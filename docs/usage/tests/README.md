@@ -154,7 +154,7 @@ pip install pytest
 OPENAI_API_KEY=your_openai_api_key
 
 # Upstage API (test_agent_system.py에 필요)
-UPSTAGE_API_KEY=your_upstage_api_key
+SOLAR_API_KEY=your_SOLAR_API_KEY
 
 # PostgreSQL (데이터베이스 관련 테스트에 필요)
 DB_HOST=localhost
