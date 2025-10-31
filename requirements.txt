@@ -32,8 +32,8 @@ pypdf>=4.0.0
 # PostgreSQL & ORM & 마이그레이션
 SQLAlchemy>=2.0.0
 alembic>=1.12.0
-psycopg2-binary>=2.9.9
-langchain-postgres>=0.0.12
+psycopg2-binary>=2.9.11
+langchain-postgres>=0.0.16
 
 # 유틸
 tenacity>=8.2.0
