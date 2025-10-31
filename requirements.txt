@@ -8,6 +8,8 @@ langchain-core>=0.1.0
 langchain-openai>=0.1.0
 langchain-groq>=0.1.0
 langchain-text-splitters>=0.0.1
+langchain-upstage>=0.7.4
+langgraph>=1.0.1
 
 # 임베딩 & 벡터DB
 sentence-transformers>=2.2.0
