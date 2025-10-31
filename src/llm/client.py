@@ -17,7 +17,7 @@ import os
 # ------------------------- LangChain 라이브러리 ------------------------- #
 from langchain_openai import ChatOpenAI
 from langchain_upstage import ChatUpstage
-from langchain.callbacks import get_openai_callback
+from langchain_community.callbacks.manager import get_openai_callback
 # ChatOpenAI: OpenAI GPT 모델 클라이언트
 # ChatUpstage: Solar (Upstage) 모델 클라이언트
 # get_openai_callback: OpenAI 토큰 사용량 추적
