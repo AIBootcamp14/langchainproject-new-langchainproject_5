@@ -4,8 +4,14 @@ Agent 노드 함수 모듈
 
 LangGraph Agent의 노드 함수들:
 - router_node: 질문 분석 및 도구 선택
-- 6개 도구 노드 (placeholder)
+- 6개 도구 노드
 """
+
+# ------------------------- 표준 라이브러리 ------------------------- #
+from datetime import datetime
+import os
+# datetime: 파일명 생성용 타임스탬프
+# os: 파일 경로 처리
 
 # ------------------------- LangChain 라이브러리 ------------------------- #
 from langchain_openai import ChatOpenAI
@@ -140,7 +146,7 @@ def general_answer_node(state: AgentState, exp_manager=None):
 # ---------------------- 도구 2: 파일 저장 노드 ---------------------- #
 def save_file_node(state: AgentState, exp_manager=None):
     """
-    파일 저장 노드 (Placeholder)
+    파일 저장 노드: 답변 내용을 파일로 저장
 
     Args:
         state (AgentState): Agent 상태
@@ -149,13 +155,53 @@ def save_file_node(state: AgentState, exp_manager=None):
     Returns:
         AgentState: 업데이트된 상태
     """
-    # -------------- Placeholder 구현 -------------- #
+    # -------------- 상태에서 질문 추출 -------------- #
+    question = state["question"]                # 사용자 질문
+
+    # -------------- 로깅 -------------- #
     if exp_manager:
-        exp_manager.logger.write("파일 저장 노드 실행 (Placeholder)")
+        exp_manager.logger.write(f"파일 저장 노드 실행: {question}")
 
-    state["final_answer"] = "파일 저장 노드 (구현 예정)"  # Placeholder 응답
+    # -------------- 저장할 내용 확인 -------------- #
+    # 이전 답변이 있으면 그것을 저장, 없으면 대화 히스토리 저장
+    content_to_save = state.get("tool_result") or state.get("final_answer") or "저장할 내용이 없습니다."
 
-    return state                                # 상태 반환
+    if exp_manager:
+        exp_manager.logger.write(f"저장할 내용 길이: {len(content_to_save)} 글자")
+
+    # -------------- 파일명 생성 -------------- #
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 타임스탬프 생성
+    filename = f"response_{timestamp}.txt"      # 파일명 구성
+
+    if exp_manager:
+        exp_manager.logger.write(f"파일명: {filename}")
+
+    # -------------- 파일 저장 -------------- #
+    if exp_manager:
+        # ExperimentManager의 save_output 메서드 사용
+        file_path = exp_manager.save_output(filename, content_to_save)  # 파일 저장
+
+        exp_manager.logger.write(f"파일 저장 완료: {file_path}")
+
+        # 성공 메시지 구성
+        answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
+    else:
+        # ExperimentManager 없을 때 (테스트 환경)
+        output_dir = "outputs"                  # 기본 출력 디렉토리
+        os.makedirs(output_dir, exist_ok=True)  # 디렉토리 생성
+        file_path = os.path.join(output_dir, filename)  # 파일 경로 생성
+
+        # 파일 쓰기
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content_to_save)            # 내용 저장
+
+        # 성공 메시지 구성
+        answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
+
+    # -------------- 최종 답변 저장 -------------- #
+    state["final_answer"] = answer              # 성공 메시지 저장
+
+    return state                                # 업데이트된 상태 반환
 
 
 # ---------------------- 도구 3: RAG 검색 노드 ---------------------- #
