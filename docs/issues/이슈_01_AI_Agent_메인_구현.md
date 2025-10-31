@@ -150,7 +150,7 @@ LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 �
 
 ```bash
 # 가상환경 활성화
-source .venv/bin/activate
+pyenv activate langchain_py3_11_9
 
 # 필요한 패키지 설치
 pip install langchain langchain-openai langchain-upstage langgraph
