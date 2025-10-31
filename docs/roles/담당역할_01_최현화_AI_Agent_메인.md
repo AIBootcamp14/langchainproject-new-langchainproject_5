@@ -1154,7 +1154,7 @@ def create_agent_graph(exp_manager=None):
 - __init__ 메서드:
   - provider 파라미터로 "openai" 또는 "solar" 선택
   - provider에 따라 ChatOpenAI 또는 ChatUpstage 인스턴스 생성
-  - 환경변수에서 API 키 로드 (OPENAI_API_KEY, UPSTAGE_API_KEY)
+  - 환경변수에서 API 키 로드 (OPENAI_API_KEY, SOLAR_API_KEY)
   - streaming=True 설정
 
 ### 2. 에러 핸들링 및 재시도
@@ -1224,7 +1224,7 @@ class LLMClient:
             self.llm = ChatUpstage(
                 model="solar-1-mini-chat",
                 temperature=temperature,
-                api_key=os.getenv("UPSTAGE_API_KEY"),
+                api_key=os.getenv("SOLAR_API_KEY"),
                 streaming=True
             )
 

@@ -37,7 +37,7 @@ pytest tests/integration/test_agent_system.py -v
 ```bash
 # .env 파일
 OPENAI_API_KEY=your_openai_api_key
-UPSTAGE_API_KEY=your_upstage_api_key
+SOLAR_API_KEY=your_SOLAR_API_KEY
 ```
 
 **참고**: 환경 변수가 설정되지 않아도 Agent 그래프 구조 검증은 가능합니다.
@@ -140,7 +140,7 @@ Phase 1: 기반 시스템 테스트 시작
 
 [환경변수 확인]
 ✅ OPENAI_API_KEY 설정됨
-✅ UPSTAGE_API_KEY 설정됨
+✅ SOLAR_API_KEY 설정됨
 
 ============================================================
 테스트 1: LLM 클라이언트
@@ -178,7 +178,7 @@ Phase 1: 기반 시스템 테스트 시작
 
 [환경변수 확인]
 ❌ OPENAI_API_KEY 미설정
-⚠️  UPSTAGE_API_KEY 미설정 (Solar 테스트 제한)
+⚠️  SOLAR_API_KEY 미설정 (Solar 테스트 제한)
 
 ============================================================
 테스트 1: LLM 클라이언트

@@ -63,7 +63,7 @@ class LLMClient:
             self.llm = ChatUpstage(
                 model="solar-1-mini-chat",          # Solar 모델명
                 temperature=temperature,            # 창의성 수준
-                api_key=os.getenv("UPSTAGE_API_KEY"),  # Upstage API 키
+                api_key=os.getenv("SOLAR_API_KEY"),  # Upstage API 키
                 streaming=True                      # 스트리밍 응답 활성화
             )
 

@@ -157,7 +157,7 @@ pip install langchain langchain-openai langchain-upstage langgraph
 
 # 환경변수 설정
 export OPENAI_API_KEY="your-openai-api-key"
-export UPSTAGE_API_KEY="your-upstage-api-key"
+export SOLAR_API_KEY="your-upstage-api-key"
 
 # Agent 실행 테스트
 python src/agent/graph.py
