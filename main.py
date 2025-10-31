@@ -10,9 +10,14 @@ LangGraph 기반 논문 리뷰 챗봇 AI Agent 실행:
 """
 
 # ==================== Import ==================== #
+import os
+from dotenv import load_dotenv
 from src.agent.graph import create_agent_graph
 from src.memory.chat_history import ChatMemoryManager
 from src.utils.experiment_manager import ExperimentManager
+
+# ==================== 환경변수 로드 ==================== #
+load_dotenv()  # .env 파일 로드
 
 
 # ==================== 테스트 질문 리스트 ==================== #
