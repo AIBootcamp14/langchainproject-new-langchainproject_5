@@ -51,11 +51,11 @@ def summarize_node(state: AgentState, exp_manager=None):
         # ============================================================ #
         llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
         extract_prompt = f"""다음 질문에서 요약하려는 논문의 제목을 추출하세요.
-논문 제목만 정확히 반환하세요. 다른 설명은 불필요합니다.
+                             논문 제목만 정확히 반환하세요. 다른 설명은 불필요합니다.
 
-질문: {question}
+                             질문: {question}
 
-논문 제목:"""
+                             논문 제목:"""
 
         if tool_logger:
             tool_logger.write(f"논문 제목 추출 프롬프트: {extract_prompt}")
@@ -150,16 +150,16 @@ def summarize_node(state: AgentState, exp_manager=None):
         # ============================================================ #
         if difficulty == "easy":
             system_content = """당신은 논문을 쉽게 설명하는 AI 어시스턴트입니다.
-초심자도 이해할 수 있도록 다음 논문을 요약해주세요:
-- 핵심 내용을 간단하고 명확하게 설명
-- 전문 용어는 쉬운 말로 풀어서 설명
-- 3-5개의 주요 포인트로 정리"""
+                                초심자도 이해할 수 있도록 다음 논문을 요약해주세요:
+                                - 핵심 내용을 간단하고 명확하게 설명
+                                - 전문 용어는 쉬운 말로 풀어서 설명
+                                - 3-5개의 주요 포인트로 정리"""
         else:  # hard
             system_content = """당신은 전문적인 논문 분석 AI 어시스턴트입니다.
-다음 논문을 전문적으로 요약해주세요:
-- 연구 목적, 방법론, 주요 결과, 결론을 포함
-- 기술적 세부사항과 핵심 기여도 강조
-- 학술적 관점에서 종합적으로 분석"""
+                                다음 논문을 전문적으로 요약해주세요:
+                                - 연구 목적, 방법론, 주요 결과, 결론을 포함
+                                - 기술적 세부사항과 핵심 기여도 강조
+                                - 학술적 관점에서 종합적으로 분석"""
 
         # SystemMessage 저장
         if exp_manager:
@@ -172,16 +172,16 @@ def summarize_node(state: AgentState, exp_manager=None):
         # 프롬프트 템플릿 정의
         prompt_template = f"""{system_content}
 
-논문 정보:
-- 제목: {title}
-- 저자: {authors}
-- 발행일: {publish_date}
-- 초록: {abstract}
+                              논문 정보:
+                              - 제목: {title}
+                              - 저자: {authors}
+                              - 발행일: {publish_date}
+                              - 초록: {abstract}
 
-논문 내용:
-{{text}}
+                              논문 내용:
+                              {{text}}
 
-요약:"""
+                              요약:"""
 
         prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
 
@@ -207,12 +207,12 @@ def summarize_node(state: AgentState, exp_manager=None):
         # ============================================================ #
         final_answer = f"""📄 논문 요약
 
-**제목**: {title}
-**저자**: {authors}
-**발행일**: {publish_date}
+                           **제목**: {title}
+                           **저자**: {authors}
+                           **발행일**: {publish_date}
 
-**요약**:
-{summary}"""
+                           **요약**:
+                           {summary}"""
 
         state["tool_result"] = summary          # 도구 실행 결과
         state["final_answer"] = final_answer    # 최종 답변

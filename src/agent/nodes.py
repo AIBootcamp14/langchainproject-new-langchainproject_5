@@ -41,21 +41,20 @@ def router_node(state: AgentState, exp_manager=None):
         exp_manager.logger.write(f"라우터 노드 실행: {question}")
 
     # -------------- 라우팅 결정 프롬프트 구성 -------------- #
-    routing_prompt = f"""
-                    사용자 질문을 분석하여 적절한 도구를 선택하세요:
+    routing_prompt = f"""사용자 질문을 분석하여 적절한 도구를 선택하세요:
 
-                    도구 목록:
-                    - search_paper: 논문 데이터베이스에서 검색
-                    - web_search: 웹에서 최신 논문 검색
-                    - glossary: 용어 정의 검색
-                    - summarize: 논문 요약
-                    - save_file: 파일 저장
-                    - general: 일반 답변
+                         도구 목록:
+                         - search_paper: 논문 데이터베이스에서 검색
+                         - web_search: 웹에서 최신 논문 검색
+                         - glossary: 용어 정의 검색
+                         - summarize: 논문 요약
+                         - save_file: 파일 저장
+                         - general: 일반 답변
 
-                    질문: {question}
+                         질문: {question}
 
-                    하나의 도구 이름만 반환하세요:
-                    """
+                         하나의 도구 이름만 반환하세요:
+                         """
 
     # -------------- LLM 초기화 -------------- #
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)  # 라우팅용 LLM
