@@ -1560,181 +1560,174 @@ experiments/
 
 ## Feature 브랜치
 
-### 구현 우선순위 및 순서
+### 총 3개 브랜치로 구현
 
-**Phase 1: 기반 시스템 구축 (필수 선행 작업)**
-
-1. **`3-1. feature/llm-client`** - LLM 클라이언트 구현
-   - **우선순위**: P0 (최우선)
-   - **이유**: 모든 도구가 LLM을 사용하므로 가장 먼저 구현 필요
-   - **구현 내용**:
-     - ChatOpenAI + Solar(Upstage) 다중 LLM 지원
-     - 에러 핸들링 및 재시도 로직 (tenacity)
-     - 토큰 사용량 추적 (get_openai_callback)
-     - 스트리밍 응답 처리 (astream)
-     - LLM 선택 전략 (작업 유형별)
-   - **파일**: `src/llm/client.py`
-   - **의존성**: 없음
-
-2. **`3-2. feature/agent-base`** - Agent 그래프 기본 구조
-   - **우선순위**: P0 (최우선)
-   - **이유**: 도구들을 연결하는 Agent 프레임워크 먼저 구축
-   - **구현 내용**:
-     - AgentState 정의 (question, difficulty, tool_choice, messages, final_answer)
-     - 빈 노드 함수들 정의 (placeholder)
-     - 라우터 노드 기본 구조
-     - StateGraph 생성 및 조건부 엣지 설정
-     - 그래프 컴파일
-   - **파일**: `src/agent/state.py`, `src/agent/graph.py`, `src/agent/nodes.py`
-   - **의존성**: `3-1. feature/llm-client`
+**효율적인 작업을 위해 10개 브랜치를 3개로 통합**
 
 ---
 
-**Phase 2: 간단한 도구 구현 (DB/API 불필요)**
+### **1. `feature/agent-system` (Phase 1: 기반 시스템)**
 
-3. **`3-3. feature/tool-general`** - 일반 답변 도구
-   - **우선순위**: P1
-   - **이유**: 가장 간단한 도구, DB 필요 없음, Agent 테스트 가능
-   - **구현 내용**:
-     - general_answer_node 함수 구현
-     - 난이도별 SystemMessage 설정
-     - LLM 직접 호출
-     - ExperimentManager 통합
-   - **파일**: `src/agent/nodes.py`
-   - **의존성**: `3-2. feature/agent-base`
+**우선순위**: P0 (최우선)
 
-4. **`3-4. feature/tool-save`** - 파일 저장 도구
-   - **우선순위**: P1
-   - **이유**: 간단한 도구, 파일 시스템만 사용
-   - **구현 내용**:
-     - save_file_node 함수 구현
-     - ExperimentManager.save_output() 사용
-     - 파일명 자동 생성 (timestamp)
-     - outputs/ 폴더에 저장
-   - **파일**: `src/agent/nodes.py`
-   - **의존성**: `3-2. feature/agent-base`
+**구현 내용**:
 
----
+#### 1-1. LLM 클라이언트 구현
+- ChatOpenAI + Solar(Upstage) 다중 LLM 지원
+- 에러 핸들링 및 재시도 로직 (tenacity)
+- 토큰 사용량 추적 (get_openai_callback)
+- 스트리밍 응답 처리 (astream)
+- LLM 선택 전략 (작업 유형별)
 
-**Phase 3: DB/API 통합 도구 구현 (팀원 협업 필요)**
+#### 1-2. Agent 그래프 기본 구조
+- AgentState 정의 (question, difficulty, tool_choice, tool_result, final_answer, messages)
+- 빈 노드 함수들 정의 (placeholder 함수 6개)
+- 라우터 노드 기본 구조
+- StateGraph 생성 및 조건부 엣지 설정
+- 그래프 컴파일
 
-5. **`3-5. feature/tool-rag`** - RAG 검색 도구 ⭐ (신준엽 협업)
-   - **우선순위**: P1
-   - **이유**: 핵심 기능, 신준엽 팀원의 RAG 시스템과 통합 필요
-   - **구현 내용**:
-     - search_paper_node 함수 구현
-     - pgvector 유사도 검색 (Top-5)
-     - PostgreSQL papers 테이블 메타데이터 조회
-     - 난이도별 프롬프트 구성
-     - ExperimentManager 통합 (DB 쿼리 기록, 검색 결과 저장)
-   - **파일**: `src/agent/nodes.py`
-   - **의존성**: `3-2. feature/agent-base`, 신준엽의 RAG 시스템
-   - **협업**: 신준엽 팀원과 Vector DB 스키마 및 검색 로직 조율
+**구현 파일**:
+- `src/llm/client.py` - LLMClient 클래스, get_llm_for_task() 함수
+- `src/agent/state.py` - AgentState TypedDict 정의
+- `src/agent/graph.py` - create_agent_graph() 함수, route_to_tool() 함수
+- `src/agent/nodes.py` - router_node() 및 6개 빈 노드 함수 (placeholder)
 
-6. **`3-6. feature/tool-glossary`** - 용어집 도구 ⭐ (신준엽 협업)
-   - **우선순위**: P1
-   - **이유**: 핵심 기능, 신준엽 팀원의 용어집 시스템과 통합 필요
-   - **구현 내용**:
-     - glossary_node 함수 구현
-     - PostgreSQL glossary 테이블 검색
-     - 난이도별 설명 제공 (easy_explanation / hard_explanation)
-     - 용어 추출 로직 (LLM 사용)
-     - ExperimentManager 통합
-   - **파일**: `src/agent/nodes.py`
-   - **의존성**: `3-2. feature/agent-base`, 신준엽의 용어집 시스템
-   - **협업**: 신준엽 팀원과 glossary 테이블 스키마 조율
+**테스트 방법**:
+- LLM 클라이언트 단독 테스트 (OpenAI, Solar API 호출)
+- Agent 그래프 컴파일 테스트
+- 라우터 노드 테스트 (도구 선택 로직)
 
-7. **`3-7. feature/tool-web`** - 웹 검색 도구 ⭐ (임예슬 협업)
-   - **우선순위**: P1
-   - **이유**: 핵심 기능, 임예슬 팀원의 Tavily API 통합 필요
-   - **구현 내용**:
-     - web_search_node 함수 구현
-     - Tavily Search API 호출
-     - 검색 결과 LLM 정리
-     - 난이도별 프롬프트 적용
-     - ExperimentManager 통합
-   - **파일**: `src/agent/nodes.py`
-   - **의존성**: `3-2. feature/agent-base`, 임예슬의 Tavily API 설정
-   - **협업**: 임예슬 팀원과 Tavily API 키 및 사용법 조율
+**의존성**: 없음
 
 ---
 
-**Phase 4: 복잡한 도구 구현**
+### **2. `feature/agent-tools` (Phase 2~4: 6개 도구 구현)**
 
-8. **`3-8. feature/tool-summarize`** - 논문 요약 도구
-   - **우선순위**: P2
-   - **이유**: 복잡한 도구, load_summarize_chain 사용
-   - **구현 내용**:
-     - summarize_paper 함수 구현
-     - PostgreSQL papers 테이블에서 논문 검색
-     - pgvector에서 논문 전체 청크 조회 (filter by paper_id)
-     - load_summarize_chain (stuff, map_reduce, refine)
-     - 난이도별 프롬프트 설계
-     - ExperimentManager 통합
-   - **파일**: `src/tools/summarize.py`, `src/agent/nodes.py`
-   - **의존성**: `3-2. feature/agent-base`, `3-5. feature/tool-rag` (Vector DB 공유)
+**우선순위**: P1
+
+**구현 내용**:
+
+#### 2-1. 간단한 도구 (DB/API 불필요)
+- **도구 1: 일반 답변** (general_answer_node)
+  - 난이도별 SystemMessage 설정
+  - LLM 직접 호출
+  - ExperimentManager 통합
+
+- **도구 2: 파일 저장** (save_file_node)
+  - ExperimentManager.save_output() 사용
+  - 파일명 자동 생성 (timestamp)
+  - outputs/ 폴더에 저장
+
+#### 2-2. DB/API 통합 도구 (팀원 협업 필요)
+- **도구 3: RAG 검색** (search_paper_node) ⭐ 신준엽 협업
+  - pgvector 유사도 검색 (Top-5)
+  - PostgreSQL papers 테이블 메타데이터 조회
+  - 난이도별 프롬프트 구성
+  - ExperimentManager 통합 (DB 쿼리 기록, 검색 결과 저장)
+
+- **도구 4: 용어집** (glossary_node) ⭐ 신준엽 협업
+  - PostgreSQL glossary 테이블 검색
+  - 난이도별 설명 제공 (easy_explanation / hard_explanation)
+  - 용어 추출 로직 (LLM 사용)
+  - ExperimentManager 통합
+
+- **도구 5: 웹 검색** (web_search_node) ⭐ 임예슬 협업
+  - Tavily Search API 호출
+  - 검색 결과 LLM 정리
+  - 난이도별 프롬프트 적용
+  - ExperimentManager 통합
+
+#### 2-3. 복잡한 도구
+- **도구 6: 논문 요약** (summarize_node)
+  - PostgreSQL papers 테이블에서 논문 검색
+  - pgvector에서 논문 전체 청크 조회 (filter by paper_id)
+  - load_summarize_chain (stuff, map_reduce, refine)
+  - 난이도별 프롬프트 설계
+  - ExperimentManager 통합
+
+**구현 파일**:
+- `src/agent/nodes.py` - 6개 노드 함수 전체 구현 (placeholder → 실제 구현)
+- `src/tools/summarize.py` - 논문 요약 도구 (선택)
+
+**테스트 방법**:
+- 각 도구별 단독 테스트
+- Agent 그래프에서 도구 호출 테스트
+- ExperimentManager 로깅 확인
+
+**의존성**: `feature/agent-system`
+
+**협업 포인트**:
+- 신준엽: RAG 시스템, 용어집 시스템
+- 임예슬: Tavily Search API
 
 ---
 
-**Phase 5: 대화 메모리 및 최종 통합**
+### **3. `feature/agent-integration` (Phase 5: 통합)**
 
-9. **`3-9. feature/memory`** - 대화 메모리 시스템
-   - **우선순위**: P2
-   - **이유**: 선택 사항, 대화 히스토리 관리 기능
-   - **구현 내용**:
-     - ConversationBufferMemory 구현
-     - 대화 히스토리 관리 (add_user_message, add_ai_message)
-     - 세션 기반 메모리 (PostgresChatMessageHistory, 선택)
-     - Agent와 메모리 통합
-   - **파일**: `src/memory/chat_history.py`
-   - **의존성**: 모든 도구 구현 완료 후
+**우선순위**: P2
 
-10. **`3-10. feature/integration`** - 최종 통합 및 main.py
-    - **우선순위**: P2
-    - **이유**: 모든 모듈 통합 및 테스트
-    - **구현 내용**:
-      - main.py 작성 (Agent 실행 루프)
-      - 모든 노드 함수 통합
-      - ExperimentManager 전역 통합
-      - 테스트 질문 리스트로 Agent 실행
-      - 디버깅 및 오류 수정
-    - **파일**: `main.py`
-    - **의존성**: 모든 Feature 브랜치 (3-1 ~ 3-9)
+**구현 내용**:
+
+#### 3-1. 대화 메모리 시스템
+- ConversationBufferMemory 구현
+- 대화 히스토리 관리 (add_user_message, add_ai_message)
+- 세션 기반 메모리 (PostgresChatMessageHistory, 선택)
+- Agent와 메모리 통합
+
+#### 3-2. main.py 작성
+- Agent 실행 루프 구현
+- ExperimentManager 전역 통합
+- 테스트 질문 리스트로 Agent 실행
+- 결과 출력 및 로깅
+
+#### 3-3. 전체 통합 테스트
+- 10개 시나리오 테스트 (PRD 09 평가 기준)
+- 디버깅 및 오류 수정
+- 성능 최적화
+
+**구현 파일**:
+- `src/memory/chat_history.py` - ChatMemoryManager 클래스
+- `main.py` - Agent 실행 메인 파일
+- `tests/test_agent.py` - 통합 테스트 (선택)
+
+**테스트 방법**:
+- 전체 Agent 실행 테스트
+- 10개 시나리오 검증
+- 로그 파일 확인
+
+**의존성**: `feature/agent-system`, `feature/agent-tools`
 
 ---
 
-### 브랜치 병합 순서
+### 브랜치 작업 순서
 
 ```
-3-1. feature/llm-client
-  ↓
-3-2. feature/agent-base (의존: 3-1)
-  ↓
-병합 → develop
-  ↓
-3-3. feature/tool-general (의존: 3-2)
-3-4. feature/tool-save (의존: 3-2)
-  ↓
-병합 → develop (간단한 도구 2개 완료, Agent 테스트 가능)
-  ↓
-3-5. feature/tool-rag (의존: 3-2, 신준엽 협업)
-3-6. feature/tool-glossary (의존: 3-2, 신준엽 협업)
-3-7. feature/tool-web (의존: 3-2, 임예슬 협업)
-  ↓
-병합 → develop (핵심 도구 3개 완료)
-  ↓
-3-8. feature/tool-summarize (의존: 3-2, 3-5)
-  ↓
-병합 → develop (6개 도구 모두 완료)
-  ↓
-3-9. feature/memory (의존: 모든 도구)
-  ↓
-병합 → develop
-  ↓
-3-10. feature/integration (의존: 3-1 ~ 3-9)
-  ↓
-최종 병합 → develop → main
+1. feature/agent-system
+   ├─ LLM 클라이언트 구현
+   ├─ Agent 그래프 기본 구조
+   └─ 빈 노드 함수들 (placeholder)
+   ↓
+   병합 → develop
+   ↓
+2. feature/agent-tools
+   ├─ 도구 1: 일반 답변
+   ├─ 도구 2: 파일 저장
+   ├─ 도구 3: RAG 검색 (신준엽 협업)
+   ├─ 도구 4: 용어집 (신준엽 협업)
+   ├─ 도구 5: 웹 검색 (임예슬 협업)
+   └─ 도구 6: 논문 요약
+   ↓
+   병합 → develop
+   ↓
+3. feature/agent-integration
+   ├─ 대화 메모리 시스템
+   ├─ main.py 작성
+   └─ 전체 통합 테스트
+   ↓
+   최종 병합 → develop → main
 ```
+
+---
 
 ### 협업 포인트
 
