@@ -15,72 +15,134 @@
 
 ## 📌 이슈 목적
 
-LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 구현합니다. 사용자 질문을 분석하여 적절한 도구(RAG 검색, 용어집, 웹 검색, 요약, 파일 저장)를 자동으로 선택하고 실행하는 지능형 Agent를 개발합니다.
+LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 구현합니다. 사용자 질문을 분석하여 적절한 도구(일반 답변, RAG 검색, 웹 검색, 용어집, 논문 요약, 파일 저장)를 자동으로 선택하고 실행하는 지능형 Agent를 개발합니다.
 
 **핵심 목표:**
 - LangGraph StateGraph 구조 설계 및 구현
-- 질문 라우팅 로직 구현 (일반 답변 / RAG 검색 / 용어집 / 웹 검색 / 요약)
-- 5가지 Langchain 도구 통합
+- 질문 라우팅 로직 구현 (일반 답변 / RAG 검색 / 용어집 / 웹 검색 / 요약 / 저장)
+- 6가지 도구 노드 통합
 - 멀티턴 대화 메모리 관리
 - OpenAI + Solar(Upstage) 듀얼 LLM 전략
+- ExperimentManager 기반 실험 추적 및 로깅
 
 ---
 
 ## ✅ 작업 항목 체크리스트
 
-### Phase 1: LangGraph 기본 구조 (2일)
-- [ ] AgentState 정의 (TypedDict: question, difficulty, messages, tool_result, final_answer, next_action)
-- [ ] StateGraph 생성 및 노드 추가
-- [ ] 5개 노드 구현
-  - [ ] `router_node`: 질문 분석 및 라우팅 (일반/RAG/용어집/웹/요약 판단)
-  - [ ] `general_answer_node`: 일반적인 질문에 직접 답변
-  - [ ] `search_paper_node`: RAG 검색 도구 호출 → 답변 생성
-  - [ ] `glossary_node`: 용어집 도구 호출 → 답변 생성
-  - [ ] `web_search_node`: 웹 검색 도구 호출 → 답변 생성
-- [ ] 조건부 엣지 구현 (`route_question` 함수)
-- [ ] Agent 컴파일 및 실행 테스트
+### Phase 1: 기반 시스템 (`feature/agent-system`) - 2일
+**브랜치**: `feature/agent-system`
+**우선순위**: P0 (최우선)
 
-### Phase 2: 도구 통합 (2일)
-- [ ] Langchain @tool 데코레이터 기반 도구 5개 통합
-  - [ ] 도구 1: `search_paper_database` (RAG 검색)
-  - [ ] 도구 2: `search_latest_papers` (웹 검색)
-  - [ ] 도구 3: `search_glossary` (용어집)
-  - [ ] 도구 4: `summarize_paper` (논문 요약)
-  - [ ] 도구 5: `save_to_file` (파일 저장)
-- [ ] ToolNode 생성 및 Agent에 통합
-- [ ] 도구 실행 결과 State 업데이트 로직
+#### 1-1. LLM 클라이언트 구현
+- [ ] LLMClient 클래스 구현 (`src/llm/client.py`)
+  - [ ] ChatOpenAI 지원 (gpt-3.5-turbo, gpt-4)
+  - [ ] Solar(Upstage) 지원 (solar-pro, solar-mini)
+  - [ ] 에러 핸들링 및 재시도 (tenacity)
+  - [ ] 토큰 사용량 추적 (get_openai_callback)
+  - [ ] 스트리밍 응답 처리 (astream)
+- [ ] get_llm_for_task() 함수 구현 (작업 유형별 LLM 선택)
 
-### Phase 3: LLM 클라이언트 및 메모리 (2일)
-- [ ] LLM 클라이언트 구현 (`src/llm/client.py`)
-  - [ ] OpenAI API 연동 (gpt-4o-mini, gpt-4o)
-  - [ ] Solar API 연동 (solar-pro, solar-mini)
-  - [ ] fallback 로직 (OpenAI 실패 시 Solar 사용)
-  - [ ] 에러 핸들링 및 재시도
-- [ ] ChatMemoryManager 구현 (`src/memory/chat_history.py`)
-  - [ ] Langchain ChatMessageHistory 사용
-  - [ ] add_user_message(), add_ai_message()
-  - [ ] get_history() (최근 10턴 반환)
-  - [ ] clear() 메모리 초기화
-- [ ] 난이도별 프롬프트 적용 (Easy/Hard 모드)
+#### 1-2. Agent 그래프 기본 구조
+- [ ] AgentState 정의 (`src/agent/state.py`)
+  - [ ] question, difficulty, tool_choice, tool_result, final_answer, messages
+- [ ] create_agent_graph() 함수 구현 (`src/agent/graph.py`)
+  - [ ] StateGraph 생성
+  - [ ] 노드 추가 (router + 6개 빈 노드)
+  - [ ] 조건부 엣지 설정
+  - [ ] 그래프 컴파일
+- [ ] 라우터 노드 구현 (`src/agent/nodes.py`)
+  - [ ] 질문 분석 및 도구 선택 로직
+  - [ ] LLM으로 라우팅 결정
+- [ ] 6개 빈 노드 함수 정의 (placeholder)
+  - [ ] general_answer_node
+  - [ ] search_paper_node
+  - [ ] web_search_node
+  - [ ] glossary_node
+  - [ ] summarize_node
+  - [ ] save_file_node
 
-### Phase 4: 통합 및 테스트 (1일)
-- [ ] Agent 그래프 통합 (`src/agent/graph.py`)
-- [ ] create_agent_graph() 함수 완성
-- [ ] 단위 테스트 작성 (`tests/test_agent.py`)
-  - [ ] router_node 테스트
-  - [ ] general_answer_node 테스트
-  - [ ] 도구 통합 테스트
-  - [ ] 메모리 저장/로드 테스트
-- [ ] main.py 통합 실행 테스트
+#### 1-3. 테스트
+- [ ] LLM 클라이언트 단독 테스트
+- [ ] Agent 그래프 컴파일 테스트
+- [ ] 라우터 노드 테스트
 
-### Phase 5: 로깅 및 문서화 (1일)
-- [ ] Logger 클래스를 사용한 로깅 적용
-  - [ ] 실험 폴더 생성 (experiments/날짜/날짜_시간_실험명/)
-  - [ ] experiment.log 기록
-  - [ ] config.yaml 저장
-  - [ ] results.json 저장
-- [ ] 코드 주석 작성
-- [ ] 사용 예시 문서 작성
+---
+
+### Phase 2: 6개 도구 구현 (`feature/agent-tools`) - 2~3일
+**브랜치**: `feature/agent-tools`
+**우선순위**: P1
+**의존성**: `feature/agent-system`
+
+#### 2-1. 간단한 도구 (DB/API 불필요)
+- [ ] 도구 1: 일반 답변 (general_answer_node)
+  - [ ] 난이도별 SystemMessage 설정
+  - [ ] LLM 직접 호출
+  - [ ] ExperimentManager 통합
+- [ ] 도구 2: 파일 저장 (save_file_node)
+  - [ ] ExperimentManager.save_output() 사용
+  - [ ] 파일명 자동 생성 (timestamp)
+  - [ ] outputs/ 폴더에 저장
+
+#### 2-2. DB/API 통합 도구 (팀원 협업)
+- [ ] 도구 3: RAG 검색 (search_paper_node) ⭐ 신준엽 협업
+  - [ ] pgvector 유사도 검색 (Top-5)
+  - [ ] PostgreSQL papers 테이블 조회
+  - [ ] 난이도별 프롬프트 구성
+  - [ ] ExperimentManager 통합
+- [ ] 도구 4: 용어집 (glossary_node) ⭐ 신준엽 협업
+  - [ ] PostgreSQL glossary 테이블 검색
+  - [ ] 난이도별 설명 제공
+  - [ ] 용어 추출 로직
+  - [ ] ExperimentManager 통합
+- [ ] 도구 5: 웹 검색 (web_search_node) ⭐ 임예슬 협업
+  - [ ] Tavily Search API 호출
+  - [ ] 검색 결과 LLM 정리
+  - [ ] 난이도별 프롬프트 적용
+  - [ ] ExperimentManager 통합
+
+#### 2-3. 복잡한 도구
+- [ ] 도구 6: 논문 요약 (summarize_node)
+  - [ ] PostgreSQL papers 테이블 검색
+  - [ ] pgvector 논문 전체 청크 조회
+  - [ ] load_summarize_chain (stuff, map_reduce, refine)
+  - [ ] 난이도별 프롬프트 설계
+  - [ ] ExperimentManager 통합
+
+#### 2-4. 테스트
+- [ ] 각 도구별 단독 테스트
+- [ ] Agent 그래프에서 도구 호출 테스트
+- [ ] ExperimentManager 로깅 확인
+
+---
+
+### Phase 3: 통합 (`feature/agent-integration`) - 1~2일
+**브랜치**: `feature/agent-integration`
+**우선순위**: P2
+**의존성**: `feature/agent-system`, `feature/agent-tools`
+
+#### 3-1. 대화 메모리 시스템
+- [ ] ChatMemoryManager 클래스 구현 (`src/memory/chat_history.py`)
+  - [ ] ConversationBufferMemory 초기화
+  - [ ] add_user_message() 구현
+  - [ ] add_ai_message() 구현
+  - [ ] get_history() 구현
+  - [ ] clear() 구현
+- [ ] 세션 기반 메모리 (선택)
+  - [ ] PostgresChatMessageHistory 구현
+  - [ ] get_session_history() 함수
+
+#### 3-2. main.py 작성
+- [ ] Agent 실행 루프 구현
+- [ ] ExperimentManager 전역 통합
+- [ ] 테스트 질문 리스트로 Agent 실행
+- [ ] 결과 출력 및 로깅
+
+#### 3-3. 전체 통합 테스트
+- [ ] 10개 시나리오 테스트 (PRD 09 평가 기준)
+- [ ] 디버깅 및 오류 수정
+- [ ] 성능 최적화
+- [ ] 로그 파일 확인
+- [ ] 문서화 작성
 
 ---
 
@@ -109,16 +171,23 @@ pytest tests/test_agent.py -v
 ### ⚡️ 참고
 
 **중요 사항:**
-1. **PRD 05, 06 필수 준수**: 모든 print()를 logger.write()로 변경, 실험 폴더 구조 준수
-2. **LangGraph 패턴**: StateGraph → add_node → add_edge → add_conditional_edges → compile
-3. **도구 통합**: Langchain @tool 데코레이터 사용, invoke() 메서드로 도구 호출
-4. **듀얼 LLM**: OpenAI 우선, 실패 시 Solar로 fallback
-5. **난이도 모드**: Easy(초심자용), Hard(전문가용) 프롬프트 분리
+1. **ExperimentManager 필수 사용**: 모든 도구에서 ExperimentManager 통합
+   - with ExperimentManager() as exp: 패턴 사용
+   - 도구별 Logger 생성: exp.get_tool_logger('tool_name')
+   - DB 쿼리 기록: exp.log_sql_query(), exp.log_pgvector_search()
+   - 프롬프트 저장: exp.save_system_prompt(), exp.save_user_prompt()
+2. **PRD 05, 06 필수 준수**: 실험 폴더 구조 준수, Session ID 자동 부여
+3. **LangGraph 패턴**: StateGraph → add_node → add_edge → add_conditional_edges → compile
+4. **6가지 도구 노드**: 일반 답변, RAG 검색, 웹 검색, 용어집, 논문 요약, 파일 저장
+5. **AgentState 필드**: question, difficulty, tool_choice, tool_result, final_answer, messages
+6. **듀얼 LLM**: OpenAI 우선, 실패 시 Solar로 fallback
+7. **난이도 모드**: Easy(초심자용), Hard(전문가용) 프롬프트 분리
 
 **주의:**
 - Agent 노드에서 반드시 `return state` (State 업데이트)
-- 조건부 엣지에서 명확한 라우팅 키 반환 ("general", "search_paper", "glossary", "web_search")
+- 조건부 엣지에서 명확한 라우팅 키 반환 ("general", "search_paper", "web_search", "glossary", "summarize", "save_file")
 - 메모리는 최근 10턴만 유지 (토큰 절약)
+- 협업 필요: 신준엽 (RAG, 용어집), 임예슬 (Tavily API)
 
 ---
 
@@ -127,13 +196,22 @@ pytest tests/test_agent.py -v
 **필수 참고 PRD 문서:**
 - [docs/PRD/01_프로젝트_개요.md](../PRD/01_프로젝트_개요.md) - 프로젝트 전체 개요 및 목표
 - [docs/PRD/02_프로젝트_구조.md](../PRD/02_프로젝트_구조.md) - 폴더 구조 및 모듈 배치
-- [docs/PRD/05_로깅_시스템.md](../PRD/05_로깅_시스템.md) ⭐ - Logger 클래스 사용법 및 규칙
-- [docs/PRD/06_실험_추적_관리.md](../PRD/06_실험_추적_관리.md) ⭐ - 실험 폴더 구조 및 명명 규칙
+- [docs/PRD/05_로깅_시스템.md](../PRD/05_로깅_시스템.md) ⭐⭐⭐ - ExperimentManager 사용법 및 로깅 규칙
+- [docs/PRD/06_실험_추적_관리.md](../PRD/06_실험_추적_관리.md) ⭐⭐⭐ - 실험 폴더 구조 및 Session ID 자동 부여 규칙
+- [docs/PRD/09_평가_기준.md](../PRD/09_평가_기준.md) ⭐⭐ - RAG 평가, Agent 정확도, 응답 시간, 비용 분석
 - [docs/PRD/10_기술_요구사항.md](../PRD/10_기술_요구사항.md) - 기술 스택 및 라이브러리
 - [docs/PRD/12_AI_Agent_설계.md](../PRD/12_AI_Agent_설계.md) - LangGraph 구조 및 도구 정의
 - [docs/PRD/14_LLM_설정.md](../PRD/14_LLM_설정.md) - LLM 선택 전략 및 에러 핸들링
 
-**참고 PRD 문서:**
+**참고 역할 문서:**
+- [docs/roles/담당역할_01_최현화_AI_Agent_메인.md](../roles/담당역할_01_최현화_AI_Agent_메인.md) ⭐⭐⭐ - 전체 구현 가이드
+- [docs/roles/담당역할_01-1_최현화_실험_관리_시스템.md](../roles/담당역할_01-1_최현화_실험_관리_시스템.md) ⭐⭐⭐ - ExperimentManager 구현 가이드
+- [docs/roles/담당역할_01-2_최현화_로깅_모니터링.md](../roles/담당역할_01-2_최현화_로깅_모니터링.md) ⭐⭐ - Logger 및 실험 관리 시스템
+
+**참고 레퍼런스 문서:**
+- [docs/rules/실험_폴더_구조.md](../rules/실험_폴더_구조.md) ⭐⭐⭐ - 전체 폴더 구조 및 ExperimentManager 전체 코드
+
+**기타 참고 PRD 문서:**
 - [docs/PRD/03_브랜치_전략.md](../PRD/03_브랜치_전략.md) - Feature 브랜치 전략
 - [docs/PRD/04_일정_관리.md](../PRD/04_일정_관리.md) - 개발 일정 및 마일스톤
 - [docs/PRD/11_데이터베이스_설계.md](../PRD/11_데이터베이스_설계.md) - DB 스키마
