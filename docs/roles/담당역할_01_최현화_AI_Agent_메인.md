@@ -96,7 +96,9 @@ class AgentState(TypedDict):
     question: str
     difficulty: str
     tool_choice: str
+    tool_result: str
     final_answer: str
+    messages: list  # 대화 히스토리
 
 def general_answer_node(state: AgentState, exp_manager=None):
     """
@@ -302,6 +304,576 @@ def summarize_paper(paper_title: str, difficulty: str = "easy", exp_manager=None
 
 ---
 
+## 도구 3: RAG 검색 도구
+
+### 기능 설명
+논문 데이터베이스에서 사용자 질문과 관련된 논문을 검색하고, 난이도에 맞는 답변을 생성하는 도구
+
+### 구현 방법
+
+**파일 경로**: `src/agent/nodes.py`
+
+1. **RAG 검색 노드 함수 생성**
+   - AgentState를 파라미터로 받는 `search_paper_node` 함수 정의
+   - state에서 question과 difficulty 추출
+   - Vector DB (pgvector)에서 유사도 검색 수행 (Top-K=5)
+   - 검색된 논문 청크에서 paper_id 추출
+   - PostgreSQL papers 테이블에서 메타데이터 조회
+   - 검색된 컨텍스트와 난이도별 프롬프트를 결합하여 LLM에 전달
+   - 생성된 답변을 state["final_answer"]에 저장
+
+2. **난이도별 프롬프트 구성**
+   - Easy 모드: 초심자용 설명, 전문 용어 최소화
+   - Hard 모드: 기술적 세부사항, 수식 포함, 논문 비교
+
+3. **ExperimentManager 통합**
+   - 도구별 Logger 생성 (`exp.get_tool_logger('rag_paper')`)
+   - DB 쿼리 기록 (`exp.log_sql_query()`, `exp.log_pgvector_search()`)
+   - 검색 결과 저장 (`exp.save_search_results()`)
+   - 프롬프트 저장 (`exp.save_user_prompt()`, `exp.save_system_prompt()`)
+
+### 사용하는 DB
+
+#### PostgreSQL + pgvector (Vector DB)
+- **컬렉션**: `paper_chunks`
+- **역할**: 논문 내용을 청크로 나눠 저장, 임베딩 벡터 검색
+- **검색 방식**: Cosine Similarity 기반 Top-K 검색 (k=5)
+- **메타데이터**: paper_id, chunk_index
+
+#### PostgreSQL (관계형 데이터)
+- **테이블**: `papers`
+- **역할**: 논문 메타데이터 조회 (제목, 저자, 년도, 카테고리)
+- **쿼리**: `SELECT * FROM papers WHERE paper_id IN (...)`
+
+### 예제 코드
+
+```python
+# src/agent/nodes.py
+
+from langchain_postgres.vectorstores import PGVector
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.schema import SystemMessage, HumanMessage
+import psycopg2
+import os
+
+def search_paper_node(state: AgentState, exp_manager=None):
+    """
+    RAG 검색 노드: 논문 DB에서 관련 논문 검색 및 답변 생성
+
+    Args:
+        state: Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+    """
+    question = state["question"]
+    difficulty = state.get("difficulty", "easy")
+
+    # 도구별 Logger 생성
+    tool_logger = exp_manager.get_tool_logger('rag_paper') if exp_manager else None
+
+    if tool_logger:
+        tool_logger.write(f"RAG 검색 노드 실행: {question}")
+        tool_logger.write(f"난이도: {difficulty}")
+
+    # 1. Vector DB 초기화
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    vectorstore = PGVector(
+        collection_name="paper_chunks",
+        embedding_function=embeddings,
+        connection_string=os.getenv("DATABASE_URL")
+    )
+
+    # 2. 유사도 검색 (Top-5)
+    if tool_logger:
+        tool_logger.write("Vector DB 유사도 검색 시작 (Top-5)")
+
+    docs = vectorstore.similarity_search(question, k=5)
+
+    if tool_logger:
+        tool_logger.write(f"검색된 문서 수: {len(docs)}")
+
+        # pgvector 검색 기록
+        if exp_manager:
+            exp_manager.log_pgvector_search({
+                "tool": "rag_paper",
+                "query_text": question,
+                "top_k": 5,
+                "results_count": len(docs)
+            })
+
+    # 3. paper_id 추출 및 메타데이터 조회
+    paper_ids = list(set([doc.metadata.get("paper_id") for doc in docs if doc.metadata.get("paper_id")]))
+
+    if not paper_ids:
+        if tool_logger:
+            tool_logger.write("검색된 논문이 없음")
+            tool_logger.close()
+        state["final_answer"] = "관련 논문을 찾을 수 없습니다."
+        return state
+
+    # PostgreSQL 연결
+    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+    cursor = conn.cursor()
+
+    # papers 테이블에서 메타데이터 조회
+    placeholders = ','.join(['%s'] * len(paper_ids))
+    query = f"SELECT paper_id, title, authors, publish_date FROM papers WHERE paper_id IN ({placeholders})"
+
+    if tool_logger:
+        tool_logger.write(f"SQL 쿼리 실행: paper_id IN {paper_ids}")
+
+        # SQL 쿼리 기록
+        if exp_manager:
+            exp_manager.log_sql_query(
+                query=query,
+                description="논문 메타데이터 조회",
+                tool="rag_paper"
+            )
+
+    cursor.execute(query, paper_ids)
+    papers_meta = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # 4. 컨텍스트 구성
+    context = "\n\n".join([
+        f"[논문 {i+1}] {doc.page_content}\n출처: {doc.metadata.get('title', 'Unknown')}"
+        for i, doc in enumerate(docs)
+    ])
+
+    # 5. 난이도별 프롬프트
+    if difficulty == "easy":
+        system_prompt = """
+당신은 논문을 쉽게 설명하는 전문가입니다.
+초심자도 이해할 수 있도록 쉽고 명확하게 답변해주세요.
+- 전문 용어는 풀어서 설명
+- 비유와 예시 사용
+- 수식은 최소화
+        """
+    else:  # hard
+        system_prompt = """
+당신은 논문 분석 전문가입니다.
+기술적 세부사항을 포함하여 정확하고 전문적으로 답변해주세요.
+- 논문의 핵심 기여 설명
+- 수식 및 알고리즘 포함
+- 관련 연구와 비교
+        """
+
+    user_prompt = f"""
+[참고 논문]
+{context}
+
+[질문]
+{question}
+
+위 논문을 참고하여 질문에 답변해주세요.
+    """
+
+    # 프롬프트 저장
+    if exp_manager:
+        exp_manager.save_system_prompt(system_prompt, metadata={"difficulty": difficulty})
+        exp_manager.save_user_prompt(user_prompt, metadata={"papers_count": len(papers_meta)})
+
+    if tool_logger:
+        tool_logger.write("LLM 답변 생성 시작")
+
+    # 6. LLM 호출
+    llm = ChatOpenAI(model="gpt-4", temperature=0.7)
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
+
+    response = llm.invoke(messages)
+
+    if tool_logger:
+        tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
+        tool_logger.close()
+
+    # 7. 최종 답변 저장
+    state["final_answer"] = response.content
+
+    return state
+```
+
+---
+
+## 도구 4: 웹 검색 도구
+
+### 기능 설명
+Tavily Search API를 사용하여 웹에서 최신 논문 정보를 검색하고 결과를 정리하는 도구
+
+### 구현 방법
+
+**파일 경로**: `src/agent/nodes.py`
+
+1. **웹 검색 노드 함수 생성**
+   - AgentState를 파라미터로 받는 `web_search_node` 함수 정의
+   - state에서 question과 difficulty 추출
+   - Tavily Search API 호출 (langchain_community.tools.tavily_search 사용)
+   - 검색 결과를 LLM에 전달하여 난이도에 맞게 정리
+   - 정리된 답변을 state["final_answer"]에 저장
+
+2. **Tavily API 설정**
+   - 환경변수에서 TAVILY_API_KEY 로드
+   - TavilySearchResults 도구 초기화 (max_results=5)
+
+3. **검색 결과 정리**
+   - LLM에게 검색 결과를 전달하여 요약 및 정리
+   - 난이도별 프롬프트 적용
+
+### 사용하는 DB
+**DB 사용 없음** (Tavily API 외부 웹 검색)
+
+### 예제 코드
+
+```python
+# src/agent/nodes.py
+
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_openai import ChatOpenAI
+from langchain.schema import SystemMessage, HumanMessage
+import os
+
+def web_search_node(state: AgentState, exp_manager=None):
+    """
+    웹 검색 노드: Tavily API로 최신 논문 정보 검색
+
+    Args:
+        state: Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+    """
+    question = state["question"]
+    difficulty = state.get("difficulty", "easy")
+
+    # 도구별 Logger 생성
+    tool_logger = exp_manager.get_tool_logger('web_search') if exp_manager else None
+
+    if tool_logger:
+        tool_logger.write(f"웹 검색 노드 실행: {question}")
+        tool_logger.write(f"난이도: {difficulty}")
+
+    # 1. Tavily Search API 초기화
+    search_tool = TavilySearchResults(
+        max_results=5,
+        api_key=os.getenv("TAVILY_API_KEY")
+    )
+
+    if tool_logger:
+        tool_logger.write("Tavily Search API 호출 시작")
+
+    # 2. 웹 검색 실행
+    search_results = search_tool.invoke({"query": question})
+
+    if tool_logger:
+        tool_logger.write(f"검색 결과 수: {len(search_results)}")
+
+    # 3. 검색 결과 포맷팅
+    formatted_results = "\n\n".join([
+        f"[결과 {i+1}]\n제목: {result.get('title', 'N/A')}\n내용: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}"
+        for i, result in enumerate(search_results)
+    ])
+
+    # 4. 난이도별 프롬프트
+    if difficulty == "easy":
+        system_prompt = """
+당신은 최신 논문 정보를 쉽게 설명하는 전문가입니다.
+초심자도 이해할 수 있도록 검색 결과를 정리해주세요.
+- 핵심 내용 요약
+- 쉬운 언어 사용
+- 중요한 정보만 선별
+        """
+    else:  # hard
+        system_prompt = """
+당신은 논문 분석 전문가입니다.
+검색 결과를 전문적으로 정리해주세요.
+- 기술적 세부사항 포함
+- 최신 연구 동향 분석
+- 관련 논문 비교
+        """
+
+    user_prompt = f"""
+[웹 검색 결과]
+{formatted_results}
+
+[질문]
+{question}
+
+위 검색 결과를 바탕으로 질문에 답변해주세요.
+    """
+
+    # 프롬프트 저장
+    if exp_manager:
+        exp_manager.save_system_prompt(system_prompt, metadata={"difficulty": difficulty})
+        exp_manager.save_user_prompt(user_prompt, metadata={"results_count": len(search_results)})
+
+    if tool_logger:
+        tool_logger.write("LLM 답변 생성 시작")
+
+    # 5. LLM 호출
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ]
+
+    response = llm.invoke(messages)
+
+    if tool_logger:
+        tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
+        tool_logger.close()
+
+    # 6. 최종 답변 저장
+    state["final_answer"] = response.content
+
+    return state
+```
+
+---
+
+## 도구 5: 용어집 도구
+
+### 기능 설명
+PostgreSQL glossary 테이블에서 용어 정의를 검색하고, 난이도에 맞는 설명을 제공하는 도구
+
+### 구현 방법
+
+**파일 경로**: `src/agent/nodes.py`
+
+1. **용어집 검색 노드 함수 생성**
+   - AgentState를 파라미터로 받는 `glossary_node` 함수 정의
+   - state에서 question에서 용어 추출
+   - PostgreSQL glossary 테이블에서 용어 검색
+   - 난이도에 따라 easy_explanation 또는 hard_explanation 반환
+   - Vector DB glossary_embeddings에서 유사 용어 검색 (선택)
+
+2. **용어 추출 로직**
+   - LLM에게 질문에서 핵심 용어 추출 요청
+   - glossary 테이블에서 ILIKE 검색
+
+3. **난이도별 설명 제공**
+   - Easy: easy_explanation 필드 사용
+   - Hard: hard_explanation 필드 사용
+
+### 사용하는 DB
+
+#### PostgreSQL (관계형 데이터)
+- **테이블**: `glossary`
+- **역할**: 용어 정의 및 난이도별 설명 저장
+- **쿼리**: `SELECT * FROM glossary WHERE term ILIKE '%{term}%'`
+
+#### PostgreSQL + pgvector (선택)
+- **컬렉션**: `glossary_embeddings`
+- **역할**: 유사 용어 검색
+
+### 예제 코드
+
+```python
+# src/agent/nodes.py
+
+from langchain_openai import ChatOpenAI
+from langchain.schema import SystemMessage, HumanMessage
+import psycopg2
+import os
+
+def glossary_node(state: AgentState, exp_manager=None):
+    """
+    용어집 노드: glossary 테이블에서 용어 정의 검색
+
+    Args:
+        state: Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+    """
+    question = state["question"]
+    difficulty = state.get("difficulty", "easy")
+
+    # 도구별 Logger 생성
+    tool_logger = exp_manager.get_tool_logger('rag_glossary') if exp_manager else None
+
+    if tool_logger:
+        tool_logger.write(f"용어집 노드 실행: {question}")
+        tool_logger.write(f"난이도: {difficulty}")
+
+    # 1. 질문에서 용어 추출
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    extract_prompt = f"""
+다음 질문에서 핵심 용어를 추출하세요. 용어만 반환하세요:
+
+질문: {question}
+
+용어:
+    """
+
+    term = llm.invoke(extract_prompt).content.strip()
+
+    if tool_logger:
+        tool_logger.write(f"추출된 용어: {term}")
+
+    # 2. PostgreSQL glossary 테이블에서 검색
+    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+    cursor = conn.cursor()
+
+    query = "SELECT term, definition, easy_explanation, hard_explanation, category FROM glossary WHERE term ILIKE %s"
+
+    if tool_logger:
+        tool_logger.write(f"SQL 쿼리 실행: term ILIKE '%{term}%'")
+
+        # SQL 쿼리 기록
+        if exp_manager:
+            exp_manager.log_sql_query(
+                query=query,
+                description="용어집 검색",
+                tool="rag_glossary"
+            )
+
+    cursor.execute(query, (f"%{term}%",))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    # 3. 결과 처리
+    if not result:
+        if tool_logger:
+            tool_logger.write("용어를 찾을 수 없음")
+            tool_logger.close()
+        state["final_answer"] = f"'{term}' 용어를 용어집에서 찾을 수 없습니다."
+        return state
+
+    term_name, definition, easy_exp, hard_exp, category = result
+
+    if tool_logger:
+        tool_logger.write(f"용어 발견: {term_name} (카테고리: {category})")
+
+    # 4. 난이도별 설명 선택
+    if difficulty == "easy":
+        explanation = easy_exp if easy_exp else definition
+        if tool_logger:
+            tool_logger.write("Easy 모드 설명 사용")
+    else:  # hard
+        explanation = hard_exp if hard_exp else definition
+        if tool_logger:
+            tool_logger.write("Hard 모드 설명 사용")
+
+    # 5. 최종 답변 구성
+    answer = f"""
+**용어**: {term_name}
+
+**카테고리**: {category}
+
+**설명**:
+{explanation}
+    """
+
+    if tool_logger:
+        tool_logger.write(f"답변 생성 완료: {len(answer)} 글자")
+        tool_logger.close()
+
+    # 6. 최종 답변 저장
+    state["final_answer"] = answer
+
+    return state
+```
+
+---
+
+## 도구 6: 파일 저장 도구
+
+### 기능 설명
+대화 내용이나 생성된 답변을 텍스트 파일로 저장하고, Streamlit 다운로드 기능과 연동하는 도구
+
+### 구현 방법
+
+**파일 경로**: `src/agent/nodes.py`
+
+1. **파일 저장 노드 함수 생성**
+   - AgentState를 파라미터로 받는 `save_file_node` 함수 정의
+   - state에서 저장할 내용 추출 (이전 답변 또는 요약 내용)
+   - ExperimentManager의 `save_output()` 메서드 사용
+   - outputs/ 폴더에 파일 저장
+   - 파일 경로를 state["final_answer"]에 저장
+
+2. **파일명 생성 로직**
+   - 현재 시간 기반 파일명 생성 (예: `response_20251031_103015.txt`)
+   - 또는 사용자가 지정한 파일명 사용
+
+3. **ExperimentManager 통합**
+   - `exp.save_output(filename, content)` 호출
+   - 파일이 experiments/날짜/session_XXX/outputs/ 경로에 저장됨
+
+### 사용하는 DB
+**DB 사용 없음** (파일 시스템만 사용)
+
+### 예제 코드
+
+```python
+# src/agent/nodes.py
+
+from datetime import datetime
+import os
+
+def save_file_node(state: AgentState, exp_manager=None):
+    """
+    파일 저장 노드: 답변 내용을 파일로 저장
+
+    Args:
+        state: Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+    """
+    question = state["question"]
+
+    # 도구별 Logger 생성
+    tool_logger = exp_manager.get_tool_logger('file_save') if exp_manager else None
+
+    if tool_logger:
+        tool_logger.write(f"파일 저장 노드 실행: {question}")
+
+    # 1. 저장할 내용 확인
+    # 이전 답변이 있으면 그것을 저장, 없으면 대화 히스토리 저장
+    content_to_save = state.get("tool_result") or state.get("final_answer") or "저장할 내용이 없습니다."
+
+    if tool_logger:
+        tool_logger.write(f"저장할 내용 길이: {len(content_to_save)} 글자")
+
+    # 2. 파일명 생성
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"response_{timestamp}.txt"
+
+    if tool_logger:
+        tool_logger.write(f"파일명: {filename}")
+
+    # 3. 파일 저장
+    if exp_manager:
+        # ExperimentManager의 save_output 메서드 사용
+        file_path = exp_manager.save_output(filename, content_to_save)
+
+        if tool_logger:
+            tool_logger.write(f"파일 저장 완료: {file_path}")
+            tool_logger.close()
+
+        # 성공 메시지
+        answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
+    else:
+        # ExperimentManager 없을 때 (테스트 환경)
+        output_dir = "outputs"
+        os.makedirs(output_dir, exist_ok=True)
+        file_path = os.path.join(output_dir, filename)
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content_to_save)
+
+        if tool_logger:
+            tool_logger.write(f"파일 저장 완료: {file_path}")
+            tool_logger.close()
+
+        answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
+
+    # 4. 최종 답변 저장
+    state["final_answer"] = answer
+
+    return state
+```
+
+---
+
 ## Agent 아키텍처 다이어그램
 
 ### 1. LangGraph Agent 구조
@@ -473,6 +1045,7 @@ class AgentState(TypedDict):
     tool_choice: str
     tool_result: str
     final_answer: str
+    messages: list  # 대화 히스토리
 
 def router_node(state: AgentState, exp_manager=None):
     """
@@ -987,12 +1560,194 @@ experiments/
 
 ## Feature 브랜치
 
-**3단계: AI Agent 메인 구현 (최현화)**
-- `3-1. feature/llm-client` - LLM 클라이언트 구현
-- `3-2. feature/memory` - 대화 메모리 시스템
-- `3-3. feature/agent-graph` - LangGraph 그래프 구현
-- `3-4. feature/tool-summarize` - 논문 요약 도구
-- `3-5. feature/integration` - 통합 및 main.py
+### 구현 우선순위 및 순서
+
+**Phase 1: 기반 시스템 구축 (필수 선행 작업)**
+
+1. **`3-1. feature/llm-client`** - LLM 클라이언트 구현
+   - **우선순위**: P0 (최우선)
+   - **이유**: 모든 도구가 LLM을 사용하므로 가장 먼저 구현 필요
+   - **구현 내용**:
+     - ChatOpenAI + Solar(Upstage) 다중 LLM 지원
+     - 에러 핸들링 및 재시도 로직 (tenacity)
+     - 토큰 사용량 추적 (get_openai_callback)
+     - 스트리밍 응답 처리 (astream)
+     - LLM 선택 전략 (작업 유형별)
+   - **파일**: `src/llm/client.py`
+   - **의존성**: 없음
+
+2. **`3-2. feature/agent-base`** - Agent 그래프 기본 구조
+   - **우선순위**: P0 (최우선)
+   - **이유**: 도구들을 연결하는 Agent 프레임워크 먼저 구축
+   - **구현 내용**:
+     - AgentState 정의 (question, difficulty, tool_choice, messages, final_answer)
+     - 빈 노드 함수들 정의 (placeholder)
+     - 라우터 노드 기본 구조
+     - StateGraph 생성 및 조건부 엣지 설정
+     - 그래프 컴파일
+   - **파일**: `src/agent/state.py`, `src/agent/graph.py`, `src/agent/nodes.py`
+   - **의존성**: `3-1. feature/llm-client`
+
+---
+
+**Phase 2: 간단한 도구 구현 (DB/API 불필요)**
+
+3. **`3-3. feature/tool-general`** - 일반 답변 도구
+   - **우선순위**: P1
+   - **이유**: 가장 간단한 도구, DB 필요 없음, Agent 테스트 가능
+   - **구현 내용**:
+     - general_answer_node 함수 구현
+     - 난이도별 SystemMessage 설정
+     - LLM 직접 호출
+     - ExperimentManager 통합
+   - **파일**: `src/agent/nodes.py`
+   - **의존성**: `3-2. feature/agent-base`
+
+4. **`3-4. feature/tool-save`** - 파일 저장 도구
+   - **우선순위**: P1
+   - **이유**: 간단한 도구, 파일 시스템만 사용
+   - **구현 내용**:
+     - save_file_node 함수 구현
+     - ExperimentManager.save_output() 사용
+     - 파일명 자동 생성 (timestamp)
+     - outputs/ 폴더에 저장
+   - **파일**: `src/agent/nodes.py`
+   - **의존성**: `3-2. feature/agent-base`
+
+---
+
+**Phase 3: DB/API 통합 도구 구현 (팀원 협업 필요)**
+
+5. **`3-5. feature/tool-rag`** - RAG 검색 도구 ⭐ (신준엽 협업)
+   - **우선순위**: P1
+   - **이유**: 핵심 기능, 신준엽 팀원의 RAG 시스템과 통합 필요
+   - **구현 내용**:
+     - search_paper_node 함수 구현
+     - pgvector 유사도 검색 (Top-5)
+     - PostgreSQL papers 테이블 메타데이터 조회
+     - 난이도별 프롬프트 구성
+     - ExperimentManager 통합 (DB 쿼리 기록, 검색 결과 저장)
+   - **파일**: `src/agent/nodes.py`
+   - **의존성**: `3-2. feature/agent-base`, 신준엽의 RAG 시스템
+   - **협업**: 신준엽 팀원과 Vector DB 스키마 및 검색 로직 조율
+
+6. **`3-6. feature/tool-glossary`** - 용어집 도구 ⭐ (신준엽 협업)
+   - **우선순위**: P1
+   - **이유**: 핵심 기능, 신준엽 팀원의 용어집 시스템과 통합 필요
+   - **구현 내용**:
+     - glossary_node 함수 구현
+     - PostgreSQL glossary 테이블 검색
+     - 난이도별 설명 제공 (easy_explanation / hard_explanation)
+     - 용어 추출 로직 (LLM 사용)
+     - ExperimentManager 통합
+   - **파일**: `src/agent/nodes.py`
+   - **의존성**: `3-2. feature/agent-base`, 신준엽의 용어집 시스템
+   - **협업**: 신준엽 팀원과 glossary 테이블 스키마 조율
+
+7. **`3-7. feature/tool-web`** - 웹 검색 도구 ⭐ (임예슬 협업)
+   - **우선순위**: P1
+   - **이유**: 핵심 기능, 임예슬 팀원의 Tavily API 통합 필요
+   - **구현 내용**:
+     - web_search_node 함수 구현
+     - Tavily Search API 호출
+     - 검색 결과 LLM 정리
+     - 난이도별 프롬프트 적용
+     - ExperimentManager 통합
+   - **파일**: `src/agent/nodes.py`
+   - **의존성**: `3-2. feature/agent-base`, 임예슬의 Tavily API 설정
+   - **협업**: 임예슬 팀원과 Tavily API 키 및 사용법 조율
+
+---
+
+**Phase 4: 복잡한 도구 구현**
+
+8. **`3-8. feature/tool-summarize`** - 논문 요약 도구
+   - **우선순위**: P2
+   - **이유**: 복잡한 도구, load_summarize_chain 사용
+   - **구현 내용**:
+     - summarize_paper 함수 구현
+     - PostgreSQL papers 테이블에서 논문 검색
+     - pgvector에서 논문 전체 청크 조회 (filter by paper_id)
+     - load_summarize_chain (stuff, map_reduce, refine)
+     - 난이도별 프롬프트 설계
+     - ExperimentManager 통합
+   - **파일**: `src/tools/summarize.py`, `src/agent/nodes.py`
+   - **의존성**: `3-2. feature/agent-base`, `3-5. feature/tool-rag` (Vector DB 공유)
+
+---
+
+**Phase 5: 대화 메모리 및 최종 통합**
+
+9. **`3-9. feature/memory`** - 대화 메모리 시스템
+   - **우선순위**: P2
+   - **이유**: 선택 사항, 대화 히스토리 관리 기능
+   - **구현 내용**:
+     - ConversationBufferMemory 구현
+     - 대화 히스토리 관리 (add_user_message, add_ai_message)
+     - 세션 기반 메모리 (PostgresChatMessageHistory, 선택)
+     - Agent와 메모리 통합
+   - **파일**: `src/memory/chat_history.py`
+   - **의존성**: 모든 도구 구현 완료 후
+
+10. **`3-10. feature/integration`** - 최종 통합 및 main.py
+    - **우선순위**: P2
+    - **이유**: 모든 모듈 통합 및 테스트
+    - **구현 내용**:
+      - main.py 작성 (Agent 실행 루프)
+      - 모든 노드 함수 통합
+      - ExperimentManager 전역 통합
+      - 테스트 질문 리스트로 Agent 실행
+      - 디버깅 및 오류 수정
+    - **파일**: `main.py`
+    - **의존성**: 모든 Feature 브랜치 (3-1 ~ 3-9)
+
+---
+
+### 브랜치 병합 순서
+
+```
+3-1. feature/llm-client
+  ↓
+3-2. feature/agent-base (의존: 3-1)
+  ↓
+병합 → develop
+  ↓
+3-3. feature/tool-general (의존: 3-2)
+3-4. feature/tool-save (의존: 3-2)
+  ↓
+병합 → develop (간단한 도구 2개 완료, Agent 테스트 가능)
+  ↓
+3-5. feature/tool-rag (의존: 3-2, 신준엽 협업)
+3-6. feature/tool-glossary (의존: 3-2, 신준엽 협업)
+3-7. feature/tool-web (의존: 3-2, 임예슬 협업)
+  ↓
+병합 → develop (핵심 도구 3개 완료)
+  ↓
+3-8. feature/tool-summarize (의존: 3-2, 3-5)
+  ↓
+병합 → develop (6개 도구 모두 완료)
+  ↓
+3-9. feature/memory (의존: 모든 도구)
+  ↓
+병합 → develop
+  ↓
+3-10. feature/integration (의존: 3-1 ~ 3-9)
+  ↓
+최종 병합 → develop → main
+```
+
+### 협업 포인트
+
+**신준엽 팀원과 협업 필요:**
+- RAG 시스템 (Vector DB 스키마, 검색 로직)
+- 용어집 시스템 (glossary 테이블 스키마)
+
+**임예슬 팀원과 협업 필요:**
+- Tavily Search API (API 키, 사용법)
+
+**팀 전체 협업:**
+- ExperimentManager 통합 (모든 도구에서 사용)
+- 프롬프트 엔지니어링 (난이도별 프롬프트 검토)
 
 ---
 
