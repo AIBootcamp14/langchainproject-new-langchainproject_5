@@ -42,9 +42,9 @@ def glossary_node(state: AgentState, exp_manager=None):
         llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)  # 용어 추출용 LLM
         extract_prompt = f"""다음 질문에서 핵심 용어를 추출하세요. 용어만 반환하세요:
 
-질문: {question}
+                             질문: {question}
 
-용어:"""
+                             용어:"""
 
         term = llm.invoke(extract_prompt).content.strip()  # 용어 추출
 
@@ -115,10 +115,10 @@ def glossary_node(state: AgentState, exp_manager=None):
     # -------------- 최종 답변 구성 -------------- #
     answer = f"""**용어**: {term_name}
 
-**카테고리**: {category}
+                 **카테고리**: {category}
 
-**설명**:
-{explanation}"""
+                 **설명**:
+                 {explanation}"""
 
     if tool_logger:
         tool_logger.write(f"답변 생성 완료: {len(answer)} 글자")
