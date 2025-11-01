@@ -1,0 +1,98 @@
+# ------------------------------- LLM 모델 설정 ------------------------------- #
+# OpenAI 및 Solar API 모델 설정 파일
+
+# LLM 모델 설정
+llm:
+  # 개발 환경 설정
+  development:
+    provider: openai                            # LLM 제공자 (openai, solar)
+    model: gpt-3.5-turbo                        # 모델명 (비용 절감)
+    temperature: 0.7                            # 답변 생성 창의성 (0.0~1.0)
+    max_tokens: 2000                            # 최대 토큰 수
+    streaming: true                             # 스트리밍 응답 활성화
+    request_timeout: 30                         # 요청 타임아웃 (초)
+    max_retries: 2                              # 최대 재시도 횟수
+
+  # 프로덕션 환경 설정
+  production:
+    provider: openai                            # LLM 제공자 (openai, solar)
+    model: gpt-4                                # 모델명 (높은 품질)
+    temperature: 0.7                            # 답변 생성 창의성 (0.0~1.0)
+    max_tokens: 3000                            # 최대 토큰 수
+    streaming: true                             # 스트리밍 응답 활성화
+    request_timeout: 60                         # 요청 타임아웃 (초)
+    max_retries: 3                              # 최대 재시도 횟수
+
+# Solar LLM 설정 (한국어 특화)
+solar:
+  # 개발 환경
+  development:
+    model: solar-pro                            # Solar 모델명
+    temperature: 0.7                            # 답변 생성 창의성
+    max_tokens: 2000                            # 최대 토큰 수
+    streaming: true                             # 스트리밍 응답 활성화
+    request_timeout: 30                         # 요청 타임아웃 (초)
+
+  # 프로덕션 환경
+  production:
+    model: solar-pro                            # Solar 모델명
+    temperature: 0.7                            # 답변 생성 창의성
+    max_tokens: 3000                            # 최대 토큰 수
+    streaming: true                             # 스트리밍 응답 활성화
+    request_timeout: 60                         # 요청 타임아웃 (초)
+
+# Embeddings 설정
+embeddings:
+  provider: openai                              # 임베딩 제공자
+  model: text-embedding-3-small                 # 임베딩 모델 (비용 효율적)
+  dimension: 1536                               # 임베딩 차원 수
+  batch_size: 100                               # 배치 처리 크기
+  max_retries: 3                                # 최대 재시도 횟수
+  request_timeout: 30                           # 요청 타임아웃 (초)
+
+# RAG 검색 설정
+rag:
+  chunk_size: 1000                              # 청크 크기 (문자 단위)
+  chunk_overlap: 200                            # 청크 오버랩 (문자 단위)
+  top_k: 5                                      # 검색 결과 개수
+  search_type: mmr                              # 검색 타입 (similarity, mmr)
+  mmr_lambda: 0.5                               # MMR 다양성 파라미터 (0~1)
+  score_threshold: 0.7                          # 유사도 점수 임계값
+
+# Temperature 용도별 설정
+temperature_settings:
+  routing: 0.0                                  # 라우팅 결정 (결정론적)
+  classification: 0.0                           # 분류 작업 (일관성)
+  summarization: 0.3                            # 요약 작업 (약간의 창의성)
+  answer_generation: 0.7                        # 답변 생성 (자연스러움)
+  creative_writing: 0.9                         # 창의적 글쓰기 (높은 창의성)
+
+# 비용 제한 설정
+cost_limits:
+  daily_budget_usd: 10.0                        # 일일 예산 (달러)
+  daily_budget_krw: 13000                       # 일일 예산 (원화)
+  alert_threshold: 0.8                          # 경고 임계값 (80%)
+  auto_stop: true                               # 예산 초과 시 자동 중지
+
+# 하이브리드 전략 설정 (난이도별 모델 선택)
+hybrid_strategy:
+  enabled: true                                 # 하이브리드 전략 활성화
+  rules:
+    - condition:
+        difficulty: easy                        # Easy 모드
+        language: ko                            # 한국어
+      model:
+        provider: solar                         # Solar 사용 (한국어 특화)
+        name: solar-pro
+
+    - condition:
+        difficulty: hard                        # Hard 모드
+      model:
+        provider: openai                        # OpenAI 사용 (기술적 정확도)
+        name: gpt-4
+
+    - condition:
+        default: true                           # 기본값
+      model:
+        provider: openai                        # OpenAI GPT-3.5
+        name: gpt-3.5-turbo
