@@ -83,13 +83,13 @@ hybrid_strategy:
         language: ko                            # 한국어
       model:
         provider: solar                         # Solar 사용 (한국어 특화)
-        name: solar-pro
+        name: solar-pro2
 
     - condition:
         difficulty: hard                        # Hard 모드
       model:
         provider: openai                        # OpenAI 사용 (기술적 정확도)
-        name: gpt-4
+        name: gpt-5
 
     - condition:
         default: true                           # 기본값
