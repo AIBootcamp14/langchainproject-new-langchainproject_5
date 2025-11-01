@@ -511,29 +511,40 @@ psql -U your_username -d papers
 
 ## 8. Python에서 DB 연결
 
-### 8.1 Connection Pool 구현
+### 8.1 config_loader를 활용한 DB 연결
+
+**설정 파일 구조**:
+```
+.env (환경 변수)
+  ↓
+configs/db_config.yaml (설정 파일, ${VAR} 형태로 환경 변수 참조)
+  ↓
+src/utils/config_loader.py (YAML 로드 및 환경 변수 치환)
+  ↓
+src/utils/db.py (Connection Pool)
+```
+
+### 8.2 Connection Pool 구현
 
 **파일 경로**: `src/utils/db.py`
 
 ```python
 # src/utils/db.py
 
-# ------------------------- 표준 라이브러리 ------------------------- #
-import os
-from dotenv import load_dotenv
-
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 import psycopg2
 from psycopg2 import pool
 
-# .env 파일 로드
-load_dotenv()
+# ------------------------- 프로젝트 모듈 ------------------------- #
+from src.utils.config_loader import get_db_config
 
 
 # ==================== PostgreSQL Connection Pool ==================== #
 class PostgreSQLConnectionPool:
     """
     PostgreSQL 연결 풀 관리 클래스
+
+    configs/db_config.yaml 설정 파일을 사용하여 연결합니다.
     """
 
     def __init__(self, min_connections=1, max_connections=10):
@@ -544,14 +555,18 @@ class PostgreSQLConnectionPool:
             min_connections: 최소 연결 수
             max_connections: 최대 연결 수
         """
+        # configs/db_config.yaml에서 설정 로드
+        db_config = get_db_config()
+        pg_config = db_config['postgresql']
+
         self.connection_pool = psycopg2.pool.SimpleConnectionPool(
             minconn=min_connections,                        # 최소 연결 수
             maxconn=max_connections,                        # 최대 연결 수
-            host=os.getenv("POSTGRES_HOST"),
-            port=os.getenv("POSTGRES_PORT"),
-            database=os.getenv("POSTGRES_DB"),
-            user=os.getenv("POSTGRES_USER"),
-            password=os.getenv("POSTGRES_PASSWORD")
+            host=pg_config['host'],
+            port=pg_config['port'],
+            database=pg_config['database'],
+            user=pg_config['user'],
+            password=pg_config['password']
         )
 
     # ---------------------- 연결 가져오기 ---------------------- #
@@ -942,20 +957,21 @@ delete_paper(paper_id=100)
 
 # ------------------------- 표준 라이브러리 ------------------------- #
 import os
-from dotenv import load_dotenv
 
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 from langchain_openai import OpenAIEmbeddings
 from langchain_postgres.vectorstores import PGVector
 
-# .env 파일 로드
-load_dotenv()
+# ------------------------- 프로젝트 모듈 ------------------------- #
+from src.utils.config_loader import get_postgres_connection_string, get_model_config
 
 
 # ==================== PGVector VectorStore 초기화 ==================== #
 class PaperVectorStore:
     """
     논문 벡터 검색을 위한 PGVector 클래스
+
+    configs/db_config.yaml 및 configs/model_config.yaml 설정을 사용합니다.
     """
 
     def __init__(self, collection_name="paper_chunks"):
@@ -965,19 +981,18 @@ class PaperVectorStore:
         Args:
             collection_name: 컬렉션 이름 (paper_chunks, paper_abstracts, glossary_embeddings)
         """
+        # configs/model_config.yaml에서 모델 설정 로드
+        model_config = get_model_config()
+        embedding_config = model_config['embeddings']
+
         # OpenAI Embeddings 초기화
         self.embeddings = OpenAIEmbeddings(
-            model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"),
+            model=embedding_config['model'],
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
 
-        # PostgreSQL 연결 문자열 생성
-        self.connection_string = (
-            f"postgresql://"
-            f"{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
-            f"@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}"
-            f"/{os.getenv('POSTGRES_DB')}"
-        )
+        # configs/db_config.yaml에서 PostgreSQL 연결 문자열 가져오기
+        self.connection_string = get_postgres_connection_string()
 
         # PGVector VectorStore 초기화
         self.vectorstore = PGVector(
