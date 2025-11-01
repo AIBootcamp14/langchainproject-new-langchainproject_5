@@ -308,7 +308,9 @@ print(f"POSTGRES_DB: {os.getenv('POSTGRES_DB')}")
 
 ```bash
 # ---------------------- PostgreSQL 접속 ---------------------- #
-psql -U langchain -d postgres
+psql -U langchain -d postgres -h localhost
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- papers 데이터베이스 생성 ---------------------- #
 CREATE DATABASE papers;
@@ -517,7 +519,9 @@ CREATE INDEX IF NOT EXISTS idx_query_logs_success ON query_logs(success);
 
 ```bash
 # ---------------------- SQL 스크립트 실행 ---------------------- #
-psql -U langchain -d papers -f database/schema.sql
+psql -U langchain -d papers -h localhost -f database/schema.sql
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 출력 예시 ---------------------- #
 # CREATE EXTENSION
@@ -531,7 +535,9 @@ psql -U langchain -d papers -f database/schema.sql
 
 ```bash
 # ---------------------- PostgreSQL 접속 ---------------------- #
-psql -U langchain -d papers
+psql -U langchain -d papers -h localhost
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 테이블 목록 확인 ---------------------- #
 \dt
@@ -1153,7 +1159,9 @@ docs_with_scores = vector_store.similarity_search_with_score(query, k=5)
 
 ```bash
 # ---------------------- 전체 DB 백업 ---------------------- #
-pg_dump -U langchain -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).dump
+pg_dump -U langchain -h localhost -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).dump
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # -F c: Custom 포맷 (압축 및 병렬 복구 지원)
 # -f: 출력 파일명
@@ -1163,23 +1171,33 @@ pg_dump -U langchain -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).dump
 
 ```bash
 # ---------------------- papers 테이블만 백업 ---------------------- #
-pg_dump -U langchain -d papers -t papers -F c -f papers_backup.dump
+pg_dump -U langchain -h localhost -d papers -t papers -F c -f papers_backup.dump
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- glossary 테이블만 백업 ---------------------- #
-pg_dump -U langchain -d papers -t glossary -F c -f glossary_backup.dump
+pg_dump -U langchain -h localhost -d papers -t glossary -F c -f glossary_backup.dump
+
+# 비밀번호 입력: dusrufdmlalswhr
 ```
 
 ### 11.3 데이터베이스 복원
 
 ```bash
 # ---------------------- 새 데이터베이스 생성 ---------------------- #
-createdb -U langchain papers_restored
+createdb -U langchain -h localhost papers_restored
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 백업 파일 복원 ---------------------- #
-pg_restore -U langchain -d papers_restored backup_papers_20251101_120000.dump
+pg_restore -U langchain -h localhost -d papers_restored backup_papers_20251101_120000.dump
+
+# 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 복원 확인 ---------------------- #
-psql -U langchain -d papers_restored -c "SELECT COUNT(*) FROM papers"
+psql -U langchain -d papers_restored -h localhost -c "SELECT COUNT(*) FROM papers"
+
+# 비밀번호 입력: dusrufdmlalswhr
 ```
 
 ### 11.4 자동 백업 스크립트
@@ -1258,7 +1276,9 @@ sudo make install
 sudo systemctl restart postgresql
 
 # Extension 생성
-psql -U langchain -d papers -c "CREATE EXTENSION vector;"
+psql -U langchain -d papers -h localhost -c "CREATE EXTENSION vector;"
+
+# 비밀번호 입력: dusrufdmlalswhr
 ```
 
 ### 12.3 권한 오류
@@ -1270,8 +1290,8 @@ ERROR: permission denied for table papers
 
 **해결:**
 ```bash
-# PostgreSQL 접속
-psql -U postgres -d papers
+# PostgreSQL 접속 (postgres 관리자)
+sudo -u postgres psql -d papers
 
 # 권한 부여
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO langchain;
