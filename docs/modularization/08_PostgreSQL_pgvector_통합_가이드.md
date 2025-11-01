@@ -274,7 +274,7 @@ POSTGRES_DB=papers
 
 ```bash
 # .env 파일 편집
-nano .env
+vi .env
 
 # 예시 (실제 값으로 변경)
 POSTGRES_USER=langchain
