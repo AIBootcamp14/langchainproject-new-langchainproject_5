@@ -184,6 +184,43 @@ ALTER USER langchain WITH SUPERUSER;
 
 **확인**: langchain 사용자가 목록에 나타나야 합니다.
 
+### 3.3 비밀번호 자동 인증 설정 (~/.pgpass)
+
+이 설정을 완료하면 이후 모든 psql 명령어에서 `-h localhost`와 비밀번호 입력 없이 간편하게 접속할 수 있습니다.
+
+```bash
+# ---------------------- ~/.pgpass 파일 생성 ---------------------- #
+cat > ~/.pgpass << 'EOF'
+localhost:5432:*:langchain:dusrufdmlalswhr
+EOF
+
+# ---------------------- 파일 권한 설정 (필수!) ---------------------- #
+chmod 600 ~/.pgpass
+
+# ---------------------- 설정 확인 ---------------------- #
+ls -la ~/.pgpass
+
+# ---------------------- 출력 예시 ---------------------- #
+# -rw------- 1 ieyeppo ieyeppo 44 Nov  1 12:00 /home/ieyeppo/.pgpass
+```
+
+**~/.pgpass 파일 형식**: `호스트:포트:데이터베이스:사용자명:비밀번호`
+- `localhost:5432:*:langchain:dusrufdmlalswhr`
+- `*`는 모든 데이터베이스를 의미
+
+**설정 후 사용 방법**:
+```bash
+# ---------------------- 비밀번호 입력 없이 간편 접속! ---------------------- #
+psql -h localhost -U langchain -d papers
+
+# 또는 더 간단하게 (기본 사용자명이 langchain일 경우)
+psql -h localhost -d papers
+```
+
+**보안 주의사항**:
+- 파일 권한은 반드시 `600` (소유자만 읽기/쓰기)이어야 합니다
+- 권한이 잘못되면 PostgreSQL이 파일을 무시합니다
+
 ---
 
 ## 4. pgvector Extension 설치
@@ -310,7 +347,7 @@ print(f"POSTGRES_DB: {os.getenv('POSTGRES_DB')}")
 # ---------------------- PostgreSQL 접속 ---------------------- #
 psql -U langchain -d postgres -h localhost
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- papers 데이터베이스 생성 ---------------------- #
 CREATE DATABASE papers;
@@ -521,7 +558,7 @@ CREATE INDEX IF NOT EXISTS idx_query_logs_success ON query_logs(success);
 # ---------------------- SQL 스크립트 실행 ---------------------- #
 psql -U langchain -d papers -h localhost -f database/schema.sql
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 출력 예시 ---------------------- #
 # CREATE EXTENSION
@@ -537,7 +574,7 @@ psql -U langchain -d papers -h localhost -f database/schema.sql
 # ---------------------- PostgreSQL 접속 ---------------------- #
 psql -U langchain -d papers -h localhost
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 테이블 목록 확인 ---------------------- #
 \dt
@@ -1161,7 +1198,7 @@ docs_with_scores = vector_store.similarity_search_with_score(query, k=5)
 # ---------------------- 전체 DB 백업 ---------------------- #
 pg_dump -U langchain -h localhost -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).dump
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # -F c: Custom 포맷 (압축 및 병렬 복구 지원)
 # -f: 출력 파일명
@@ -1173,12 +1210,12 @@ pg_dump -U langchain -h localhost -d papers -F c -f backup_papers_$(date +%Y%m%d
 # ---------------------- papers 테이블만 백업 ---------------------- #
 pg_dump -U langchain -h localhost -d papers -t papers -F c -f papers_backup.dump
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- glossary 테이블만 백업 ---------------------- #
 pg_dump -U langchain -h localhost -d papers -t glossary -F c -f glossary_backup.dump
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 ```
 
 ### 11.3 데이터베이스 복원
@@ -1187,17 +1224,17 @@ pg_dump -U langchain -h localhost -d papers -t glossary -F c -f glossary_backup.
 # ---------------------- 새 데이터베이스 생성 ---------------------- #
 createdb -U langchain -h localhost papers_restored
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 백업 파일 복원 ---------------------- #
 pg_restore -U langchain -h localhost -d papers_restored backup_papers_20251101_120000.dump
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 
 # ---------------------- 복원 확인 ---------------------- #
 psql -U langchain -d papers_restored -h localhost -c "SELECT COUNT(*) FROM papers"
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 ```
 
 ### 11.4 자동 백업 스크립트
@@ -1278,7 +1315,7 @@ sudo systemctl restart postgresql
 # Extension 생성
 psql -U langchain -d papers -h localhost -c "CREATE EXTENSION vector;"
 
-# 비밀번호 입력: dusrufdmlalswhr
+# ~/.pgpass 미설정 시 비밀번호 입력: dusrufdmlalswhr
 ```
 
 ### 12.3 권한 오류
