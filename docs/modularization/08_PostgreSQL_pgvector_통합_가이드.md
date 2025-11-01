@@ -47,9 +47,9 @@
 
 ```
 PostgreSQL (papers DB)
-├── papers 테이블 (관계형)           # 논문 메타데이터
-├── glossary 테이블 (관계형)         # 용어집
-├── query_logs 테이블 (관계형)       # 사용자 질의 로그
+├── papers 테이블 (관계형)             # 논문 메타데이터
+├── glossary 테이블 (관계형)           # 용어집
+├── query_logs 테이블 (관계형)         # 사용자 질의 로그
 ├── paper_chunks (pgvector)          # 논문 본문 청크 임베딩
 ├── paper_abstracts (pgvector)       # 논문 초록 임베딩
 └── glossary_embeddings (pgvector)   # 용어집 임베딩
