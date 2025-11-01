@@ -211,10 +211,8 @@ ls -la ~/.pgpass
 **설정 후 사용 방법**:
 ```bash
 # ---------------------- 비밀번호 입력 없이 간편 접속! ---------------------- #
+# 주의: -U langchain을 반드시 명시해야 합니다 (생략 시 OS 사용자명으로 접속 시도)
 psql -h localhost -U langchain -d papers
-
-# 또는 더 간단하게 (기본 사용자명이 langchain일 경우)
-psql -h localhost -d papers
 ```
 
 **보안 주의사항**:
