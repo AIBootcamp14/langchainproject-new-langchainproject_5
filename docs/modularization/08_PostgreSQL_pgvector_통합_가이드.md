@@ -150,24 +150,39 @@ psql --version
 4. 설치 경로 및 비밀번호 설정
 5. Port 5432 (기본값) 사용
 
-### 3.2 PostgreSQL 기본 설정
+### 3.2 PostgreSQL 사용자 생성 및 설정
+
+**중요**: 이 단계는 반드시 먼저 완료해야 합니다!
 
 ```bash
 # ---------------------- postgres 사용자로 접속 ---------------------- #
 sudo -u postgres psql
 
-# ---------------------- 새 사용자 생성 ---------------------- #
-CREATE USER your_username WITH PASSWORD 'your_password';
+# ---------------------- langchain 사용자 생성 ---------------------- #
+# .env 파일의 POSTGRES_USER, POSTGRES_PASSWORD와 동일하게 설정
+CREATE USER langchain WITH PASSWORD 'dusrufdmlalswhr';
 
 # ---------------------- 데이터베이스 생성 권한 부여 ---------------------- #
-ALTER USER your_username CREATEDB;
+ALTER USER langchain CREATEDB;
 
 # ---------------------- 슈퍼유저 권한 부여 (개발 환경) ---------------------- #
-ALTER USER your_username WITH SUPERUSER;
+ALTER USER langchain WITH SUPERUSER;
+
+# ---------------------- 사용자 생성 확인 ---------------------- #
+\du
+
+# ---------------------- 출력 예시 ---------------------- #
+#                                   List of roles
+#  Role name |                         Attributes
+# -----------+------------------------------------------------------------
+#  langchain | Superuser, Create DB
+#  postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS
 
 # ---------------------- 종료 ---------------------- #
 \q
 ```
+
+**확인**: langchain 사용자가 목록에 나타나야 합니다.
 
 ---
 
@@ -194,24 +209,49 @@ sudo systemctl restart postgresql
 
 ### 4.2 Extension 활성화
 
+**방법 1: postgres 관리자로 활성화 (권장)**
+
 ```bash
-# ---------------------- PostgreSQL 접속 ---------------------- #
-psql -U your_username -d postgres
+# ---------------------- postgres 사용자로 접속 ---------------------- #
+sudo -u postgres psql
 
 # ---------------------- vector extension 생성 ---------------------- #
 CREATE EXTENSION vector;
 
 # ---------------------- Extension 확인 ---------------------- #
-SELECT * FROM pg_extension WHERE extname = 'vector';
+\dx
 
 # ---------------------- 출력 예시 ---------------------- #
-# extname | extowner | extnamespace | extrelocatable | extversion
-# --------+----------+--------------+----------------+------------
-# vector  |    10    |      2200    |      false     |  0.5.0
+#                  List of installed extensions
+#   Name   | Version |   Schema   |         Description
+# ---------+---------+------------+------------------------------
+#  plpgsql | 1.0     | pg_catalog | PL/pgSQL procedural language
+#  vector  | 0.5.0   | public     | vector data type and ivfflat...
 
 # ---------------------- 종료 ---------------------- #
 \q
 ```
+
+**방법 2: langchain 사용자로 활성화**
+
+```bash
+# ---------------------- langchain 사용자로 접속 ---------------------- #
+psql -U langchain -d postgres -h localhost
+
+# 비밀번호 입력 프롬프트:
+# Password for user langchain: dusrufdmlalswhr
+
+# ---------------------- vector extension 생성 ---------------------- #
+CREATE EXTENSION vector;
+
+# ---------------------- Extension 확인 ---------------------- #
+\dx
+
+# ---------------------- 종료 ---------------------- #
+\q
+```
+
+**참고**: `-h localhost`를 추가하면 TCP/IP 연결을 사용하여 비밀번호 인증이 정상 작동합니다.
 
 ---
 
@@ -223,8 +263,8 @@ SELECT * FROM pg_extension WHERE extname = 'vector';
 
 ```bash
 # ==================== PostgreSQL 설정 ==================== #
-POSTGRES_USER=your_username
-POSTGRES_PASSWORD=your_password
+POSTGRES_USER=langchain
+POSTGRES_PASSWORD=dusrufdmlalswhr
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=papers
@@ -237,8 +277,8 @@ POSTGRES_DB=papers
 nano .env
 
 # 예시 (실제 값으로 변경)
-POSTGRES_USER=langchain_user
-POSTGRES_PASSWORD=SecurePassword123!
+POSTGRES_USER=langchain
+POSTGRES_PASSWORD=dusrufdmlalswhr
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=papers
@@ -268,7 +308,7 @@ print(f"POSTGRES_DB: {os.getenv('POSTGRES_DB')}")
 
 ```bash
 # ---------------------- PostgreSQL 접속 ---------------------- #
-psql -U your_username -d postgres
+psql -U langchain -d postgres
 
 # ---------------------- papers 데이터베이스 생성 ---------------------- #
 CREATE DATABASE papers;
@@ -279,7 +319,7 @@ CREATE DATABASE papers;
 # ---------------------- 출력 예시 ---------------------- #
 #      Name       |  Owner   | Encoding | Collate | Ctype
 # ----------------+----------+----------+---------+---------
-#  papers         | langchain_user | UTF8     | en_US.UTF-8 | en_US.UTF-8
+#  papers         | langchain | UTF8     | en_US.UTF-8 | en_US.UTF-8
 #  postgres       | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8
 
 # ---------------------- papers DB로 전환 ---------------------- #
@@ -477,7 +517,7 @@ CREATE INDEX IF NOT EXISTS idx_query_logs_success ON query_logs(success);
 
 ```bash
 # ---------------------- SQL 스크립트 실행 ---------------------- #
-psql -U your_username -d papers -f database/schema.sql
+psql -U langchain -d papers -f database/schema.sql
 
 # ---------------------- 출력 예시 ---------------------- #
 # CREATE EXTENSION
@@ -491,7 +531,7 @@ psql -U your_username -d papers -f database/schema.sql
 
 ```bash
 # ---------------------- PostgreSQL 접속 ---------------------- #
-psql -U your_username -d papers
+psql -U langchain -d papers
 
 # ---------------------- 테이블 목록 확인 ---------------------- #
 \dt
@@ -500,9 +540,9 @@ psql -U your_username -d papers
 #          List of relations
 #  Schema |    Name     | Type  |     Owner
 # --------+-------------+-------+----------------
-#  public | glossary    | table | langchain_user
-#  public | papers      | table | langchain_user
-#  public | query_logs  | table | langchain_user
+#  public | glossary    | table | langchain
+#  public | papers      | table | langchain
+#  public | query_logs  | table | langchain
 
 # ---------------------- papers 테이블 구조 확인 ---------------------- #
 \d papers
@@ -1113,7 +1153,7 @@ docs_with_scores = vector_store.similarity_search_with_score(query, k=5)
 
 ```bash
 # ---------------------- 전체 DB 백업 ---------------------- #
-pg_dump -U your_username -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).dump
+pg_dump -U langchain -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).dump
 
 # -F c: Custom 포맷 (압축 및 병렬 복구 지원)
 # -f: 출력 파일명
@@ -1123,23 +1163,23 @@ pg_dump -U your_username -d papers -F c -f backup_papers_$(date +%Y%m%d_%H%M%S).
 
 ```bash
 # ---------------------- papers 테이블만 백업 ---------------------- #
-pg_dump -U your_username -d papers -t papers -F c -f papers_backup.dump
+pg_dump -U langchain -d papers -t papers -F c -f papers_backup.dump
 
 # ---------------------- glossary 테이블만 백업 ---------------------- #
-pg_dump -U your_username -d papers -t glossary -F c -f glossary_backup.dump
+pg_dump -U langchain -d papers -t glossary -F c -f glossary_backup.dump
 ```
 
 ### 11.3 데이터베이스 복원
 
 ```bash
 # ---------------------- 새 데이터베이스 생성 ---------------------- #
-createdb -U your_username papers_restored
+createdb -U langchain papers_restored
 
 # ---------------------- 백업 파일 복원 ---------------------- #
-pg_restore -U your_username -d papers_restored backup_papers_20251101_120000.dump
+pg_restore -U langchain -d papers_restored backup_papers_20251101_120000.dump
 
 # ---------------------- 복원 확인 ---------------------- #
-psql -U your_username -d papers_restored -c "SELECT COUNT(*) FROM papers"
+psql -U langchain -d papers_restored -c "SELECT COUNT(*) FROM papers"
 ```
 
 ### 11.4 자동 백업 스크립트
@@ -1194,7 +1234,7 @@ sudo systemctl status postgresql
 sudo systemctl start postgresql
 
 # 연결 테스트
-psql -U your_username -d papers -h localhost
+psql -U langchain -d papers -h localhost
 ```
 
 ### 12.2 pgvector Extension 오류
@@ -1218,7 +1258,7 @@ sudo make install
 sudo systemctl restart postgresql
 
 # Extension 생성
-psql -U your_username -d papers -c "CREATE EXTENSION vector;"
+psql -U langchain -d papers -c "CREATE EXTENSION vector;"
 ```
 
 ### 12.3 권한 오류
@@ -1234,8 +1274,8 @@ ERROR: permission denied for table papers
 psql -U postgres -d papers
 
 # 권한 부여
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_username;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO your_username;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO langchain;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO langchain;
 
 # 종료
 \q
