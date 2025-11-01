@@ -79,8 +79,12 @@ python-dotenv==1.0.0                  # 환경 변수 관리
 
 ```bash
 # ------------------------- 가상 환경 활성화 ------------------------- #
+# 방식 1
 source venv/bin/activate              # Linux/Mac
 # venv\Scripts\activate               # Windows
+
+# 방식 2
+pyenv activate langchain_py3_11_9
 
 # ------------------------- 패키지 설치 ------------------------- #
 pip install -r requirements.txt
