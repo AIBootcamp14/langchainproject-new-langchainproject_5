@@ -4,7 +4,8 @@
 사이드바 UI 컴포넌트
 
 Streamlit 사이드바 구성 요소:
-- 난이도 선택 (Easy/Hard) - 변경 시 새 채팅 생성
+- 난이도 설명 및 선택 (Easy/Hard)
+- 새 채팅 버튼 - 선택된 난이도로 채팅 생성
 - 채팅 목록 (ChatGPT 스타일)
 - 설정 정보 표시
 """
@@ -75,33 +76,28 @@ def render_sidebar(exp_manager=None):
         str: 선택된 난이도 (easy 또는 hard)
     """
     with st.sidebar:
-        # -------------- 난이도 선택 라디오 버튼 -------------- #
+        # -------------- 난이도 설정 섹션 -------------- #
+        st.markdown("### ⚙️ 설정")
+
+        # 난이도 설명 (위쪽에 배치)
+        with st.expander("ℹ️ 난이도 설명", expanded=False):
+            st.markdown("""
+            **🟢 초급 모드**:
+            - 쉬운 용어 사용
+            - 비유와 예시 활용
+            - 수식 최소화
+
+            **🔴 전문가 모드**:
+            - 전문 용어 사용
+            - 수식 및 알고리즘 상세 설명
+            - 기술적 세부사항 포함
+            """)
+
         # 현재 채팅이 있으면 그 난이도를 기본값으로
         current_difficulty = get_current_difficulty()
         default_index = 0 if current_difficulty == "easy" else 1 if current_difficulty else 0
 
-        # 난이도 변경 콜백 함수
-        def on_difficulty_change():
-            """난이도 변경 시 새 채팅 생성"""
-            new_difficulty = st.session_state.difficulty_selector
-
-            # 첫 실행이 아니고, 현재 채팅이 있고, 실제로 난이도가 변경된 경우만
-            if "difficulty_initialized" in st.session_state and st.session_state.current_chat_id:
-                current_chat_difficulty = get_current_difficulty()
-
-                # 현재 채팅의 난이도와 다른 경우만 새 채팅 생성
-                if current_chat_difficulty and current_chat_difficulty != new_difficulty:
-                    if exp_manager:
-                        exp_manager.log_ui_interaction(
-                            f"난이도 변경: {current_chat_difficulty} → {new_difficulty} (새 채팅 생성)"
-                        )
-                    create_new_chat(new_difficulty)
-
-            # 초기화 플래그 설정
-            st.session_state.difficulty_initialized = True
-
-        st.markdown("### ⚙️ 설정")
-
+        # 난이도 선택 라디오 버튼 (콜백 제거)
         difficulty = st.radio(
             "난이도 선택",
             options=["easy", "hard"],
@@ -109,9 +105,18 @@ def render_sidebar(exp_manager=None):
             index=default_index,
             help="답변의 난이도를 선택하세요",
             key="difficulty_selector",
-            on_change=on_difficulty_change,
             horizontal=True
         )
+
+        # 새 채팅 버튼
+        if st.button("➕ 새 채팅", use_container_width=True, type="primary"):
+            selected_difficulty = st.session_state.difficulty_selector
+            create_new_chat(selected_difficulty)
+
+            if exp_manager:
+                exp_manager.log_ui_interaction(f"새 채팅 생성: 난이도={selected_difficulty}")
+
+            st.rerun()
 
         # 구분선 추가
         st.divider()
@@ -188,23 +193,6 @@ def render_sidebar(exp_manager=None):
 
                 # 그룹 구분선
                 st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
-
-        # 구분선 추가
-        st.divider()
-
-        # -------------- 난이도별 설명 정보 박스 -------------- #
-        with st.expander("ℹ️ 난이도 설명", expanded=False):
-            st.markdown("""
-            **🟢 초급 모드**:
-            - 쉬운 용어 사용
-            - 비유와 예시 활용
-            - 수식 최소화
-
-            **🔴 전문가 모드**:
-            - 전문 용어 사용
-            - 수식 및 알고리즘 상세 설명
-            - 기술적 세부사항 포함
-            """)
 
         # 구분선 추가
         st.divider()
