@@ -44,16 +44,16 @@ def router_node(state: AgentState, exp_manager=None):
     routing_prompt = f"""사용자 질문을 분석하여 적절한 도구를 선택하세요:
 
                          도구 목록:
-                         - search_paper: 논문 데이터베이스에서 검색
-                         - web_search: 웹에서 최신 논문 검색
-                         - glossary: 용어 정의 검색
-                         - summarize: 논문 요약
-                         - save_file: 파일 저장
-                         - general: 일반 답변
+                         - search_paper: 논문 데이터베이스에서 검색 (예: "Transformer 논문", "BERT에 대해 알려줘")
+                         - web_search: 웹에서 최신 논문 검색 (예: "2024년 최신 논문", "최근 연구")
+                         - glossary: 용어 정의 검색 (예: "Attention이 뭐야", "BLEU Score가 뭐야")
+                         - summarize: 논문 요약 (예: "논문 요약해줘", "요약해줘")
+                         - save_file: 파일 저장 (예: "파일로 저장해줘", "다운로드해줘", "저장해줘")
+                         - general: 일반 답변 (위 도구들에 해당하지 않는 경우)
 
                          질문: {question}
 
-                         하나의 도구 이름만 반환하세요:
+                         하나의 도구 이름만 반환하세요 (예: search_paper):
                          """
 
     # -------------- 난이도별 LLM 초기화 -------------- #

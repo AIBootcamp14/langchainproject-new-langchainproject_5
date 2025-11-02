@@ -390,12 +390,16 @@ class ExperimentManager:
         Args:
             filename: 파일명
             content: 내용
+
+        Returns:
+            str: 저장된 파일 경로
         """
         output_path = self.outputs_dir / filename
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
         self.logger.write(f"결과물 저장: {filename}")
+        return str(output_path)
 
 
     # ==================== 평가 지표 관련 메서드 ==================== #
