@@ -125,12 +125,12 @@ def summarize_node(state: AgentState, exp_manager=None):
             connection=os.getenv("DATABASE_URL")
         )
 
-        # paper_id로 필터링하여 모든 청크 조회
-        # PGVector의 similarity_search에서 filter 사용
+        # 논문 제목으로 시맨틱 검색하여 관련 청크 조회
+        # filter는 source 필드와 정확히 매치되지 않을 수 있으므로
+        # 제목을 query로 사용하여 관련 청크를 찾음
         docs = vectorstore.similarity_search(
-            query="",  # 빈 쿼리 (필터만 사용)
-            k=100,     # 충분히 많은 수
-            filter={"paper_id": paper_id}
+            query=title,  # 논문 제목으로 검색
+            k=50          # 충분한 청크 수
         )
 
         if tool_logger:
@@ -141,9 +141,8 @@ def summarize_node(state: AgentState, exp_manager=None):
             exp_manager.log_pgvector_search({
                 "tool": "summarize",
                 "collection": "paper_chunks",
-                "query_text": "",
-                "top_k": 100,
-                "filter": {"paper_id": paper_id},
+                "query_text": title,
+                "top_k": 50,
                 "result_count": len(docs)
             })
 
@@ -170,8 +169,8 @@ def summarize_node(state: AgentState, exp_manager=None):
 
         # SystemMessage 저장
         if exp_manager:
-            exp_manager.save_system_prompt(system_content, "summarize")
-            exp_manager.save_user_prompt(question, "summarize")
+            exp_manager.save_system_prompt(system_content, {"tool": "summarize"})
+            exp_manager.save_user_prompt(question, {"tool": "summarize"})
 
         # 난이도별 LLM 초기화
         llm_client_summarize = LLMClient.from_difficulty(
@@ -179,35 +178,30 @@ def summarize_node(state: AgentState, exp_manager=None):
             logger=exp_manager.logger if exp_manager else None
         )
 
-        # 프롬프트 템플릿 정의
-        prompt_template = f"""{system_content}
+        # 논문 청크들을 하나의 텍스트로 결합
+        combined_text = "\n\n".join([doc.page_content for doc in docs])
 
-                              논문 정보:
-                              - 제목: {title}
-                              - 저자: {authors}
-                              - 발행일: {publish_date}
-                              - 초록: {abstract}
+        # 프롬프트 생성
+        summary_prompt = f"""{system_content}
 
-                              논문 내용:
-                              {{text}}
+논문 정보:
+- 제목: {title}
+- 저자: {authors}
+- 발행일: {publish_date}
+- 초록: {abstract}
 
-                              요약:"""
+논문 내용:
+{combined_text}
 
-        prompt = PromptTemplate(template=prompt_template, input_variables=["text"])
-
-        # Summarize chain 실행 (stuff 방식)
-        chain = load_summarize_chain(
-            llm=llm_client_summarize.llm,  # LLMClient의 llm 객체 사용
-            chain_type="stuff",             # 모든 문서를 한번에 처리
-            prompt=prompt
-        )
+위 논문의 방법론 부분을 중심으로 요약해주세요.
+요약:"""
 
         if tool_logger:
-            tool_logger.write("Summarize chain 실행 중...")
+            tool_logger.write("LLM 요약 생성 중...")
+            tool_logger.write(f"결합된 텍스트 길이: {len(combined_text)} 문자")
 
-        # 요약 실행
-        summary_result = chain.invoke({"input_documents": docs})
-        summary = summary_result.get("output_text", "요약 생성 실패")
+        # LLM으로 요약 생성
+        summary = llm_client_summarize.llm.invoke(summary_prompt).content
 
         if tool_logger:
             tool_logger.write(f"요약 생성 완료 - 길이: {len(summary)} 문자")
