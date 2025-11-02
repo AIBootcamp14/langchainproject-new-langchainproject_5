@@ -529,6 +529,29 @@ class ExperimentManager:
         self.logger.write("설정 파일 저장 완료")
 
 
+    # ---------------------- 빈 폴더 정리 ---------------------- #
+    def cleanup_empty_folders(self):
+        """experiments 폴더 내 빈 폴더 삭제"""
+        experiments_root = Path("experiments")
+        if not experiments_root.exists():
+            return
+
+        deleted_count = 0
+
+        # 모든 빈 폴더 찾기 (하위 폴더부터 상위 폴더 순으로)
+        for folder in sorted(experiments_root.rglob("*"), key=lambda p: -len(p.parts)):
+            if folder.is_dir() and not any(folder.iterdir()):
+                try:
+                    folder.rmdir()
+                    deleted_count += 1
+                except Exception:
+                    # 권한 오류 등은 무시
+                    pass
+
+        if deleted_count > 0:
+            self.logger.write(f"빈 폴더 {deleted_count}개 삭제 완료")
+
+
     # ---------------------- 실험 종료 ---------------------- #
     def close(self):
         """실험 종료"""
@@ -542,6 +565,10 @@ class ExperimentManager:
         self.logger.write("=" * 50)
         self.logger.write("실험 종료")
         self.logger.write("=" * 50)
+
+        # 빈 폴더 정리
+        self.cleanup_empty_folders()
+
         self.logger.close()
 
 
