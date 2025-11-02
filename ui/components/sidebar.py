@@ -25,6 +25,11 @@ from ui.components.chat_manager import (
     get_current_difficulty,
     export_chat
 )
+from ui.components.storage import (
+    save_chats_to_local_storage,
+    clear_local_storage,
+    get_storage_info
+)
 
 
 # ==================== 사이드바 렌더링 함수 ==================== #
@@ -79,6 +84,47 @@ def render_sidebar(exp_manager=None):
     with st.sidebar:
         # -------------- 난이도 설정 섹션 -------------- #
         st.markdown("### ⚙️ 설정")
+
+        # 다크 모드 토글
+        if "dark_mode" not in st.session_state:
+            st.session_state.dark_mode = False
+
+        dark_mode = st.toggle("🌙 다크 모드", value=st.session_state.dark_mode, key="dark_mode_toggle")
+
+        # 다크 모드 CSS 적용
+        if dark_mode:
+            st.markdown("""
+            <style>
+            :root {
+                --background-color: #0E1117;
+                --secondary-background-color: #262730;
+                --text-color: #FAFAFA;
+            }
+            .stApp {
+                background-color: #0E1117;
+                color: #FAFAFA;
+            }
+            .stSidebar {
+                background-color: #262730;
+            }
+            .stChatMessage {
+                background-color: #262730;
+            }
+            .stTextInput > div > div > input {
+                background-color: #262730;
+                color: #FAFAFA;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+            st.session_state.dark_mode = True
+
+            if exp_manager:
+                exp_manager.log_ui_interaction("다크 모드 활성화")
+        else:
+            st.session_state.dark_mode = False
+
+        st.divider()
 
         # 난이도 설명 (위쪽에 배치)
         with st.expander("ℹ️ 난이도 설명", expanded=False):
@@ -214,10 +260,45 @@ def render_sidebar(exp_manager=None):
         # 구분선 추가
         st.divider()
 
+        # -------------- 저장소 관리 섹션 -------------- #
+        with st.expander("💾 저장소 관리", expanded=False):
+            storage_info = get_storage_info()
+
+            st.caption(f"📊 총 채팅 수: {storage_info['total_chats']}개")
+            st.caption(f"🔄 자동 저장: {'✅ 활성화' if storage_info['auto_save_enabled'] else '❌ 비활성화'}")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                # 수동 저장 버튼
+                if st.button("💾 저장", help="현재 채팅을 브라우저에 저장", use_container_width=True):
+                    save_chats_to_local_storage()
+                    st.success("저장 완료!")
+
+                    if exp_manager:
+                        exp_manager.log_ui_interaction("LocalStorage 수동 저장")
+
+            with col2:
+                # 저장소 초기화 버튼
+                if st.button("🗑️ 초기화", help="브라우저 저장소 초기화", use_container_width=True):
+                    clear_local_storage()
+
+                    if exp_manager:
+                        exp_manager.log_ui_interaction("LocalStorage 초기화")
+
+            st.caption("💡 채팅은 브라우저에 자동 저장됩니다")
+
+        # 구분선 추가
+        st.divider()
+
         # -------------- 시스템 정보 표시 -------------- #
         st.caption("📚 논문 리뷰 챗봇")
         st.caption("🤖 LangGraph + RAG 기반")
         st.caption("💬 OpenAI GPT-5 / Solar-pro2")
+
+    # 자동 저장 실행
+    if st.session_state.get("auto_save_enabled", True) and st.session_state.get("chats"):
+        save_chats_to_local_storage()
 
     # 선택된 난이도 반환
     return difficulty
