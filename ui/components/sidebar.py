@@ -44,43 +44,35 @@ def render_sidebar(exp_manager=None):
         current_difficulty = get_current_difficulty()
         default_index = 0 if current_difficulty == "easy" else 1 if current_difficulty else 0
 
+        # 난이도 변경 콜백 함수
+        def on_difficulty_change():
+            """난이도 변경 시 새 채팅 생성"""
+            new_difficulty = st.session_state.difficulty_selector
+
+            # 첫 실행이 아니고, 현재 채팅이 있고, 실제로 난이도가 변경된 경우만
+            if "difficulty_initialized" in st.session_state and st.session_state.current_chat_id:
+                current_chat_difficulty = get_current_difficulty()
+
+                # 현재 채팅의 난이도와 다른 경우만 새 채팅 생성
+                if current_chat_difficulty and current_chat_difficulty != new_difficulty:
+                    if exp_manager:
+                        exp_manager.log_ui_interaction(
+                            f"난이도 변경: {current_chat_difficulty} → {new_difficulty} (새 채팅 생성)"
+                        )
+                    create_new_chat(new_difficulty)
+
+            # 초기화 플래그 설정
+            st.session_state.difficulty_initialized = True
+
         difficulty = st.radio(
             "🎚️ 난이도 선택",
             options=["easy", "hard"],
             format_func=lambda x: "초급 (쉬운 설명)" if x == "easy" else "전문가 (상세 설명)",
             index=default_index,
             help="답변의 난이도를 선택하세요",
-            key="difficulty_selector"
+            key="difficulty_selector",
+            on_change=on_difficulty_change
         )
-
-        # -------------- 난이도 변경 감지 및 새 채팅 생성 -------------- #
-        # 세션 상태에 마지막 난이도 저장
-        if "last_difficulty" not in st.session_state:
-            st.session_state.last_difficulty = difficulty
-
-        # 난이도가 변경되었고 현재 채팅이 있는 경우 새 채팅 생성
-        if st.session_state.last_difficulty != difficulty and st.session_state.current_chat_id:
-            if exp_manager:
-                exp_manager.log_ui_interaction(
-                    f"난이도 변경 감지: {st.session_state.last_difficulty} → {difficulty} (새 채팅 생성)"
-                )
-
-            # 새 채팅 생성
-            create_new_chat(difficulty)
-            st.rerun()
-
-        # 난이도 업데이트
-        st.session_state.last_difficulty = difficulty
-
-        # -------------- 새 채팅 버튼 -------------- #
-        if st.button("➕ 새 채팅", use_container_width=True):
-            # 새 채팅 생성
-            chat_id = create_new_chat(difficulty)
-
-            if exp_manager:
-                exp_manager.log_ui_interaction(f"새 채팅 생성: {chat_id} (난이도: {difficulty})")
-
-            st.rerun()
 
         # 구분선 추가
         st.divider()
