@@ -88,11 +88,16 @@ def router_node(state: AgentState, exp_manager=None):
     )
 
     # -------------- LLM 호출 -------------- #
-    tool_choice = llm_client.llm.invoke(routing_prompt).content.strip()  # 도구 선택
+    raw_response = llm_client.llm.invoke(routing_prompt).content.strip()  # 도구 선택
+
+    # -------------- 응답 파싱: 첫 번째 단어만 추출 -------------- #
+    # LLM이 설명을 포함할 수 있으므로, 첫 번째 단어만 가져옴
+    tool_choice = raw_response.split()[0] if raw_response else "general"
 
     # -------------- 로깅 -------------- #
     if exp_manager:
-        exp_manager.logger.write(f"라우팅 결정: {tool_choice}")
+        exp_manager.logger.write(f"라우팅 결정 (원본): {raw_response[:100]}...")
+        exp_manager.logger.write(f"라우팅 결정 (파싱): {tool_choice}")
 
     # -------------- 상태 업데이트 -------------- #
     state["tool_choice"] = tool_choice          # 선택된 도구 저장
