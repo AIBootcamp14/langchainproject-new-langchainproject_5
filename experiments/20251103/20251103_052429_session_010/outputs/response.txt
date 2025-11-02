@@ -1,0 +1,6 @@
+**용어**: Attention Mechanism
+
+                 **카테고리**: Deep Learning
+
+                 **설명**:
+                 특정 정보에 더 집중하는 신경망 기법.

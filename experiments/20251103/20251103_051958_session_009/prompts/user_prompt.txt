@@ -1,0 +1,102 @@
+[웹 검색 결과]
+                      [결과 1]
+제목: MoE: Mixture of Experts (전문가 혼합) - 인공지능(AI) & 머신러닝(ML ...
+내용: 최신 연구 동향. 최근 MoE 모델은 다양한 개선을 통해 더욱 효율적인 학습과 추론이 가능해지고 있다. 대표적인 연구 사례는 다음과 같다. DeepSeek-V2.
+URL: https://wikidocs.net/275230
+
+[결과 2]
+제목: ﻿“글자를 읽지 마라, 보라” 딥시크 OCR 2주 연속 1위 ﻿[정원훈의 AI ...
+내용: 미니맥스-M2에서 언급된 MoE(Mixture of Experts, 전문가 혼합)는 최근 AI 모델 설계의 핵심 트렌드입니다. 이 방식은 기존 방식의 비효율을 극복했다는 점에서 높은 점수를 줄 수 있습니다. 전통적인 AI 모델은 모든 파라미터가 항상 작동합니다. 1000억 파라미터 모델이면 질문 하나에 1000억개 전부 계산해요. "2+2는?"이라는 간단한 질문에도 1000억개를 동원하는 거죠. 마치 바퀴벌레 한 마리 잡는데 전투기를 출격시키는 격입니다. 그러나, MoE는 전문가 집단을 두고, 입력에 따라 필요한 전문가만 활성화합니다. [...] 중국 미니맥스가 내놓은 M2는 '에이전트와 코딩을 위해 태어난' 모델입니다. 미니맥스라는 이름이 참 재치 있죠? "Mini(작음)"와 "Max(최대)"의 조합에서 작지만 최대 효과를 낸다는 자신감이 엿보입니다. 총 230B(2300억) 파라미터를 가졌지만, 실제로는 10B(100억) 파라미터만 활성화되는 MoE(Mixture of Experts) 구조입니다. 이게 무슨 의미냐고요?
+
+종합병원에 230명의 전문의가 있다고 상상해보세요. 환자가 골절로 왔다면 정형외과 의사 10명만 투입하고, 감기로 왔다면 내과 의사 10명만 투입합니다. 230명 전체가 매번 회진을 돌 필요가 없죠. 이렇게 하면 속도는 빠르고, 비용은 절감되며, 각 분야 전문가가 담당하니 품질도 최상입니다. [...] MoE는 속도, 비용, 성능 등 3가지 면에서 장점이 있습니다. 첫째, 전체가 아닌 일부만 작동하니 10배 이상 빠릅니다. 둘째, 계산량이 줄어 전력비와 서버비가 대폭 절감됩니다. 각 분야 전문가가 담당하니 품질은 오히려 향상됩니다. 이 기술은 다양한 인공지능에 활용되고 있습니다. OpenAI GPT-4도 MoE 구조로 추정 (공식 미확인)되구요. Google Gemini에도 MoE가 적용되고 있답니다. Mistral의 Mixtral: 8명(?)의 전문가 중 2명씩 활성화하는 방식을 사용하고 있구요. MiniMax-M2: 230명 중 10명이 활성화하는 방식을 사용하고 있답니다.
+URL: https://it.chosun.com/news/articleView.html?idxno=2023092150007
+
+[결과 3]
+제목: 2025 LLM 트렌드: from FM to AI Agent - LG AI Research BLOG
+내용: Jiang, Albert Q., et al. "Mixtral of experts." arXiv preprint arXiv:2401.04088 (2024).
+
+     Gale, Trevor, et al. "Megablocks: Efficient sparse training with mixture-of-experts." Proceedings of Machine Learning and Systems 5 (2023): 288-304.
+
+     Dai, Damai, et al. "Deepseekmoe: Towards ultimate expert specialization in mixture-of-experts language models." arXiv preprint arXiv:2401.06066 (2024). [...] Rafailov, Rafael, et al. "Direct preference optimization: Your language model is secretly a reward model." Advances in Neural Information Processing Systems 36 (2023): 53728-53741.
+
+     Meng, Yu, Mengzhou Xia, and Danqi Chen. "Simpo: Simple preference optimization with a reference-free reward." Advances in Neural Information Processing Systems 37 (2024): 124198-124235.
+
+     Schulman, John, et al. "Proximal policy optimization algorithms." arXiv preprint arXiv:1707.06347 (2017). [...] DeepSeek AI. "Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning." arXiv preprint arXiv:2501.12948 (2025).
+
+     Anthropic. “Building effective agents” Dec 19, 2024. 
+
+     Anthropic. “Introducing the Model Context Protocol” Nov 26, 2024. 
+
+     OpenAI. "Computer-Using Agent" OpenAI, January 23, 2025. 
+
+     Anthropic. “Introducing computer use, a new Claude 3.5 Sonnet, and Claude 3.5 Haiku” Oct 23, 2024.
+URL: https://www.lgresearch.ai/blog/view?seq=565
+
+[결과 4]
+제목: 모델 크기 경쟁을 넘어: MoE가 제시하는 스마트한 AI - DevOcean
+내용: 이쯤에서 한 번쯤은 “정말 좋은 성능을 내려면 무조건 파라미터가 많아야만 할까?”라는 질문이 자연스럽게 떠오릅니다.
+
+최근 이 질문에 새로운 답변을 제시하는 접근법으로 MoE(Mixture of Experts) 아키텍처가 다시 주목받고 있습니다.
+
+MoE는 거대한 하나의 신경망 대신, 다양한 전문성을 가진 여러 ‘전문가(Expert)’ 네트워크를 두고, 입력에 따라 딱 맞는 몇 명의 전문가만 선택적으로 활용하는 구조입니다.
+
+마치 거대한 도서관에서 모든 책을 샅샅이 찾는 대신, 궁금한 분야에 특화된 사서를 찾아가 바로 답을 듣는 것처럼 말이죠.
+
+이런 방식을 통해 전체적으로는 큰 모델이지만, 실제 추론 시에는 필요한 계산만 수행할 수 있어 성능과 효율이라는 두 마리 토끼를 잡을 수 있습니다.
+
+이 글은 AI 분야에 전문가는 아니지만 엔지니어로서 MoE에 대해 공부하며 알게 된 내용을 정리한 것입니다. [...] 모델 크기 경쟁을 넘어: MoE가 제시하는 스마트한 AI
+  :   대규모 언어 모델(LLM) 분야에서는 오랫동안 “더 큰 모델일수록 더 뛰어난 성능을 낸다”는 믿음이 강하게 자리잡아 왔습니다. 하지만 모델의 파라미터가 커질수록 훈련과 서비스에 필요한 비용 또한 기하급수적으로 늘어나 현실적으로 한계에 부딪히곤 했죠. 이쯤에서 한 번쯤은 “정말 좋은 성능을 내려면 무조건 파라미터가 많아야만 할까?”라는 질문이 자연스럽게 떠오릅니다. 최근 이 질문에 새로운 답변을 제시하는 접근법으로 MoE(Mixture of Experts) 아키텍처가 다시 주목받고 있습니다. MoE는 거대한 하나의 신경망 대신, 다양한 전문성을 가진 여러 ‘전문가(Expert)’ 네트워크를 두고, 입력에 따라 딱 맞는 몇 명의 전문가만 선택적으로 활용하는 구조입니다...
+ Kubernetes에서 NFS를 활용한 ReadWriteMany 스토리지 구성하기 [...] DEVOTEE 요약
+:   대규모 언어 모델에서 성능 향상을 위해 모델 크기를 키우는 접근법은 비용과 효율성에 한계가 있었습니다. 이를 해결하기 위해 MoE(Mixture of Experts) 아키텍처가 주목받고 있으며, 다양한 전문가 네트워크 중 입력에 적합한 일부만 활성화해 필요한 계산만 수행함으로써 성능과 효율성을 동시에 확보합니다. 그러나 MoE는 라우팅 편향, 메모리 사용량 증가, 추론 일관성 문제 등 몇 가지 단점이 있으며, 이를 극복하기 위해 로드 밸런싱, 통신 최적화, 분산 서빙 기술 등이 연구됩니다.
+
+대규모 언어 모델(LLM) 분야에서는 오랫동안 “더 큰 모델일수록 더 뛰어난 성능을 낸다”는 믿음이 강하게 자리잡아 왔습니다.
+
+하지만 모델의 파라미터가 커질수록 훈련과 서비스에 필요한 비용 또한 기하급수적으로 늘어나 현실적으로 한계에 부딪히곤 했죠.
+URL: https://devocean.sk.com/blog/techBoardDetail.do?ID=167671&boardType=techBlog
+
+[결과 5]
+제목: Mixture-of-Experts 추천 시스템 개요 - ① - KM-Hana - 티스토리
+내용: Mixture-of-Experts (MoE)는 1991년 Jacobs 등이 처음 제한한 고전적인 앙상블 기법입니다.
+
+MoE는 모델 용량을 크게 확장할 수 있으며, 계산 오버헤드 가능성이 크지 않습니다. 이러한 능력은 최근 딥러닝 분야에서 혁신적으로 결합되어, 다양한 분야에서 MoE를 광범위하게 사용하게 되었습니다. 특히, LLM(Large Language Model)와 같은 대규모 어플리케이션에 성공적으로 활용되고 있습니다.
+
+Mixture-of-Experts (MoE)에 대한 소개와 중요하게 개선된 히스토리를 소개하고자 합니다.
+
+※ 
+
+를 기반으로 작성했습니다
+
+## Mixture-of-Experts(MoE) 소개
+
+일반적으로 말해, MoE(Mixture-of-Experts) 구조는 다수의 모델을 결합한 앙상블(ensemble) 방식입니다.  MoE는 전문가(expert) 라고 불리는 여러 개의 하위 모델로 구성되어, 특정한 Task에 특화되어 훈련됩니다. [...] [이전글[논문요약] GDCN(Gated Deep Cross Net, 2023) - 추천 AI의 핵심 트렌드](/52)
+ 현재글Mixture-of-Experts 추천 시스템 개요 - ①
+ 다음글Mixture-of-Experts 추천 시스템 개요 - ②
+
+### 관련글
+
+ 추천 MTL - Progressive Layered Extraction(PLE)
+  2025.05.14
+ Mixture-of-Experts 추천 시스템 개요 - ②
+  2025.04.06
+ [[논문요약] GDCN(Gated Deep Cross Net, 2023) - 추천 AI의 핵심 트렌드
+  2025.02.03](/52?category=882777)
+ [[논문요약] DNN for YouTube(2016) - 추천 딥러닝 모델의 바이블
+  2022.02.15](/36?category=882777)
+
+댓글 1
+
+KM-HanaKM-Hana 님의 블로그입니다. [...] 3. 순환 신경망(Recurrent Neural Network) 활용그림에서 게이트가 입력 데이터의 특성에 따라 최적이라고 판단된 전문가 두 개만 선택하는 모습을 볼 수 있습니다. 최근 대규모 언어 모델(LLM)에서 희소 게이팅 방식을 사용한 결과, 일반적인 밀집(Dense) 모델 대비 4배 적은 계산량으로도 비슷한 성능을 낼 수 있다는 연구 결과도 있었습니다.
+URL: https://kmhana.tistory.com/53
+
+                      [질문]
+                      최근 Mixture of Experts 연구 동향은?
+
+                      위 검색 결과를 바탕으로 질문에 답변해주세요.
+                      **중요**: 각 논문이나 정보 출처의 URL을 반드시 포함하세요.
+                      예시 형식:
+                      - 논문 제목 ([링크](URL))
+                      또는
+                      🔗 출처: [제목](URL)
+
+===== 메타데이터 =====
+results_count: 5

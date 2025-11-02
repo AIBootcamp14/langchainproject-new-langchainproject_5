@@ -1,0 +1,10 @@
+2025-11-03 06:09:30 | 논문 요약 노드 실행 - 질문: BERT 논문의 방법론 부분만 요약해줘, 난이도: hard
+2025-11-03 06:09:30 | 논문 제목 추출 프롬프트: 다음 질문에서 요약하려는 논문의 제목을 추출하세요.
+                             논문 제목만 정확히 반환하세요. 다른 설명은 불필요합니다.
+
+                             질문: BERT 논문의 방법론 부분만 요약해줘
+
+                             논문 제목:
+2025-11-03 06:09:35 | 추출된 논문 제목: BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
+2025-11-03 06:09:35 | 논문 발견 - ID: 2, 제목: BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
+2025-11-03 06:09:35 | 오류: 논문 요약 중 오류 발생: PGVector.__init__() got an unexpected keyword argument 'embedding_function'
