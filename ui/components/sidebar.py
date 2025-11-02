@@ -4,13 +4,23 @@
 사이드바 UI 컴포넌트
 
 Streamlit 사이드바 구성 요소:
-- 난이도 선택 (Easy/Hard)
-- 대화 초기화 버튼
+- 난이도 선택 (Easy/Hard) - 변경 시 새 채팅 생성
+- 새 채팅 버튼
+- 채팅 목록 (이전 채팅 기록)
 - 설정 정보 표시
 """
 
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 import streamlit as st
+
+# ------------------------- 프로젝트 모듈 ------------------------- #
+from ui.components.chat_manager import (
+    create_new_chat,
+    switch_chat,
+    delete_chat,
+    get_chat_list,
+    get_current_difficulty
+)
 
 
 # ==================== 사이드바 렌더링 함수 ==================== #
@@ -30,30 +40,47 @@ def render_sidebar(exp_manager=None):
         st.header("⚙️ 설정")
 
         # -------------- 난이도 선택 라디오 버튼 -------------- #
+        # 현재 채팅이 있으면 그 난이도를 기본값으로
+        current_difficulty = get_current_difficulty()
+        default_index = 0 if current_difficulty == "easy" else 1 if current_difficulty else 0
+
         difficulty = st.radio(
             "🎚️ 난이도 선택",
             options=["easy", "hard"],
             format_func=lambda x: "초급 (쉬운 설명)" if x == "easy" else "전문가 (상세 설명)",
-            index=0,                                    # 기본값: easy
-            help="답변의 난이도를 선택하세요"
+            index=default_index,
+            help="답변의 난이도를 선택하세요",
+            key="difficulty_selector"
         )
 
-        # -------------- 난이도 변경 로그 기록 -------------- #
-        # 세션 상태에 이전 난이도 저장 및 변경 감지
-        if "previous_difficulty" not in st.session_state:
-            st.session_state.previous_difficulty = difficulty
-            # 첫 실행 시 로깅
-            if exp_manager:
-                exp_manager.log_ui_interaction(f"초기 난이도 설정: {difficulty}")
-                exp_manager.update_metadata(difficulty=difficulty)
-        elif st.session_state.previous_difficulty != difficulty:
-            # 난이도 변경 감지
+        # -------------- 난이도 변경 감지 및 새 채팅 생성 -------------- #
+        # 세션 상태에 마지막 난이도 저장
+        if "last_difficulty" not in st.session_state:
+            st.session_state.last_difficulty = difficulty
+
+        # 난이도가 변경되었고 현재 채팅이 있는 경우 새 채팅 생성
+        if st.session_state.last_difficulty != difficulty and st.session_state.current_chat_id:
             if exp_manager:
                 exp_manager.log_ui_interaction(
-                    f"난이도 변경: {st.session_state.previous_difficulty} → {difficulty}"
+                    f"난이도 변경 감지: {st.session_state.last_difficulty} → {difficulty} (새 채팅 생성)"
                 )
-                exp_manager.update_metadata(difficulty=difficulty)
-            st.session_state.previous_difficulty = difficulty
+
+            # 새 채팅 생성
+            create_new_chat(difficulty)
+            st.rerun()
+
+        # 난이도 업데이트
+        st.session_state.last_difficulty = difficulty
+
+        # -------------- 새 채팅 버튼 -------------- #
+        if st.button("➕ 새 채팅", use_container_width=True):
+            # 새 채팅 생성
+            chat_id = create_new_chat(difficulty)
+
+            if exp_manager:
+                exp_manager.log_ui_interaction(f"새 채팅 생성: {chat_id} (난이도: {difficulty})")
+
+            st.rerun()
 
         # 구분선 추가
         st.divider()
@@ -74,11 +101,57 @@ def render_sidebar(exp_manager=None):
         # 구분선 추가
         st.divider()
 
-        # -------------- 대화 초기화 버튼 -------------- #
-        if st.button("🔄 대화 초기화", use_container_width=True):
-            # 세션 상태의 메시지 히스토리 초기화
-            st.session_state.messages = []              # 메시지 리스트 비우기
-            st.rerun()                                  # UI 새로고침
+        # -------------- 채팅 목록 -------------- #
+        st.subheader("💬 채팅 기록")
+
+        chat_list = get_chat_list()
+
+        if not chat_list:
+            st.caption("아직 채팅 기록이 없습니다.")
+        else:
+            for chat_info in chat_list:
+                chat_id = chat_info["id"]
+                title = chat_info["title"]
+                difficulty_label = "초급" if chat_info["difficulty"] == "easy" else "전문가"
+                msg_count = chat_info["message_count"]
+
+                # 현재 활성 채팅 표시
+                is_current = (chat_id == st.session_state.current_chat_id)
+                prefix = "🔹" if is_current else "⚪"
+
+                # 채팅 컨테이너
+                with st.container():
+                    col1, col2 = st.columns([4, 1])
+
+                    with col1:
+                        # 채팅 선택 버튼
+                        if st.button(
+                            f"{prefix} {title}",
+                            key=f"chat_{chat_id}",
+                            use_container_width=True,
+                            disabled=is_current
+                        ):
+                            # 채팅 전환
+                            switch_chat(chat_id)
+
+                            if exp_manager:
+                                exp_manager.log_ui_interaction(f"채팅 전환: {chat_id}")
+
+                            st.rerun()
+
+                    with col2:
+                        # 삭제 버튼 (현재 채팅이 아닌 경우만)
+                        if not is_current:
+                            if st.button("🗑️", key=f"delete_{chat_id}", help="채팅 삭제"):
+                                delete_chat(chat_id)
+
+                                if exp_manager:
+                                    exp_manager.log_ui_interaction(f"채팅 삭제: {chat_id}")
+
+                                st.rerun()
+
+                    # 채팅 정보
+                    st.caption(f"{difficulty_label} | {msg_count}개 메시지")
 
         # 구분선 추가
         st.divider()

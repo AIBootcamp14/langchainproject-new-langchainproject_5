@@ -19,29 +19,26 @@ from langchain.callbacks import StreamlitCallbackHandler
 # ------------------------- 프로젝트 모듈 ------------------------- #
 from ui.components.file_download import show_download_success, create_download_button
 from src.utils.glossary_extractor import extract_and_save_terms
+from ui.components.chat_manager import (
+    get_current_messages,
+    add_message_to_current_chat,
+    export_current_chat
+)
 
 
 # ==================== 채팅 히스토리 관리 ==================== #
-# ---------------------- 세션 상태 초기화 ---------------------- #
-def initialize_chat_history():
-    """
-    채팅 히스토리 세션 상태 초기화
-
-    session_state.messages 리스트가 없으면 생성
-    """
-    if "messages" not in st.session_state:
-        st.session_state.messages = []              # 빈 메시지 리스트 생성
-
-
 # ---------------------- 기존 메시지 표시 ---------------------- #
 def display_chat_history():
     """
-    저장된 채팅 히스토리 표시
+    현재 채팅의 저장된 히스토리 표시
 
-    session_state에 저장된 모든 메시지를 렌더링
+    chat_manager를 통해 현재 채팅의 메시지를 렌더링
     """
+    # 현재 채팅의 모든 메시지 가져오기
+    messages = get_current_messages()
+
     # 모든 메시지 순회
-    for message in st.session_state.messages:
+    for message in messages:
         role = message["role"]                      # user 또는 assistant
         content = message["content"]                # 메시지 내용
 
@@ -81,17 +78,14 @@ def display_chat_history():
 # ---------------------- 사용자 메시지 추가 ---------------------- #
 def add_user_message(prompt: str, exp_manager=None):
     """
-    사용자 메시지를 히스토리에 추가하고 표시
+    사용자 메시지를 현재 채팅에 추가하고 표시
 
     Args:
         prompt: 사용자 입력 텍스트
         exp_manager: ExperimentManager 인스턴스 (선택)
     """
-    # 세션 상태에 메시지 추가
-    st.session_state.messages.append({
-        "role": "user",                             # 사용자 메시지
-        "content": prompt                           # 질문 내용
-    })
+    # 현재 채팅에 메시지 추가
+    add_message_to_current_chat(role="user", content=prompt)
 
     # 채팅 버블로 표시
     with st.chat_message("user"):
@@ -288,12 +282,12 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 )
 
             # -------------- 메시지 히스토리에 추가 -------------- #
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": answer,
-                "tool_choice": tool_choice,
-                "sources": sources if sources else None
-            })
+            add_message_to_current_chat(
+                role="assistant",
+                content=answer,
+                tool_choice=tool_choice,
+                sources=sources if sources else None
+            )
 
             return response
 
@@ -330,6 +324,86 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
 
 # ==================== 채팅 입력 처리 ==================== #
+# ---------------------- 전체 채팅 저장/복사 버튼 ---------------------- #
+def render_chat_export_buttons():
+    """
+    전체 채팅 내역 저장/복사 버튼 표시
+    """
+    # 현재 채팅에 메시지가 있는지 확인
+    messages = get_current_messages()
+
+    if messages:
+        col_export_copy, col_export_save = st.columns(2)
+
+        with col_export_copy:
+            # 전체 채팅 복사 버튼
+            import json
+            chat_content = export_current_chat()
+            safe_content = json.dumps(chat_content)
+            unique_id = abs(hash(chat_content + "export"))
+
+            export_copy_html = f"""
+            <button id="export_copy_btn_{unique_id}" onclick="exportCopyToClipboard_{unique_id}()" style="
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 0.25rem;
+                cursor: pointer;
+                width: 100%;
+                font-size: 0.9rem;
+                font-weight: 500;
+            ">💬 전체 대화 복사</button>
+
+            <script>
+            function exportCopyToClipboard_{unique_id}() {{
+                const text = {safe_content};
+                const button = document.getElementById('export_copy_btn_{unique_id}');
+
+                if (!navigator.clipboard) {{
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-9999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {{
+                        document.execCommand('copy');
+                        button.textContent = '✅ 복사됨!';
+                        setTimeout(() => {{ button.textContent = '💬 전체 대화 복사'; }}, 2000);
+                    }} catch (err) {{
+                        alert('❌ 복사 실패: ' + err);
+                    }}
+                    document.body.removeChild(textArea);
+                    return;
+                }}
+
+                navigator.clipboard.writeText(text).then(function() {{
+                    button.textContent = '✅ 복사됨!';
+                    setTimeout(() => {{ button.textContent = '💬 전체 대화 복사'; }}, 2000);
+                }}, function(err) {{
+                    alert('❌ 복사 실패: ' + err);
+                }});
+            }}
+            </script>
+            """
+            st.markdown(export_copy_html, unsafe_allow_html=True)
+
+        with col_export_save:
+            # 전체 채팅 저장 버튼
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"chat_history_{timestamp}.txt"
+
+            st.download_button(
+                label="💾 전체 대화 저장",
+                data=chat_content,
+                file_name=filename,
+                mime="text/plain",
+                use_container_width=True,
+                key=f"export_save_{unique_id}"
+            )
+
+
 # ---------------------- 채팅 입력 UI ---------------------- #
 def render_chat_input(agent_executor, difficulty: str, exp_manager=None):
     """
@@ -340,6 +414,9 @@ def render_chat_input(agent_executor, difficulty: str, exp_manager=None):
         difficulty: 난이도
         exp_manager: ExperimentManager 인스턴스 (선택)
     """
+    # 전체 채팅 저장/복사 버튼 표시
+    render_chat_export_buttons()
+
     # 채팅 입력창 표시
     if prompt := st.chat_input("논문에 대해 질문해보세요..."):
         # 사용자 메시지 추가

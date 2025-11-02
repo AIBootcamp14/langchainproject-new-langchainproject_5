@@ -24,9 +24,13 @@ from src.agent.graph import create_agent_graph
 from src.utils.experiment_manager import ExperimentManager
 from ui.components.sidebar import render_sidebar
 from ui.components.chat_interface import (
-    initialize_chat_history,
     display_chat_history,
     render_chat_input
+)
+from ui.components.chat_manager import (
+    initialize_chat_sessions,
+    create_new_chat,
+    get_current_difficulty
 )
 
 
@@ -109,15 +113,26 @@ def initialize_agent():
 agent_executor, exp_manager = initialize_agent()
 
 
+# ==================== 채팅 세션 관리 초기화 ==================== #
+initialize_chat_sessions()
+
+# 첫 실행 시 또는 채팅이 없으면 자동으로 새 채팅 생성
+if not st.session_state.current_chat_id:
+    create_new_chat(difficulty="easy")
+    exp_manager.log_ui_interaction("첫 실행: 새 채팅 자동 생성 (난이도: easy)")
+
+
 # ==================== 사이드바 렌더링 ==================== #
 # 난이도 선택 및 설정
 difficulty = render_sidebar(exp_manager=exp_manager)
 
+# 현재 채팅의 난이도 가져오기 (사이드바에서 난이도가 변경되지 않았다면)
+current_difficulty = get_current_difficulty()
+if current_difficulty:
+    difficulty = current_difficulty
+
 
 # ==================== 채팅 인터페이스 ==================== #
-# ---------------------- 채팅 히스토리 초기화 ---------------------- #
-initialize_chat_history()
-
 # ---------------------- 기존 메시지 표시 ---------------------- #
 display_chat_history()
 
