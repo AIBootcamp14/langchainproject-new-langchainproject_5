@@ -5,16 +5,24 @@ from __future__ import annotations
 LangChain PGVector를 사용하여 PostgreSQL(pgvector)에 문서를 적재합니다.
 """
 
+# ==================================================================================== #
+#                                   IMPORT MODULES                                     #
+# ==================================================================================== #
+
+# ------------------------- 표준 라이브러리 ------------------------- #
 import logging
 import os
 import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from dotenv import load_dotenv
+# ------------------------- 서드파티 라이브러리 ------------------------- #
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_postgres.vectorstores import PGVector
+
+# ------------------------- 프로젝트 모듈 ------------------------- #
+from src.utils.config_loader import get_postgres_connection_string, get_model_config
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +31,20 @@ class PaperEmbeddingManager:
     """논문 임베딩 및 Vector DB 저장 클래스."""
 
     def __init__(self, collection_name: str = "paper_chunks") -> None:
-        load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+        # ---------------------- config_loader로 모델 설정 로드 ---------------------- #
+        model_config = get_model_config()
+        embedding_config = model_config['embeddings']
+
+        # ---------------------- OpenAI Embeddings 초기화 ---------------------- #
         self.embeddings = OpenAIEmbeddings(
-            model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+            model=embedding_config['model'],
             api_key=os.getenv("OPENAI_API_KEY"),
         )
-        conn = os.getenv("DATABASE_URL")
-        if not conn:
-            raise RuntimeError("DATABASE_URL이 설정되지 않았습니다.")
+
+        # ---------------------- config_loader로 PostgreSQL 연결 문자열 가져오기 ---------------------- #
+        conn = get_postgres_connection_string()
+
+        # ---------------------- PGVector VectorStore 초기화 ---------------------- #
         self.vectorstore = PGVector(
             collection_name=collection_name,
             connection=conn,
