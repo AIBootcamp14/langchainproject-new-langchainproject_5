@@ -13,6 +13,7 @@ from langchain.schema import SystemMessage, HumanMessage
 from langchain_community.tools.tavily_search import TavilySearchResults
 from src.agent.state import AgentState
 from src.llm.client import LLMClient
+from src.tools.arxiv_handler import ArxivPaperHandler
 
 
 # ==================== 도구 4: 웹 검색 노드 ==================== #
@@ -77,6 +78,36 @@ def web_search_node(state: AgentState, exp_manager=None):
             tool_logger.close()
         state["final_answer"] = "웹에서 관련 정보를 찾을 수 없습니다."
         return state
+
+    # -------------- arXiv 논문 자동 저장 -------------- #
+    arxiv_handler = ArxivPaperHandler(logger=tool_logger)
+    arxiv_count = 0
+
+    for result in search_results:
+        url = result.get('url', '')
+
+        # arXiv URL 확인
+        if 'arxiv.org' in url:
+            if tool_logger:
+                tool_logger.write(f"arXiv 논문 발견: {url}")
+
+            try:
+                # arXiv 논문 처리 (다운로드 + DB 저장)
+                success = arxiv_handler.process_arxiv_paper(url)
+
+                if success:
+                    arxiv_count += 1
+                    if tool_logger:
+                        tool_logger.write(f"arXiv 논문 저장 성공: {url}")
+                else:
+                    if tool_logger:
+                        tool_logger.write(f"arXiv 논문 저장 실패: {url}")
+            except Exception as e:
+                if tool_logger:
+                    tool_logger.write(f"arXiv 논문 처리 오류: {e}", print_error=True)
+
+    if arxiv_count > 0 and tool_logger:
+        tool_logger.write(f"총 {arxiv_count}개 arXiv 논문 저장 완료")
 
     # -------------- 검색 결과 포맷팅 -------------- #
     formatted_results = "\n\n".join([
