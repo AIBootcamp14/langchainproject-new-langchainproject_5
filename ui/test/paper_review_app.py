@@ -51,7 +51,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", message=".*TORCH_LIBRARY.*")
 
 # .env 파일에서 환경 변수 로드 (명시적 경로 지정) - OpenAI API 키 로드
-env_path = Path(__file__).resolve().parents[1] / ".env"
+env_path = Path(__file__).resolve().parents[2] / ".env"  # 프로젝트 루트의 .env
 if env_path.exists():
     load_dotenv(dotenv_path=env_path, override=True)
 else:
@@ -136,7 +136,7 @@ except Exception:  # noqa: BLE001
 
 
 # ========= 경로/상수 설정 =========
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]  # 프로젝트 루트
 DATA_DIR = ROOT / "data"
 VDB_DIR = DATA_DIR / "vectordb"
 RDBMS_DIR = DATA_DIR / "rdbms"
@@ -295,7 +295,7 @@ def get_chat_model() -> BaseChatModel:
         raise RuntimeError("langchain_openai가 설치되지 않았습니다. pip install langchain-openai")
     
     # .env 파일에서 다시 로드 확인
-    env_path = Path(__file__).resolve().parents[1] / ".env"
+    env_path = Path(__file__).resolve().parents[2] / ".env"  # 프로젝트 루트의 .env
     if env_path.exists():
         load_dotenv(dotenv_path=env_path, override=True)
     else:
@@ -303,7 +303,7 @@ def get_chat_model() -> BaseChatModel:
     
     openai_key = os.getenv("OPENAI_API_KEY")
     if not openai_key:
-        env_path = Path(__file__).resolve().parents[1] / ".env"
+        env_path = Path(__file__).resolve().parents[2] / ".env"  # 프로젝트 루트의 .env
         raise RuntimeError(
             f"OPENAI_API_KEY가 설정되지 않았습니다.\n"
             f".env 파일 위치: {env_path}\n"
@@ -884,7 +884,7 @@ def main() -> None:
         except RuntimeError as e:
             st.error(f"❌ OpenAI 초기화 실패")
             st.code(str(e))
-            env_path = Path(__file__).resolve().parents[1] / ".env"
+            env_path = Path(__file__).resolve().parents[2] / ".env"  # 프로젝트 루트의 .env
             if env_path.exists():
                 st.info(f"💡 .env 파일 위치: {env_path}")
                 # .env 파일 내용 확인 (키만)
