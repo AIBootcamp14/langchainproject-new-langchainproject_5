@@ -213,6 +213,60 @@ def get_postgres_connection_string() -> str:
     return config_loader.get_postgres_connection_string()
 
 
+def get_llm_for_difficulty(difficulty: str, language: str = "ko") -> Dict[str, str]:
+    """
+    난이도에 따른 LLM 모델 선택 (hybrid_strategy 기반)
+
+    Args:
+        difficulty: 난이도 (easy 또는 hard)
+        language: 언어 코드 (ko, en 등)
+
+    Returns:
+        {"provider": str, "model": str} 형태의 딕셔너리
+    """
+    # -------------- 모델 설정 로드 -------------- #
+    model_config = get_model_config()
+
+    # -------------- hybrid_strategy 활성화 확인 -------------- #
+    hybrid_strategy = model_config.get("hybrid_strategy", {})
+
+    if not hybrid_strategy.get("enabled", False):
+        # 하이브리드 전략 비활성화 시 기본값 반환
+        return {"provider": "openai", "model": "gpt-3.5-turbo"}
+
+    # -------------- 난이도별 모델 선택 규칙 -------------- #
+    rules = hybrid_strategy.get("rules", [])
+
+    for rule in rules:
+        condition = rule.get("condition", {})
+
+        # Easy 모드 + 한국어 체크
+        if condition.get("difficulty") == "easy" and difficulty == "easy":
+            if condition.get("language") == "ko" and language == "ko":
+                model_info = rule.get("model", {})
+                return {
+                    "provider": model_info.get("provider", "solar"),
+                    "model": model_info.get("name", "solar-pro2")
+                }
+
+        # Hard 모드 체크
+        elif condition.get("difficulty") == "hard" and difficulty == "hard":
+            model_info = rule.get("model", {})
+            return {
+                "provider": model_info.get("provider", "openai"),
+                "model": model_info.get("name", "gpt-5")
+            }
+
+        # 기본값 체크
+        elif condition.get("default"):
+            model_info = rule.get("model", {})
+            default_provider = model_info.get("provider", "openai")
+            default_model = model_info.get("name", "gpt-3.5-turbo")
+
+    # -------------- 최종 기본값 -------------- #
+    return {"provider": "openai", "model": "gpt-3.5-turbo"}
+
+
 # ==================================================================================== #
 #                                    MAIN TEST                                         #
 # ==================================================================================== #
