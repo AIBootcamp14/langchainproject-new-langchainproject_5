@@ -303,8 +303,11 @@ class ArxivPaperHandler:
             conn = psycopg2.connect(self.db_url)
             cursor = conn.cursor()
 
-            # 중복 확인
-            cursor.execute("SELECT paper_id FROM papers WHERE arxiv_id = %s", (metadata['arxiv_id'],))
+            # 중복 확인 (arxiv_id 또는 url로 확인)
+            cursor.execute(
+                "SELECT paper_id FROM papers WHERE arxiv_id = %s OR url = %s",
+                (metadata['arxiv_id'], metadata['url'])
+            )
             existing = cursor.fetchone()
 
             if existing:
