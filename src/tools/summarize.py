@@ -121,8 +121,8 @@ def summarize_node(state: AgentState, exp_manager=None):
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         vectorstore = PGVector(
             collection_name="paper_chunks",
-            embedding_function=embeddings,
-            connection_string=os.getenv("DATABASE_URL")
+            embeddings=embeddings,
+            connection=os.getenv("DATABASE_URL")
         )
 
         # paper_id로 필터링하여 모든 청크 조회
