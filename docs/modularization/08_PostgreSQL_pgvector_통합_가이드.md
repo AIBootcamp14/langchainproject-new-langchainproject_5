@@ -1083,8 +1083,8 @@ class PaperVectorStore:
         # PGVector VectorStore 초기화
         self.vectorstore = PGVector(
             collection_name=collection_name,                # 컬렉션 이름
-            embedding_function=self.embeddings,             # 임베딩 함수
-            connection_string=self.connection_string        # DB 연결 문자열
+            embeddings=self.embeddings,                     # 임베딩 함수
+            connection=self.connection_string               # DB 연결 문자열
         )
 
     # ---------------------- 문서 추가 ---------------------- #
