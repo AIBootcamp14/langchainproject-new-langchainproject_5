@@ -5,10 +5,12 @@
 
 Streamlit 사이드바 구성 요소:
 - 난이도 선택 (Easy/Hard) - 변경 시 새 채팅 생성
-- 새 채팅 버튼
-- 채팅 목록 (이전 채팅 기록)
+- 채팅 목록 (ChatGPT 스타일)
 - 설정 정보 표시
 """
+
+# ------------------------- 표준 라이브러리 ------------------------- #
+from datetime import datetime, timedelta
 
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 import streamlit as st
@@ -24,6 +26,43 @@ from ui.components.chat_manager import (
 
 
 # ==================== 사이드바 렌더링 함수 ==================== #
+# ---------------------- 날짜별 그룹화 ---------------------- #
+def group_chats_by_date(chat_list):
+    """
+    채팅 목록을 날짜별로 그룹화 (ChatGPT 스타일)
+
+    Returns:
+        dict: {"오늘": [...], "어제": [...], "지난 7일": [...], "그 이전": [...]}
+    """
+    now = datetime.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday_start = today_start - timedelta(days=1)
+    week_ago = today_start - timedelta(days=7)
+
+    groups = {
+        "오늘": [],
+        "어제": [],
+        "지난 7일": [],
+        "그 이전": []
+    }
+
+    for chat in chat_list:
+        # 문자열을 datetime으로 변환
+        created_at = datetime.strptime(chat["created_at"], "%Y-%m-%d %H:%M:%S")
+
+        if created_at >= today_start:
+            groups["오늘"].append(chat)
+        elif created_at >= yesterday_start:
+            groups["어제"].append(chat)
+        elif created_at >= week_ago:
+            groups["지난 7일"].append(chat)
+        else:
+            groups["그 이전"].append(chat)
+
+    # 빈 그룹 제거
+    return {k: v for k, v in groups.items() if v}
+
+
 # ---------------------- 난이도 선택 사이드바 ---------------------- #
 def render_sidebar(exp_manager=None):
     """
@@ -36,9 +75,6 @@ def render_sidebar(exp_manager=None):
         str: 선택된 난이도 (easy 또는 hard)
     """
     with st.sidebar:
-        # 헤더 표시
-        st.header("⚙️ 설정")
-
         # -------------- 난이도 선택 라디오 버튼 -------------- #
         # 현재 채팅이 있으면 그 난이도를 기본값으로
         current_difficulty = get_current_difficulty()
@@ -64,77 +100,85 @@ def render_sidebar(exp_manager=None):
             # 초기화 플래그 설정
             st.session_state.difficulty_initialized = True
 
+        st.markdown("### ⚙️ 설정")
+
         difficulty = st.radio(
-            "🎚️ 난이도 선택",
+            "난이도 선택",
             options=["easy", "hard"],
-            format_func=lambda x: "초급 (쉬운 설명)" if x == "easy" else "전문가 (상세 설명)",
+            format_func=lambda x: "🟢 초급" if x == "easy" else "🔴 전문가",
             index=default_index,
             help="답변의 난이도를 선택하세요",
             key="difficulty_selector",
-            on_change=on_difficulty_change
+            on_change=on_difficulty_change,
+            horizontal=True
         )
 
         # 구분선 추가
         st.divider()
 
-        # -------------- 난이도별 설명 정보 박스 -------------- #
-        st.info("""
-        **초급 모드**:
-        - 쉬운 용어 사용
-        - 비유와 예시 활용
-        - 수식 최소화
-
-        **전문가 모드**:
-        - 전문 용어 사용
-        - 수식 및 알고리즘 상세 설명
-        - 기술적 세부사항 포함
-        """)
-
-        # 구분선 추가
-        st.divider()
-
         # -------------- 채팅 목록 -------------- #
-        st.subheader("💬 채팅 기록")
+        st.markdown("### 💬 채팅 기록")
 
         chat_list = get_chat_list()
 
         if not chat_list:
-            st.caption("아직 채팅 기록이 없습니다.")
+            st.caption("📝 채팅 기록이 없습니다.")
+            st.caption("아래에서 질문을 시작하세요!")
         else:
-            for chat_info in chat_list:
-                chat_id = chat_info["id"]
-                title = chat_info["title"]
-                difficulty_label = "초급" if chat_info["difficulty"] == "easy" else "전문가"
-                msg_count = chat_info["message_count"]
+            # 날짜별 그룹화
+            grouped_chats = group_chats_by_date(chat_list)
 
-                # 현재 활성 채팅 표시
-                is_current = (chat_id == st.session_state.current_chat_id)
-                prefix = "🔹" if is_current else "⚪"
+            # 각 그룹별로 표시
+            for group_name, chats in grouped_chats.items():
+                # 그룹 헤더
+                st.markdown(f"**{group_name}**")
 
-                # 채팅 컨테이너
-                with st.container():
-                    col1, col2 = st.columns([4, 1])
+                for chat_info in chats:
+                    chat_id = chat_info["id"]
+                    title = chat_info["title"]
+                    difficulty_icon = "🟢" if chat_info["difficulty"] == "easy" else "🔴"
 
-                    with col1:
-                        # 채팅 선택 버튼
-                        if st.button(
-                            f"{prefix} {title}",
-                            key=f"chat_{chat_id}",
-                            use_container_width=True,
-                            disabled=is_current
-                        ):
-                            # 채팅 전환
-                            switch_chat(chat_id)
+                    # 현재 활성 채팅 표시
+                    is_current = (chat_id == st.session_state.current_chat_id)
 
-                            if exp_manager:
-                                exp_manager.log_ui_interaction(f"채팅 전환: {chat_id}")
+                    # 채팅 컨테이너 (현재 채팅은 배경색 표시)
+                    if is_current:
+                        # 현재 채팅 - 다른 스타일
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background-color: rgba(255, 75, 75, 0.1);
+                                padding: 8px;
+                                border-radius: 6px;
+                                margin-bottom: 4px;
+                                border-left: 3px solid #FF4B4B;
+                            ">
+                                {difficulty_icon} {title}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        # 일반 채팅 - 버튼으로 표시
+                        col1, col2 = st.columns([5, 1])
 
-                            st.rerun()
+                        with col1:
+                            if st.button(
+                                f"{difficulty_icon} {title}",
+                                key=f"chat_{chat_id}",
+                                use_container_width=True
+                            ):
+                                # 채팅 전환
+                                switch_chat(chat_id)
 
-                    with col2:
-                        # 삭제 버튼 (현재 채팅이 아닌 경우만)
-                        if not is_current:
-                            if st.button("🗑️", key=f"delete_{chat_id}", help="채팅 삭제"):
+                                if exp_manager:
+                                    exp_manager.log_ui_interaction(f"채팅 전환: {chat_id}")
+
+                                st.rerun()
+
+                        with col2:
+                            # 삭제 버튼
+                            if st.button("🗑️", key=f"delete_{chat_id}", help="삭제"):
                                 delete_chat(chat_id)
 
                                 if exp_manager:
@@ -142,8 +186,25 @@ def render_sidebar(exp_manager=None):
 
                                 st.rerun()
 
-                    # 채팅 정보
-                    st.caption(f"{difficulty_label} | {msg_count}개 메시지")
+                # 그룹 구분선
+                st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+
+        # 구분선 추가
+        st.divider()
+
+        # -------------- 난이도별 설명 정보 박스 -------------- #
+        with st.expander("ℹ️ 난이도 설명", expanded=False):
+            st.markdown("""
+            **🟢 초급 모드**:
+            - 쉬운 용어 사용
+            - 비유와 예시 활용
+            - 수식 최소화
+
+            **🔴 전문가 모드**:
+            - 전문 용어 사용
+            - 수식 및 알고리즘 상세 설명
+            - 기술적 세부사항 포함
+            """)
 
         # 구분선 추가
         st.divider()
@@ -151,7 +212,7 @@ def render_sidebar(exp_manager=None):
         # -------------- 시스템 정보 표시 -------------- #
         st.caption("📚 논문 리뷰 챗봇")
         st.caption("🤖 LangGraph + RAG 기반")
-        st.caption("💬 OpenAI GPT-4 / Solar-pro")
+        st.caption("💬 OpenAI GPT-5 / Solar-pro2")
 
     # 선택된 난이도 반환
     return difficulty
