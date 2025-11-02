@@ -33,6 +33,12 @@ from ui.components.chat_manager import (
     create_new_chat,
     get_current_difficulty
 )
+from ui.components.auth import (
+    render_login_page,
+    render_logout_button,
+    check_authentication
+)
+from ui.components.storage import initialize_storage
 
 
 # ==================== 페이지 설정 ==================== #
@@ -44,13 +50,7 @@ st.set_page_config(
 )
 
 
-# ==================== 메인 헤더 ==================== #
-st.title("📚 논문 리뷰 챗봇 (AI Agent + RAG)")
-st.caption("🤖 LangGraph + RAG 기반 논문 검색 및 질문 답변")
-st.divider()
-
-
-# ==================== 환경 변수 확인 ==================== #
+# ==================== 환경 변수 확인 (앱 시작 전) ==================== #
 # ---------------------- API 키 검증 ---------------------- #
 # OpenAI API 키 확인
 if not os.getenv("OPENAI_API_KEY"):
@@ -113,6 +113,25 @@ def initialize_agent():
 # Agent 및 ExperimentManager 로드
 agent_executor, exp_manager = initialize_agent()
 
+# Storage 초기화
+initialize_storage()
+
+
+# ==================== 인증 확인 ==================== #
+# 로그인 페이지 렌더링 (인증되지 않은 경우)
+name, username, authentication_status = render_login_page(exp_manager)
+
+# 인증되지 않은 경우 여기서 종료
+if not authentication_status:
+    st.stop()
+
+
+# ==================== 메인 헤더 (로그인 후) ==================== #
+st.title("📚 논문 리뷰 챗봇 (AI Agent + RAG)")
+st.caption("🤖 LangGraph + RAG 기반 논문 검색 및 질문 답변")
+st.caption(f"👋 환영합니다, **{name}**님!")
+st.divider()
+
 
 # ==================== 채팅 세션 관리 초기화 ==================== #
 initialize_chat_sessions()
@@ -120,10 +139,14 @@ initialize_chat_sessions()
 # 첫 실행 시 또는 채팅이 없으면 자동으로 새 채팅 생성
 if not st.session_state.current_chat_id:
     create_new_chat(difficulty="easy")
-    exp_manager.log_ui_interaction("첫 실행: 새 채팅 자동 생성 (난이도: easy)")
+    exp_manager.log_ui_interaction(f"첫 실행: 새 채팅 자동 생성 (난이도: easy) - 사용자: {username}")
 
 
 # ==================== 사이드바 렌더링 ==================== #
+with st.sidebar:
+    # 로그아웃 버튼 (사이드바 상단)
+    render_logout_button(exp_manager)
+
 # 난이도 선택 및 설정
 difficulty = render_sidebar(exp_manager=exp_manager)
 
