@@ -38,7 +38,7 @@ def display_chat_history():
     messages = get_current_messages()
 
     # 모든 메시지 순회
-    for message in messages:
+    for idx, message in enumerate(messages):
         role = message["role"]                      # user 또는 assistant
         content = message["content"]                # 메시지 내용
 
@@ -60,6 +60,59 @@ def display_chat_history():
                 st.caption(f"**사용된 도구**: {tool_label}")
 
             st.markdown(content)
+
+            # -------------- 답변 복사 버튼 (assistant만) -------------- #
+            if role == "assistant":
+                import json
+                safe_answer = json.dumps(content)
+                unique_id = abs(hash(content + str(idx)))  # idx 추가로 고유 ID 생성
+
+                copy_button_html = f"""
+                <button id="copy_history_btn_{unique_id}" onclick="copyHistoryToClipboard_{unique_id}()" style="
+                    background-color: #FF4B4B;
+                    color: white;
+                    border: none;
+                    padding: 0.4rem 0.8rem;
+                    border-radius: 0.25rem;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    margin-top: 0.5rem;
+                ">📋 복사</button>
+
+                <script>
+                function copyHistoryToClipboard_{unique_id}() {{
+                    const text = {safe_answer};
+                    const button = document.getElementById('copy_history_btn_{unique_id}');
+
+                    if (!navigator.clipboard) {{
+                        const textArea = document.createElement('textarea');
+                        textArea.value = text;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-9999px';
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {{
+                            document.execCommand('copy');
+                            button.textContent = '✅ 복사됨!';
+                            setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
+                        }} catch (err) {{
+                            alert('❌ 복사 실패: ' + err);
+                        }}
+                        document.body.removeChild(textArea);
+                        return;
+                    }}
+
+                    navigator.clipboard.writeText(text).then(function() {{
+                        button.textContent = '✅ 복사됨!';
+                        setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
+                    }}, function(err) {{
+                        alert('❌ 복사 실패: ' + err);
+                    }});
+                }}
+                </script>
+                """
+                st.markdown(copy_button_html, unsafe_allow_html=True)
 
             # -------------- 출처 정보 표시 -------------- #
             # assistant 메시지에 출처가 있으면 expander로 표시
