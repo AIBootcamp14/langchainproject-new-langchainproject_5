@@ -10,7 +10,7 @@ Langchain PGVector를 사용하여 문서 추가 및 유사도 검색을 테스�
 from langchain.schema import Document
 
 # ------------------------- 프로젝트 모듈 ------------------------- #
-from src.rag.vector_store import PaperVectorStore
+from src.database.vector_store import PaperVectorStore
 
 
 # ==================== 메인 테스트 ==================== #
