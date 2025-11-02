@@ -68,12 +68,12 @@ def initialize_authenticator():
         }
 
         # Authenticator 생성
+        # streamlit-authenticator 최신 버전: pre_authorized 파라미터 제거됨
         authenticator = stauth.Authenticate(
             config['credentials'],
             config['cookie']['name'],
             config['cookie']['key'],
-            config['cookie']['expiry_days'],
-            config['preauthorized']
+            config['cookie']['expiry_days']
         )
 
         st.session_state.authenticator = authenticator
