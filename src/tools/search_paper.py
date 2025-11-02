@@ -193,8 +193,9 @@ def search_paper_node(state: AgentState, exp_manager=None):
             tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
             tool_logger.close()
 
-        # -------------- 최종 답변 저장 -------------- #
+        # -------------- 최종 답변 및 출처 문서 저장 -------------- #
         state["final_answer"] = response.content  # 응답 내용 저장
+        state["source_documents"] = docs          # 검색된 문서 저장
 
     except Exception as e:
         if tool_logger:
