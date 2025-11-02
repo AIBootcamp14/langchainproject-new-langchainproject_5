@@ -122,30 +122,30 @@ class RAGRetriever:
 
     # ---------- 내부: MultiQueryRetriever 구성 (있으면 사용) ----------
     def _maybe_build_multiquery(self):
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or MultiQueryRetriever is None:
-        self._multi_query_retriever = None
-        return
-    try:
-        llm = ChatOpenAI(model=self.llm_model, temperature=self.llm_temperature)
-        base = self.vectorstore.as_retriever(
-            search_type=self.search_type,
-            search_kwargs={
-                "k": self.k,
-                **(
-                    {"fetch_k": self.fetch_k, "lambda_mult": self.lambda_mult}
-                    if self.search_type == "mmr"
-                    else {}
-                ),
-            },
-        )
-        self._multi_query_retriever = MultiQueryRetriever.from_llm(
-            retriever=base,
-            llm=llm,
-        )
-    except Exception:
-        # LLM/네트워크 문제 등 발생 시 폴백
-        self._multi_query_retriever = None
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key or MultiQueryRetriever is None:
+            self._multi_query_retriever = None
+            return
+        try:
+            llm = ChatOpenAI(model=self.llm_model, temperature=self.llm_temperature)
+            base = self.vectorstore.as_retriever(
+                search_type=self.search_type,
+                search_kwargs={
+                    "k": self.k,
+                    **(
+                        {"fetch_k": self.fetch_k, "lambda_mult": self.lambda_mult}
+                        if self.search_type == "mmr"
+                        else {}
+                    ),
+                },
+            )
+            self._multi_query_retriever = MultiQueryRetriever.from_llm(
+                retriever=base,
+                llm=llm,
+            )
+        except Exception:
+            # LLM/네트워크 문제 등 발생 시 폴백
+            self._multi_query_retriever = None
 
     # ---------- 공개 API: 기본 검색 ----------
     def invoke(self, query: str) -> List[Document]:
