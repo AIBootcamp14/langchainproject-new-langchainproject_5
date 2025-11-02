@@ -77,11 +77,23 @@ def initialize_agent():
         tuple: (agent_executor, exp_manager)
     """
     try:
+        # -------------- 이전 실험 폴더의 빈 폴더 정리 -------------- #
+        from pathlib import Path
+        experiments_root = Path("experiments")
+        if experiments_root.exists():
+            # 빈 폴더 삭제 (하위 폴더부터 상위 폴더 순으로)
+            for folder in sorted(experiments_root.rglob("*"), key=lambda p: -len(p.parts)):
+                if folder.is_dir() and not any(folder.iterdir()):
+                    try:
+                        folder.rmdir()
+                    except Exception:
+                        pass
+
         # ExperimentManager 생성
         exp_manager = ExperimentManager()
 
         # Agent 그래프 생성
-        agent_executor = create_agent_graph()
+        agent_executor = create_agent_graph(exp_manager=exp_manager)
 
         exp_manager.logger.write("Streamlit UI 시작")
         exp_manager.logger.write(f"실험 폴더: {exp_manager.experiment_dir}")
