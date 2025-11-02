@@ -45,8 +45,8 @@ def search_paper_node(state: AgentState, exp_manager=None):
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")  # 임베딩 모델
         vectorstore = PGVector(
             collection_name="paper_chunks",     # 컬렉션 이름
-            embedding_function=embeddings,      # 임베딩 함수
-            connection_string=os.getenv("DATABASE_URL")  # DB 연결 문자열
+            embeddings=embeddings,              # 임베딩 객체
+            connection=os.getenv("DATABASE_URL")  # DB 연결 문자열
         )
 
         if tool_logger:
