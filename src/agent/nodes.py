@@ -8,8 +8,8 @@ LangGraph Agent의 노드 함수들:
 """
 
 # ==================== 라이브러리 Import ==================== #
-from langchain_openai import ChatOpenAI
 from src.agent.state import AgentState
+from src.llm.client import LLMClient
 
 # ==================== 도구 Import ==================== #
 from src.tools.general_answer import general_answer_node
@@ -56,11 +56,15 @@ def router_node(state: AgentState, exp_manager=None):
                          하나의 도구 이름만 반환하세요:
                          """
 
-    # -------------- LLM 초기화 -------------- #
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)  # 라우팅용 LLM
+    # -------------- 난이도별 LLM 초기화 -------------- #
+    difficulty = state.get("difficulty", "easy")  # 난이도 (기본값: easy)
+    llm_client = LLMClient.from_difficulty(
+        difficulty=difficulty,
+        logger=exp_manager.logger if exp_manager else None
+    )
 
     # -------------- LLM 호출 -------------- #
-    tool_choice = llm.invoke(routing_prompt).content.strip()  # 도구 선택
+    tool_choice = llm_client.llm.invoke(routing_prompt).content.strip()  # 도구 선택
 
     # -------------- 로깅 -------------- #
     if exp_manager:
