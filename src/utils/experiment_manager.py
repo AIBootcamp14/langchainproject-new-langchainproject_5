@@ -156,7 +156,9 @@ class ExperimentManager:
         query: str,
         description: str = "",
         tool: str = "",
-        execution_time_ms: Optional[int] = None
+        execution_time_ms: Optional[int] = None,
+        params: Optional[tuple] = None,
+        result_count: Optional[int] = None
     ):
         """
         SQL 쿼리 기록
@@ -166,6 +168,8 @@ class ExperimentManager:
             description: 쿼리 설명
             tool: 사용한 도구명
             execution_time_ms: 실행 시간 (밀리초)
+            params: 쿼리 파라미터 (선택)
+            result_count: 결과 개수 (선택)
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -176,6 +180,10 @@ class ExperimentManager:
                         """
         if execution_time_ms:
             query_record += f"-- 실행 소요: {execution_time_ms}ms\n"
+        if params:
+            query_record += f"-- 파라미터: {params}\n"
+        if result_count is not None:
+            query_record += f"-- 결과 개수: {result_count}\n"
 
         query_record += f"\n{query};\n\n"
 

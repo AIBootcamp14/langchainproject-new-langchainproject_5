@@ -44,7 +44,7 @@ def extract_terms_from_answer(answer: str, difficulty: str = "easy", logger=None
         logger.write("용어 추출 시작")
 
     # -------------- LLM 프롬프트 구성 -------------- #
-    extraction_prompt = f"""다음 답변에서 사용된 AI/ML 관련 전문 용어를 추출하고, 각 용어에 대한 간단한 정의를 생성하세요.
+    extraction_prompt = f"""다음 답변에서 사용된 AI/ML 관련 전문 용어를 추출하고, 각 용어에 대한 정의와 난이도별 설명을 생성하세요.
 
 답변:
 {answer}
@@ -55,6 +55,8 @@ def extract_terms_from_answer(answer: str, difficulty: str = "easy", logger=None
     {{
       "term": "용어명",
       "definition": "간단한 정의 (1-2문장)",
+      "easy_explanation": "초보자도 이해할 수 있는 쉬운 설명 (비유, 예시 포함)",
+      "hard_explanation": "전문가용 상세 설명 (기술적 세부사항, 수식 포함)",
       "category": "카테고리 (예: Deep Learning, NLP, Computer Vision 등)"
     }}
   ]
@@ -62,6 +64,8 @@ def extract_terms_from_answer(answer: str, difficulty: str = "easy", logger=None
 
 주의사항:
 - AI/ML 관련 전문 용어만 추출하세요
+- easy_explanation은 비유와 예시를 사용하여 쉽게 설명
+- hard_explanation은 기술적 세부사항과 수식을 포함
 - 일반적인 단어는 제외하세요
 - 최대 5개 용어만 추출하세요
 - 용어가 없으면 빈 리스트를 반환하세요
@@ -122,8 +126,8 @@ def save_terms_to_glossary(terms: List[Dict[str, str]], logger=None) -> int:
 
         # -------------- INSERT 쿼리 -------------- #
         insert_query = """
-        INSERT INTO glossary (term, definition, category, created_at)
-        VALUES (%s, %s, %s, NOW())
+        INSERT INTO glossary (term, definition, easy_explanation, hard_explanation, category, created_at)
+        VALUES (%s, %s, %s, %s, %s, NOW())
         ON CONFLICT (term) DO NOTHING
         RETURNING term_id;
         """
@@ -133,6 +137,8 @@ def save_terms_to_glossary(terms: List[Dict[str, str]], logger=None) -> int:
         for term_data in terms:
             term = term_data.get("term", "").strip()
             definition = term_data.get("definition", "").strip()
+            easy_explanation = term_data.get("easy_explanation", "").strip()
+            hard_explanation = term_data.get("hard_explanation", "").strip()
             category = term_data.get("category", "AI/ML").strip()
 
             # 필수 필드 확인
@@ -142,7 +148,7 @@ def save_terms_to_glossary(terms: List[Dict[str, str]], logger=None) -> int:
                 continue
 
             try:
-                cursor.execute(insert_query, (term, definition, category))
+                cursor.execute(insert_query, (term, definition, easy_explanation, hard_explanation, category))
                 result = cursor.fetchone()
 
                 # RETURNING이 None이면 중복으로 인해 저장되지 않음
