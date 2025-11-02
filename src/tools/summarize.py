@@ -10,12 +10,13 @@ load_summarize_chain (stuff 방식) 사용
 
 # ==================== Import ==================== #
 import os
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from langchain.chains.summarize import load_summarize_chain
 from langchain.prompts import PromptTemplate
 import psycopg2
 from src.agent.state import AgentState
+from src.llm.client import LLMClient
 
 
 # ==================== 도구 6: 논문 요약 노드 ==================== #
@@ -49,7 +50,11 @@ def summarize_node(state: AgentState, exp_manager=None):
         # ============================================================ #
         #              1단계: 논문 제목 추출 (LLM 사용)               #
         # ============================================================ #
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        # 난이도별 LLM 초기화
+        llm_client = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
         extract_prompt = f"""다음 질문에서 요약하려는 논문의 제목을 추출하세요.
                              논문 제목만 정확히 반환하세요. 다른 설명은 불필요합니다.
 
@@ -60,7 +65,7 @@ def summarize_node(state: AgentState, exp_manager=None):
         if tool_logger:
             tool_logger.write(f"논문 제목 추출 프롬프트: {extract_prompt}")
 
-        paper_title = llm.invoke(extract_prompt).content.strip()
+        paper_title = llm_client.llm.invoke(extract_prompt).content.strip()
 
         if tool_logger:
             tool_logger.write(f"추출된 논문 제목: {paper_title}")
@@ -166,8 +171,11 @@ def summarize_node(state: AgentState, exp_manager=None):
             exp_manager.save_system_prompt(system_content, "summarize")
             exp_manager.save_user_prompt(question, "summarize")
 
-        # LLM 초기화 (GPT-4 사용 - 요약 품질 향상)
-        llm_summarize = ChatOpenAI(model="gpt-4", temperature=0.3)
+        # 난이도별 LLM 초기화
+        llm_client_summarize = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
 
         # 프롬프트 템플릿 정의
         prompt_template = f"""{system_content}
@@ -187,8 +195,8 @@ def summarize_node(state: AgentState, exp_manager=None):
 
         # Summarize chain 실행 (stuff 방식)
         chain = load_summarize_chain(
-            llm=llm_summarize,
-            chain_type="stuff",  # 모든 문서를 한번에 처리
+            llm=llm_client_summarize.llm,  # LLMClient의 llm 객체 사용
+            chain_type="stuff",             # 모든 문서를 한번에 처리
             prompt=prompt
         )
 
