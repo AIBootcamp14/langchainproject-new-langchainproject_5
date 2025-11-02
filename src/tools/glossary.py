@@ -341,6 +341,11 @@ def search_glossary(
     - Vector: glossary_embeddings 컬렉션 유사도 검색
     - hybrid: SQL + Vector 결과 병합 후 중복 제거
     """
+    # ---------------------- 질문에서 핵심 용어 추출 ---------------------- #
+    # "BLEU Score가 뭐야?" -> "BLEU Score"
+    if query:
+        query = _extract_term_from_question(query)
+
     items: List[Dict[str, Any]] = []
 
     # ---------------------- Vector 검색 ---------------------- #
