@@ -41,3 +41,4 @@ PyYAML>=6.0.0
 
 # 테스트
 pytest>=7.4.0
+streamlit-authenticator>=0.4.2
