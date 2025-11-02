@@ -9,11 +9,12 @@ PostgreSQL papers 테이블 조회
 
 # ==================== Import ==================== #
 import os
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.schema import SystemMessage, HumanMessage
 from langchain_postgres.vectorstores import PGVector
 import psycopg2
 from src.agent.state import AgentState
+from src.llm.client import LLMClient
 
 
 # ==================== 도구 3: RAG 검색 노드 ==================== #
@@ -176,13 +177,17 @@ def search_paper_node(state: AgentState, exp_manager=None):
         if tool_logger:
             tool_logger.write("LLM 답변 생성 시작")
 
-        llm = ChatOpenAI(model="gpt-4", temperature=0.7)  # RAG용 LLM
+        # 난이도별 LLM 초기화
+        llm_client = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
         messages = [
             SystemMessage(content=system_prompt),  # 시스템 프롬프트
             HumanMessage(content=user_prompt)      # 사용자 프롬프트
         ]
 
-        response = llm.invoke(messages)         # LLM 호출
+        response = llm_client.llm.invoke(messages)  # LLM 호출
 
         if tool_logger:
             tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
