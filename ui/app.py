@@ -99,7 +99,7 @@ agent_executor, exp_manager = initialize_agent()
 
 # ==================== 사이드바 렌더링 ==================== #
 # 난이도 선택 및 설정
-difficulty = render_sidebar()
+difficulty = render_sidebar(exp_manager=exp_manager)
 
 
 # ==================== 채팅 인터페이스 ==================== #

@@ -8,6 +8,9 @@ LangGraph StateGraph 기반 AI Agent 그래프:
 - 그래프 컴파일
 """
 
+# ------------------------- 표준 라이브러리 ------------------------- #
+from functools import partial
+
 # ------------------------- LangGraph 라이브러리 ------------------------- #
 from langgraph.graph import StateGraph, END
 # StateGraph: LangGraph 상태 그래프
@@ -63,14 +66,24 @@ def create_agent_graph(exp_manager=None):
     # -------------- StateGraph 생성 -------------- #
     workflow = StateGraph(AgentState)           # AgentState 기반 그래프 생성
 
+    # -------------- exp_manager를 바인딩한 노드 함수 생성 -------------- #
+    # partial을 사용하여 각 노드에 exp_manager를 미리 바인딩
+    router_with_exp = partial(router_node, exp_manager=exp_manager)
+    general_with_exp = partial(general_answer_node, exp_manager=exp_manager)
+    save_file_with_exp = partial(save_file_node, exp_manager=exp_manager)
+    search_paper_with_exp = partial(search_paper_node, exp_manager=exp_manager)
+    web_search_with_exp = partial(web_search_node, exp_manager=exp_manager)
+    glossary_with_exp = partial(glossary_node, exp_manager=exp_manager)
+    summarize_with_exp = partial(summarize_node, exp_manager=exp_manager)
+
     # -------------- 노드 추가 -------------- #
-    workflow.add_node("router", router_node)                    # 라우터 노드
-    workflow.add_node("general", general_answer_node)           # 일반 답변 노드
-    workflow.add_node("save_file", save_file_node)              # 파일 저장 노드
-    workflow.add_node("search_paper", search_paper_node)        # RAG 검색 노드
-    workflow.add_node("web_search", web_search_node)            # 웹 검색 노드
-    workflow.add_node("glossary", glossary_node)                # 용어집 노드
-    workflow.add_node("summarize", summarize_node)              # 논문 요약 노드
+    workflow.add_node("router", router_with_exp)                    # 라우터 노드
+    workflow.add_node("general", general_with_exp)                  # 일반 답변 노드
+    workflow.add_node("save_file", save_file_with_exp)              # 파일 저장 노드
+    workflow.add_node("search_paper", search_paper_with_exp)        # RAG 검색 노드
+    workflow.add_node("web_search", web_search_with_exp)            # 웹 검색 노드
+    workflow.add_node("glossary", glossary_with_exp)                # 용어집 노드
+    workflow.add_node("summarize", summarize_with_exp)              # 논문 요약 노드
 
     # -------------- 시작점 설정 -------------- #
     workflow.set_entry_point("router")          # 라우터를 시작점으로 설정
