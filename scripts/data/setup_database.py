@@ -7,7 +7,7 @@ from pathlib import Path
 
 import psycopg2
 from dotenv import load_dotenv
-from typing import Dict
+from typing import Dict, Optional
 
 import json
 
@@ -153,7 +153,7 @@ def insert_paper_metadata(conn, cur) -> Dict[str, int]:
     return mapping
 
 
-def save_paper_id_mapping(conn, mapping: Dict[str, int] = None):
+def save_paper_id_mapping(conn, mapping: Optional[Dict[str, int]] = None):
     """arxiv_id → paper_id 매핑을 파일로 저장합니다.
     
     Args:
