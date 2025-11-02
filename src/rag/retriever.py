@@ -16,11 +16,14 @@ from typing import List, Dict, Any, Optional, Tuple
 from langchain_core.documents import Document
 from langchain_openai import ChatOpenAI
 # ---------- MultiQueryRetriever 임포트(버전 호환) ----------
-# - 프로젝트 환경에서 확인된 안정 경로: langchain_classic.retrievers
-# - 환경에 따라 다를 수 있으므로 필요 시 대체 경로 사용 가능
-from langchain_classic.retrievers import MultiQueryRetriever # 권장
-# 대체: 신/구버전 경로 탐색 (필요 시 확장)
-# from langchain.retrievers.multi_query import MultiQueryRetriever # type: ignore
+# - 다양한 langchain 버전 지원을 위한 임포트
+try:
+    from langchain.retrievers.multi_query import MultiQueryRetriever
+except ImportError:
+    try:
+        from langchain_community.retrievers import MultiQueryRetriever
+    except ImportError:
+        MultiQueryRetriever = None  # MultiQueryRetriever 미지원 환경
 
 from .vector_store import get_pgvector_store
 

@@ -44,6 +44,4 @@ pytest>=7.4.0
 streamlit-authenticator>=0.4.2
 
 # ------------------------- RAG 시스템 (팀원: 신준엽) ------------------------- #
-langchain-postgres==0.0.13                # Langchain PostgreSQL 통합
-langchain-classic==0.3.15                 # MultiQueryRetriever 지원
 pgvector==0.3.6                            # pgvector Python 클라이언트
