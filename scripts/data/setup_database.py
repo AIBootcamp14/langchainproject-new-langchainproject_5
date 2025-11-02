@@ -49,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_papers_title ON papers USING gin (to_tsvector('si
 """
 
 DDL_ALTER_PAPERS_COLUMNS = """
+ALTER TABLE papers ADD COLUMN IF NOT EXISTS arxiv_id VARCHAR(64);
 ALTER TABLE papers ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE papers ADD COLUMN IF NOT EXISTS publish_date DATE;
 ALTER TABLE papers ADD COLUMN IF NOT EXISTS citation_count INT;
