@@ -26,6 +26,7 @@ class AgentState(TypedDict):
         tool_result (str): 도구 실행 결과
         final_answer (str): 최종 답변
         messages (list): 대화 히스토리 (메시지 리스트)
+        source_documents (list): 참고 논문 문서 리스트 (선택 사항)
     """
     question: str                               # 사용자 질문
     difficulty: str                             # 난이도 (easy/hard)
@@ -33,3 +34,4 @@ class AgentState(TypedDict):
     tool_result: str                            # 도구 실행 결과
     final_answer: str                           # 최종 답변
     messages: list                              # 대화 히스토리
+    source_documents: list                      # 참고 논문 문서

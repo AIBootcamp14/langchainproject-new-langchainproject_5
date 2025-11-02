@@ -43,11 +43,26 @@ def display_chat_history():
 
         # 역할별 채팅 버블 표시
         with st.chat_message(role):
+            # -------------- 도구 선택 정보 표시 -------------- #
+            # assistant 메시지에 도구 선택 정보가 있으면 배지로 표시
+            if role == "assistant" and "tool_choice" in message:
+                tool_choice = message["tool_choice"]
+                tool_labels = {
+                    "general": "🗣️ 일반 답변",
+                    "search_paper": "📚 RAG 논문 검색",
+                    "web_search": "🌐 웹 검색",
+                    "glossary": "📖 RAG 용어집",
+                    "summarize": "📄 논문 요약",
+                    "save_file": "💾 파일 저장"
+                }
+                tool_label = tool_labels.get(tool_choice, f"🔧 {tool_choice}")
+                st.caption(f"**사용된 도구**: {tool_label}")
+
             st.markdown(content)
 
             # -------------- 출처 정보 표시 -------------- #
             # assistant 메시지에 출처가 있으면 expander로 표시
-            if role == "assistant" and "sources" in message:
+            if role == "assistant" and message.get("sources") and len(message["sources"]) > 0:
                 with st.expander("📚 참고 논문"):
                     for doc in message["sources"]:
                         st.markdown(f"""
@@ -119,11 +134,25 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
             # -------------- 답변 표시 -------------- #
             answer = response.get("final_answer", "답변을 생성할 수 없습니다.")
+
+            # -------------- 도구 선택 정보 표시 -------------- #
+            tool_choice = response.get("tool_choice", "unknown")
+            tool_labels = {
+                "general": "🗣️ 일반 답변",
+                "search_paper": "📚 RAG 논문 검색",
+                "web_search": "🌐 웹 검색",
+                "glossary": "📖 RAG 용어집",
+                "summarize": "📄 논문 요약",
+                "save_file": "💾 파일 저장"
+            }
+            tool_label = tool_labels.get(tool_choice, f"🔧 {tool_choice}")
+            st.caption(f"**사용된 도구**: {tool_label}")
+
             message_placeholder.markdown(answer)
 
             # -------------- 출처 정보 표시 -------------- #
             sources = []
-            if "source_documents" in response:
+            if "source_documents" in response and response["source_documents"]:
                 with st.expander("📚 참고 논문"):
                     for doc in response["source_documents"]:
                         metadata = doc.metadata
@@ -138,7 +167,7 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                         sources.append(metadata)
 
             # -------------- 파일 저장 도구 실행 시 다운로드 버튼 -------------- #
-            if response.get("tool_choice") == "save_file":
+            if tool_choice == "save_file":
                 st.divider()
                 show_download_success()
                 create_download_button(
@@ -150,6 +179,7 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": answer,
+                "tool_choice": tool_choice,
                 "sources": sources if sources else None
             })
 

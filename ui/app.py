@@ -53,9 +53,17 @@ if not os.getenv("OPENAI_API_KEY"):
     st.info("💡 .env 파일에 API 키를 추가하거나 환경 변수를 설정해주세요.")
     st.stop()                                   # 앱 실행 중지
 
-# DATABASE_URL 확인
-if not os.getenv("DATABASE_URL"):
-    st.warning("⚠️ DATABASE_URL이 설정되지 않았습니다. RAG 기능이 제한될 수 있습니다.")
+# PostgreSQL 설정 확인
+postgres_config_ok = all([
+    os.getenv("POSTGRES_USER"),
+    os.getenv("POSTGRES_PASSWORD"),
+    os.getenv("POSTGRES_HOST"),
+    os.getenv("POSTGRES_DB")
+])
+
+if not postgres_config_ok:
+    st.warning("⚠️ PostgreSQL 설정이 완전하지 않습니다. RAG 기능이 제한될 수 있습니다.")
+    st.info("💡 .env 파일에서 POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_DB를 확인해주세요.")
 
 
 # ==================== Agent 및 ExperimentManager 초기화 ==================== #
