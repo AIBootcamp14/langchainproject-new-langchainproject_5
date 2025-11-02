@@ -9,9 +9,9 @@ LLM 기반 핵심 용어 추출
 
 # ==================== Import ==================== #
 import os
-from langchain_openai import ChatOpenAI
 import psycopg2
 from src.agent.state import AgentState
+from src.llm.client import LLMClient
 
 
 # ==================== 도구 5: 용어집 노드 ==================== #
@@ -39,14 +39,18 @@ def glossary_node(state: AgentState, exp_manager=None):
 
     # -------------- 질문에서 용어 추출 -------------- #
     try:
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)  # 용어 추출용 LLM
+        # 난이도별 LLM 초기화
+        llm_client = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
         extract_prompt = f"""다음 질문에서 핵심 용어를 추출하세요. 용어만 반환하세요:
 
                              질문: {question}
 
                              용어:"""
 
-        term = llm.invoke(extract_prompt).content.strip()  # 용어 추출
+        term = llm_client.llm.invoke(extract_prompt).content.strip()  # 용어 추출
 
         if tool_logger:
             tool_logger.write(f"추출된 용어: {term}")
