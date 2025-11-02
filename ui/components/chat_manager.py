@@ -215,51 +215,65 @@ def get_chat_list() -> List[Dict]:
     return chat_list
 
 
-# ---------------------- 전체 채팅 내역 내보내기 ---------------------- #
-def export_current_chat() -> str:
+# ---------------------- 특정 채팅 내역 내보내기 ---------------------- #
+def export_chat(chat_id: str) -> str:
     """
-    현재 채팅의 전체 대화 내역을 텍스트로 변환
+    특정 채팅의 전체 대화 내역을 마크다운 형식으로 변환
+
+    Args:
+        chat_id: 채팅 ID
 
     Returns:
-        str: 대화 내역 텍스트
+        str: 대화 내역 마크다운 텍스트
     """
-    chat_id = st.session_state.current_chat_id
-
     if not chat_id or chat_id not in st.session_state.chats:
         return ""
 
     chat_data = st.session_state.chats[chat_id]
     messages = chat_data["messages"]
 
-    # 헤더 정보
-    export_text = f"""=== 채팅 기록 ===
-제목: {chat_data['title']}
-난이도: {chat_data['difficulty']}
-생성 시간: {chat_data['created_at']}
-메시지 수: {len(messages)}
+    # 마크다운 헤더 정보
+    export_text = f"""# 채팅 기록
 
-{"=" * 50}
+**제목**: {chat_data['title']}
+**난이도**: {chat_data['difficulty']}
+**생성 시간**: {chat_data['created_at']}
+**메시지 수**: {len(messages)}
+
+---
 
 """
 
     # 모든 메시지 추가
     for i, msg in enumerate(messages, 1):
-        role = "사용자" if msg["role"] == "user" else "AI"
-        export_text += f"[{i}] {role}:\n{msg['content']}\n\n"
+        role = "🙋 사용자" if msg["role"] == "user" else "🤖 AI"
+        export_text += f"## [{i}] {role}\n\n{msg['content']}\n\n"
 
         # 도구 정보 추가
         if msg["role"] == "assistant" and "tool_choice" in msg:
             tool_labels = {
-                "general": "일반 답변",
-                "search_paper": "RAG 논문 검색",
-                "web_search": "웹 검색",
-                "glossary": "RAG 용어집",
-                "summarize": "논문 요약",
-                "save_file": "파일 저장"
+                "general": "🗣️ 일반 답변",
+                "search_paper": "📚 RAG 논문 검색",
+                "web_search": "🌐 웹 검색",
+                "glossary": "📖 RAG 용어집",
+                "summarize": "📄 논문 요약",
+                "save_file": "💾 파일 저장"
             }
             tool_label = tool_labels.get(msg["tool_choice"], msg["tool_choice"])
-            export_text += f"(사용된 도구: {tool_label})\n\n"
+            export_text += f"*사용된 도구: {tool_label}*\n\n"
 
-        export_text += "-" * 50 + "\n\n"
+        export_text += "---\n\n"
 
     return export_text
+
+
+# ---------------------- 현재 채팅 내역 내보내기 ---------------------- #
+def export_current_chat() -> str:
+    """
+    현재 채팅의 전체 대화 내역을 마크다운 형식으로 변환
+
+    Returns:
+        str: 대화 내역 마크다운 텍스트
+    """
+    chat_id = st.session_state.current_chat_id
+    return export_chat(chat_id)
