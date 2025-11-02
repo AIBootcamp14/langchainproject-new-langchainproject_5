@@ -7,9 +7,9 @@ LLM의 자체 지식으로 직접 답변 생성
 """
 
 # ==================== Import ==================== #
-from langchain_openai import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
 from src.agent.state import AgentState
+from src.llm.client import LLMClient
 
 
 # ==================== 도구 1: 일반 답변 노드 ==================== #
@@ -51,8 +51,11 @@ def general_answer_node(state: AgentState, exp_manager=None):
 
     system_msg = SystemMessage(content=system_content)  # SystemMessage 객체 생성
 
-    # -------------- LLM 초기화 -------------- #
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)  # 일반 답변용 LLM
+    # -------------- 난이도별 LLM 초기화 -------------- #
+    llm_client = LLMClient.from_difficulty(
+        difficulty=difficulty,
+        logger=exp_manager.logger if exp_manager else None
+    )
 
     # -------------- 메시지 구성 -------------- #
     messages = [
@@ -65,7 +68,7 @@ def general_answer_node(state: AgentState, exp_manager=None):
         exp_manager.logger.write("LLM 호출 시작")
 
     # -------------- LLM 호출 -------------- #
-    response = llm.invoke(messages)             # LLM 응답 생성
+    response = llm_client.llm.invoke(messages)  # LLM 응답 생성
 
     # -------------- 로깅 -------------- #
     if exp_manager:
