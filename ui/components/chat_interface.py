@@ -9,6 +9,9 @@ Streamlit 채팅 UI 구성:
 - Agent 실행 및 답변 표시
 """
 
+# ------------------------- 표준 라이브러리 ------------------------- #
+from datetime import datetime
+
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 import streamlit as st
 from langchain.callbacks import StreamlitCallbackHandler
@@ -75,12 +78,13 @@ def display_chat_history():
 
 # ==================== 사용자 입력 처리 ==================== #
 # ---------------------- 사용자 메시지 추가 ---------------------- #
-def add_user_message(prompt: str):
+def add_user_message(prompt: str, exp_manager=None):
     """
     사용자 메시지를 히스토리에 추가하고 표시
 
     Args:
         prompt: 사용자 입력 텍스트
+        exp_manager: ExperimentManager 인스턴스 (선택)
     """
     # 세션 상태에 메시지 추가
     st.session_state.messages.append({
@@ -91,6 +95,11 @@ def add_user_message(prompt: str):
     # 채팅 버블로 표시
     with st.chat_message("user"):
         st.markdown(prompt)
+
+    # -------------- 사용자 질문 로그 기록 -------------- #
+    if exp_manager:
+        exp_manager.log_ui_interaction(f"사용자 질문: {prompt}")
+        exp_manager.update_metadata(user_query=prompt)
 
 
 # ---------------------- Agent 응답 처리 ---------------------- #
@@ -122,6 +131,9 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
         try:
             # -------------- Agent 실행 -------------- #
+            if exp_manager:
+                exp_manager.log_ui_interaction(f"Agent 실행 시작 (난이도: {difficulty})")
+
             with st.spinner("🤖 답변 생성 중..."):
                 response = agent_executor.invoke(
                     {
@@ -148,7 +160,17 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             tool_label = tool_labels.get(tool_choice, f"🔧 {tool_choice}")
             st.caption(f"**사용된 도구**: {tool_label}")
 
+            # -------------- 도구 선택 로그 기록 -------------- #
+            if exp_manager:
+                exp_manager.log_ui_interaction(f"선택된 도구: {tool_choice} ({tool_label})")
+                exp_manager.update_metadata(tool_used=tool_choice)
+
             message_placeholder.markdown(answer)
+
+            # -------------- LLM 응답 로그 기록 -------------- #
+            if exp_manager:
+                exp_manager.save_output("response.txt", answer)
+                exp_manager.log_ui_interaction(f"답변 생성 완료 ({len(answer)} 글자)")
 
             # -------------- 출처 정보 표시 -------------- #
             sources = []
@@ -192,7 +214,27 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
             # 로그 기록 (ExperimentManager 사용 시)
             if exp_manager:
+                import traceback
+
+                # UI 에러 로그 저장
+                error_log = f"""에러 발생 시각: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+질문: {prompt}
+난이도: {difficulty}
+에러 메시지: {str(e)}
+
+상세 트레이스:
+{traceback.format_exc()}
+"""
+                # UI 폴더에 에러 로그 저장
+                error_file = exp_manager.ui_dir / "errors.log"
+                with open(error_file, 'a', encoding='utf-8') as f:
+                    f.write(error_log)
+                    f.write("=" * 80 + "\n\n")
+
+                # 메인 로거에도 기록
                 exp_manager.logger.write(f"UI 에러: {e}", print_error=True)
+                exp_manager.log_ui_interaction(f"에러 발생: {str(e)}")
+                exp_manager.update_metadata(success=False, error=str(e))
 
             return None
 
@@ -211,7 +253,7 @@ def render_chat_input(agent_executor, difficulty: str, exp_manager=None):
     # 채팅 입력창 표시
     if prompt := st.chat_input("논문에 대해 질문해보세요..."):
         # 사용자 메시지 추가
-        add_user_message(prompt)
+        add_user_message(prompt, exp_manager=exp_manager)
 
         # Agent 응답 처리
         handle_agent_response(

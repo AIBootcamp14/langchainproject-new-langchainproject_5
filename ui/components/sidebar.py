@@ -15,9 +15,12 @@ import streamlit as st
 
 # ==================== 사이드바 렌더링 함수 ==================== #
 # ---------------------- 난이도 선택 사이드바 ---------------------- #
-def render_sidebar():
+def render_sidebar(exp_manager=None):
     """
     사이드바 UI 렌더링
+
+    Args:
+        exp_manager: ExperimentManager 인스턴스 (선택)
 
     Returns:
         str: 선택된 난이도 (easy 또는 hard)
@@ -34,6 +37,23 @@ def render_sidebar():
             index=0,                                    # 기본값: easy
             help="답변의 난이도를 선택하세요"
         )
+
+        # -------------- 난이도 변경 로그 기록 -------------- #
+        # 세션 상태에 이전 난이도 저장 및 변경 감지
+        if "previous_difficulty" not in st.session_state:
+            st.session_state.previous_difficulty = difficulty
+            # 첫 실행 시 로깅
+            if exp_manager:
+                exp_manager.log_ui_interaction(f"초기 난이도 설정: {difficulty}")
+                exp_manager.update_metadata(difficulty=difficulty)
+        elif st.session_state.previous_difficulty != difficulty:
+            # 난이도 변경 감지
+            if exp_manager:
+                exp_manager.log_ui_interaction(
+                    f"난이도 변경: {st.session_state.previous_difficulty} → {difficulty}"
+                )
+                exp_manager.update_metadata(difficulty=difficulty)
+            st.session_state.previous_difficulty = difficulty
 
         # 구분선 추가
         st.divider()
