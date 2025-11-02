@@ -606,15 +606,15 @@ configs/db_config.yaml (설정 파일, ${VAR} 형태로 환경 변수 참조)
   ↓
 src/utils/config_loader.py (YAML 로드 및 환경 변수 치환)
   ↓
-src/utils/db.py (Connection Pool)
+src/database/db.py (Connection Pool)
 ```
 
 ### 8.2 Connection Pool 구현
 
-**파일 경로**: `src/utils/db.py`
+**파일 경로**: `src/database/db.py`
 
 ```python
-# src/utils/db.py
+# src/database/db.py
 
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 import psycopg2
@@ -730,7 +730,7 @@ def execute_query(query, params=None, fetch=False):
 # test_db_connection.py
 
 # ------------------------- 프로젝트 모듈 ------------------------- #
-from src.utils.db import execute_query
+from src.database.db import execute_query
 
 # ---------------------- PostgreSQL 버전 확인 ---------------------- #
 result = execute_query("SELECT version()", fetch=True)
@@ -757,7 +757,7 @@ python test_db_connection.py
 
 ```python
 # ------------------------- 프로젝트 모듈 ------------------------- #
-from src.utils.db import execute_query
+from src.database.db import execute_query
 
 # ---------------------- 논문 데이터 삽입 ---------------------- #
 def insert_paper(title, authors, publish_date, source, url, category, abstract):
