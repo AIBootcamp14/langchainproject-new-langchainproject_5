@@ -169,10 +169,40 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             message_placeholder.markdown(answer)
 
             # -------------- 답변 복사 및 저장 버튼 -------------- #
-            col_copy, col_save = st.columns([3, 1])
+            col_copy, col_save = st.columns(2)
 
             with col_copy:
-                st.text_area("📋 복사하려면 텍스트를 선택하세요", value=answer, height=100, key=f"copy_{hash(answer)}")
+                # HTML + JavaScript를 사용한 클립보드 복사 버튼
+                import json
+                # JavaScript에서 안전하게 사용하기 위해 JSON 인코딩
+                safe_answer = json.dumps(answer)
+                unique_id = abs(hash(answer))  # 양수로 변환
+
+                copy_button_html = f"""
+                <button onclick="copyToClipboard_{unique_id}()" style="
+                    background-color: #FF4B4B;
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.25rem;
+                    cursor: pointer;
+                    width: 100%;
+                    font-size: 1rem;
+                    font-weight: 500;
+                ">📋 복사</button>
+
+                <script>
+                function copyToClipboard_{unique_id}() {{
+                    const text = {safe_answer};
+                    navigator.clipboard.writeText(text).then(function() {{
+                        alert('✅ 답변이 클립보드에 복사되었습니다!');
+                    }}, function(err) {{
+                        alert('❌ 복사 실패: ' + err);
+                    }});
+                }}
+                </script>
+                """
+                st.markdown(copy_button_html, unsafe_allow_html=True)
 
             with col_save:
                 # 파일명 생성
