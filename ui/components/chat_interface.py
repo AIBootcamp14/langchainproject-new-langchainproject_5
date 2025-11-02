@@ -18,6 +18,7 @@ from langchain.callbacks import StreamlitCallbackHandler
 
 # ------------------------- 프로젝트 모듈 ------------------------- #
 from ui.components.file_download import show_download_success, create_download_button
+from src.utils.glossary_extractor import extract_and_save_terms
 
 
 # ==================== 채팅 히스토리 관리 ==================== #
@@ -167,10 +168,29 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
             message_placeholder.markdown(answer)
 
+            # -------------- 답변 복사 버튼 -------------- #
+            with st.expander("📋 답변 복사"):
+                st.code(answer, language="markdown")
+
             # -------------- LLM 응답 로그 기록 -------------- #
             if exp_manager:
                 exp_manager.save_output("response.txt", answer)
                 exp_manager.log_ui_interaction(f"답변 생성 완료 ({len(answer)} 글자)")
+
+            # -------------- AI/ML 용어 자동 추출 및 저장 -------------- #
+            try:
+                if exp_manager:
+                    saved_count = extract_and_save_terms(
+                        answer=answer,
+                        difficulty=difficulty,
+                        logger=exp_manager.logger
+                    )
+                    if saved_count > 0:
+                        exp_manager.log_ui_interaction(f"용어집에 {saved_count}개 용어 자동 저장")
+                        st.toast(f"✅ {saved_count}개 용어가 용어집에 추가되었습니다!", icon="📚")
+            except Exception as e:
+                if exp_manager:
+                    exp_manager.logger.write(f"용어 자동 저장 실패: {e}", print_error=True)
 
             # -------------- 출처 정보 표시 -------------- #
             sources = []
