@@ -22,7 +22,8 @@ from ui.components.chat_manager import (
     switch_chat,
     delete_chat,
     get_chat_list,
-    get_current_difficulty
+    get_current_difficulty,
+    export_chat
 )
 
 
@@ -165,7 +166,7 @@ def render_sidebar(exp_manager=None):
                         )
                     else:
                         # 일반 채팅 - 버튼으로 표시
-                        col1, col2 = st.columns([5, 1])
+                        col1, col2, col3 = st.columns([5, 1, 1])
 
                         with col1:
                             if st.button(
@@ -182,6 +183,22 @@ def render_sidebar(exp_manager=None):
                                 st.rerun()
 
                         with col2:
+                            # 저장 버튼
+                            chat_content = export_chat(chat_id)
+                            if chat_content:
+                                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                                filename = f"chat_{title[:20]}_{timestamp}.md"
+
+                                st.download_button(
+                                    label="💾",
+                                    data=chat_content,
+                                    file_name=filename,
+                                    mime="text/markdown",
+                                    key=f"save_{chat_id}",
+                                    help="저장"
+                                )
+
+                        with col3:
                             # 삭제 버튼
                             if st.button("🗑️", key=f"delete_{chat_id}", help="삭제"):
                                 delete_chat(chat_id)
