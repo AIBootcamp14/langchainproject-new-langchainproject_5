@@ -196,17 +196,25 @@ def main() -> int:
     dsn = dsn.replace("postgresql+psycopg2://", "postgresql://")
 
     with psycopg2.connect(dsn) as conn:
+        # ---------------------- 스키마 생성 (DDL) ---------------------- #
         with conn.cursor() as cur:
             ensure_pgvector(conn, cur)
             cur.execute(DDL_CREATE_TABLES)
             cur.execute(DDL_ALTER_PAPERS_COLUMNS)
             cur.execute(DDL_ALTER_GLOSSARY_COLUMNS)
             cur.execute(DDL_CREATE_INDEXES)
+        conn.commit()
+        print("Schema created and committed.")
+
+        # ---------------------- 데이터 삽입 ---------------------- #
+        with conn.cursor() as cur:
             insert_glossary_data(conn, cur)
             # JSON 메타데이터를 papers 테이블에 삽입
             mapping = insert_paper_metadata(conn, cur)
         conn.commit()
-        # 매핑 파일 저장
+        print("Data insertion completed.")
+
+        # ---------------------- 매핑 파일 저장 ---------------------- #
         save_paper_id_mapping(conn, mapping if mapping else None)
 
     print("Database setup completed (tables, indexes, glossary seed, id mapping).")
