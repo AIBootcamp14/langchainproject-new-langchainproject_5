@@ -1,23 +1,376 @@
-# src/tools/glossary.py
-"""
-용어집 검색 도구 모듈
+# ==========================================
+# 📘 Phase 3: 용어집 시스템 구현
+# 📍 Step 5: 용어집 도구(@tool) + 하이브리드 검색 + Agent 노드 통합
+# ------------------------------------------
+# - @tool: search_glossary (hybrid/sql/vector)
+# - PostgreSQL(ILIKE/필터) + PGVector(유사도) 병합
+# - 난이도 모드(easy/hard/auto)로 설명 선택
+# - Agent 노드 통합: glossary_node
+# ==========================================
 
-PostgreSQL glossary 테이블 연동
-LLM 기반 핵심 용어 추출
-난이도별 설명 제공 (easy_explanation, hard_explanation)
-"""
-
-# ==================== Import ==================== #
+# ------------------------- 표준 라이브러리 ------------------------- #
 import os
+from typing import Any, Dict, List, Optional, Tuple
+
+# ------------------------- 서드파티 라이브러리 ------------------------- #
 import psycopg2
-from src.agent.state import AgentState
-from src.llm.client import LLMClient
+from psycopg2.extras import RealDictCursor
+from langchain_core.tools import tool
+from langchain_core.documents import Document
+from langchain_openai import OpenAIEmbeddings
+from langchain_postgres.vectorstores import PGVector
+
+# ------------------------- 프로젝트 모듈 ------------------------- #
+from src.utils.config_loader import get_postgres_connection_string, get_db_config
 
 
-# ==================== 도구 5: 용어집 노드 ==================== #
-def glossary_node(state: AgentState, exp_manager=None):
+# ==================== 환경/커넥션 유틸리티 ==================== #
+
+def _env(primary: str, alt: str, default: Optional[str] = None) -> Optional[str]:
     """
-    용어집 노드: glossary 테이블에서 용어 정의 검색
+    환경변수 읽기 헬퍼 함수
+
+    Args:
+        primary: 우선순위 환경변수명
+        alt: 대체 환경변수명
+        default: 기본값
+
+    Returns:
+        환경변수 값
+    """
+    return os.getenv(primary) or os.getenv(alt) or default
+
+
+def _pg_conn_str() -> str:
+    """
+    PostgreSQL 연결 문자열 생성
+
+    configs/db_config.yaml 설정을 우선 사용하고,
+    없으면 환경변수로 폴백
+
+    Returns:
+        PostgreSQL 연결 문자열
+    """
+    try:
+        # configs/db_config.yaml 사용 (권장)
+        return get_postgres_connection_string()
+    except Exception:
+        # 환경변수 폴백
+        user = _env("POSTGRES_USER", "PGUSER", "postgres")
+        password = _env("POSTGRES_PASSWORD", "PGPASSWORD", "postgres")
+        host = _env("POSTGRES_HOST", "PGHOST", "localhost")
+        port = _env("POSTGRES_PORT", "PGPORT", "5432")
+        db = _env("POSTGRES_DB", "PGDATABASE", "papers")
+        return f"postgresql://{user}:{password}@{host}:{port}/{db}"
+
+
+def _get_glossary_vectorstore() -> PGVector:
+    """
+    용어집 전용 VectorStore 초기화
+
+    Returns:
+        PGVector 인스턴스 (glossary_embeddings 컬렉션)
+    """
+    # PostgreSQL 연결 문자열 가져오기
+    conn_str = _pg_conn_str()
+
+    # 컬렉션명 가져오기 (환경변수 또는 기본값)
+    collection = os.getenv("PGV_COLLECTION_GLOSSARY", "glossary_embeddings")
+
+    # Embeddings 초기화
+    embeddings = OpenAIEmbeddings(
+        model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+    )
+
+    # PGVector VectorStore 생성
+    return PGVector(
+        collection_name=collection,
+        embeddings=embeddings,
+        connection=conn_str,
+        use_jsonb=True,
+    )
+
+
+# ==================== SQL 1차 조회 ==================== #
+
+def _fetch_glossary_sql(
+    query: Optional[str],
+    category: Optional[str],
+    difficulty: Optional[str],
+    limit: int,
+) -> List[Dict[str, Any]]:
+    """
+    PostgreSQL glossary 테이블에서 검색
+
+    Args:
+        query: 검색 쿼리 (term, definition, explanation에서 ILIKE 검색)
+        category: 카테고리 필터
+        difficulty: 난이도 필터 (beginner/intermediate/advanced)
+        limit: 최대 결과 수
+
+    Returns:
+        검색 결과 리스트 (딕셔너리)
+    """
+    # PostgreSQL 연결
+    conn = psycopg2.connect(_pg_conn_str())
+
+    try:
+        # WHERE 절 조건 구성
+        where = []
+        params: List[Any] = []
+
+        # 쿼리 필터 (term, definition, easy_explanation, hard_explanation에서 검색)
+        if query:
+            where.append("(term ILIKE %s OR definition ILIKE %s OR easy_explanation ILIKE %s OR hard_explanation ILIKE %s)")
+            like = f"%{query}%"
+            params.extend([like, like, like, like])
+
+        # 카테고리 필터
+        if category:
+            where.append("category = %s")
+            params.append(category)
+
+        # 난이도 필터
+        if difficulty:
+            where.append("difficulty_level = %s")
+            params.append(difficulty)
+
+        # SQL 쿼리 구성
+        sql = """
+            SELECT term_id, term, definition, easy_explanation, hard_explanation,
+                   category, difficulty_level, related_terms, examples, created_at, updated_at
+            FROM glossary
+        """
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY term_id ASC LIMIT %s"
+        params.append(limit)
+
+        # 쿼리 실행
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(sql, tuple(params))
+            rows = cur.fetchall()
+            return [dict(r) for r in rows]
+
+    finally:
+        # 연결 종료
+        conn.close()
+
+
+# ==================== Vector 2차 조회 ==================== #
+
+def _vector_search_glossary(query: str, k: int) -> List[Tuple[Document, float]]:
+    """
+    Vector DB에서 용어집 유사도 검색
+
+    Args:
+        query: 검색 쿼리
+        k: 반환할 문서 수
+
+    Returns:
+        (Document, score) 튜플 리스트
+    """
+    # VectorStore 초기화
+    vs = _get_glossary_vectorstore()
+
+    # 유사도 검색 + 점수 반환
+    pairs = vs.similarity_search_with_score(query, k=k)
+
+    return pairs
+
+
+# ==================== 결과 포맷/설명 선택 ==================== #
+
+def _pick_explanation(row: Dict[str, Any], difficulty_mode: str) -> str:
+    """
+    난이도 모드에 맞는 설명 선택
+
+    Args:
+        row: glossary 테이블 행 (딕셔너리)
+        difficulty_mode: 'easy' | 'hard' | 'auto'
+
+    Returns:
+        선택된 설명 텍스트
+    """
+    # Easy 모드: easy_explanation 우선
+    if difficulty_mode == "easy":
+        return row.get("easy_explanation") or row.get("definition") or ""
+
+    # Hard 모드: hard_explanation 우선
+    if difficulty_mode == "hard":
+        return row.get("hard_explanation") or row.get("definition") or ""
+
+    # Auto 모드: difficulty_level 기준 자동 선택
+    level = (row.get("difficulty_level") or "").lower()
+    if level in ("beginner", "intermediate") and row.get("easy_explanation"):
+        return row["easy_explanation"]
+    if level == "advanced" and row.get("hard_explanation"):
+        return row["hard_explanation"]
+
+    # Fallback: easy → hard → definition 순서
+    return row.get("easy_explanation") or row.get("hard_explanation") or row.get("definition") or ""
+
+
+def _format_glossary_md(items: List[Dict[str, Any]]) -> str:
+    """
+    검색 결과를 Markdown 형식으로 포맷팅
+
+    Args:
+        items: 검색 결과 리스트 (딕셔너리)
+
+    Returns:
+        Markdown 형식 문자열
+    """
+    # 결과가 없으면 안내 메시지 반환
+    if not items:
+        return "관련 용어를 찾을 수 없습니다."
+
+    # Markdown 문자열 구성
+    out: List[str] = ["## 용어집 검색 결과\n"]
+
+    for i, r in enumerate(items, 1):
+        # 용어명
+        out.append(f"### {i}. {r.get('term','(term)')}")
+
+        # 카테고리
+        out.append(f"- **카테고리**: {r.get('category','')}")
+
+        # 난이도
+        out.append(f"- **난이도**: {r.get('difficulty_level','')}")
+
+        # 유사도 점수 (있으면)
+        if r.get("score") is not None:
+            out.append(f"- **유사도 점수(낮을수록 유사)**: {r['score']:.4f}")
+
+        # 연관 용어 (있으면)
+        if r.get("related_terms"):
+            related = ', '.join(r['related_terms']) if isinstance(r['related_terms'], list) else r['related_terms']
+            out.append(f"- **연관 용어**: {related}")
+
+        # 예시 (있으면)
+        if r.get("examples"):
+            out.append(f"- **예시**: {r['examples']}")
+
+        # 정의
+        if r.get("definition"):
+            out.append(f"- **정의**: {r['definition']}")
+
+        # 설명
+        if r.get("explanation"):
+            out.append(f"\n{r['explanation']}\n")
+
+        # 구분선
+        out.append("\n---\n")
+
+    return "\n".join(out)
+
+
+# ==================== @tool: 용어집 검색 도구 ==================== #
+
+@tool
+def search_glossary(
+    query: Optional[str] = None,
+    category: Optional[str] = None,
+    difficulty: str = "auto",  # 'easy' | 'hard' | 'auto'
+    mode: str = "hybrid",      # 'hybrid' | 'sql' | 'vector'
+    top_k: int = 5,
+    with_scores: bool = True,
+) -> str:
+    """
+    용어집 검색 도구 (하이브리드/SQL/Vector 지원)
+
+    Args:
+        query: 검색 쿼리
+        category: 카테고리 필터
+        difficulty: 난이도 모드 ('easy', 'hard', 'auto')
+        mode: 검색 모드 ('hybrid', 'sql', 'vector')
+        top_k: 최대 결과 수
+        with_scores: 유사도 점수 포함 여부
+
+    Returns:
+        Markdown 형식 검색 결과
+
+    검색 방식:
+    - SQL: PostgreSQL ILIKE + 필터
+    - Vector: glossary_embeddings 컬렉션 유사도 검색
+    - hybrid: SQL + Vector 결과 병합 후 중복 제거
+    """
+    items: List[Dict[str, Any]] = []
+
+    # ---------------------- Vector 검색 ---------------------- #
+    if mode in ("hybrid", "vector") and query:
+        try:
+            # Vector DB 유사도 검색
+            vector_pairs = _vector_search_glossary(query, k=top_k)
+
+            # 결과 변환
+            for doc, score in vector_pairs:
+                md = doc.metadata or {}
+                row = {
+                    "term": md.get("term") or md.get("title") or "",
+                    "category": md.get("category"),
+                    "difficulty_level": md.get("difficulty_level"),
+                    "related_terms": md.get("related_terms"),
+                    "examples": md.get("examples"),
+                    "definition": md.get("definition"),
+                    "explanation": _pick_explanation(md, difficulty),
+                    "score": float(score) if with_scores else None,
+                }
+                items.append(row)
+
+        except Exception:
+            # 벡터 인덱스가 비어 있거나 컬렉션 미생성 시 조용히 패스
+            # hybrid 모드면 SQL 결과로 보완
+            pass
+
+    # ---------------------- SQL 검색 ---------------------- #
+    if mode in ("hybrid", "sql"):
+        # difficulty_level 값 변환 (easy/hard → beginner/advanced)
+        sql_difficulty = None
+        if difficulty in ("beginner", "intermediate", "advanced"):
+            sql_difficulty = difficulty
+
+        # PostgreSQL 검색
+        sql_rows = _fetch_glossary_sql(
+            query=query,
+            category=category,
+            difficulty=sql_difficulty,
+            limit=top_k,
+        )
+
+        # 결과 변환
+        for r in sql_rows:
+            items.append({
+                "term": r.get("term"),
+                "category": r.get("category"),
+                "difficulty_level": r.get("difficulty_level"),
+                "related_terms": r.get("related_terms"),
+                "examples": r.get("examples"),
+                "definition": r.get("definition"),
+                "explanation": _pick_explanation(r, difficulty),
+                "score": None,
+            })
+
+    # ---------------------- 중복 제거 ---------------------- #
+    seen = set()
+    uniq: List[Dict[str, Any]] = []
+
+    for it in items:
+        # (term, definition) 조합으로 중복 체크
+        key = (it.get("term"), it.get("definition"))
+        if key not in seen:
+            seen.add(key)
+            uniq.append(it)
+
+    # ---------------------- top_k 보장 및 포맷팅 ---------------------- #
+    return _format_glossary_md(uniq[:top_k])
+
+
+# ==================== Agent 노드: 용어집 검색 ==================== #
+
+def glossary_node(state, exp_manager=None):
+    """
+    Agent 노드: glossary 테이블에서 용어 정의 검색
 
     Args:
         state (AgentState): Agent 상태
@@ -27,8 +380,8 @@ def glossary_node(state: AgentState, exp_manager=None):
         AgentState: 업데이트된 상태
     """
     # -------------- 상태에서 질문 및 난이도 추출 -------------- #
-    question = state["question"]                # 사용자 질문
-    difficulty = state.get("difficulty", "easy")  # 난이도 (기본값: easy)
+    question = state["question"]                          # 사용자 질문
+    difficulty = state.get("difficulty", "easy")          # 난이도 (기본값: easy)
 
     # -------------- 도구별 Logger 생성 -------------- #
     tool_logger = exp_manager.get_tool_logger('rag_glossary') if exp_manager else None
@@ -37,98 +390,32 @@ def glossary_node(state: AgentState, exp_manager=None):
         tool_logger.write(f"용어집 노드 실행: {question}")
         tool_logger.write(f"난이도: {difficulty}")
 
-    # -------------- 질문에서 용어 추출 -------------- #
+    # -------------- search_glossary 도구 호출 -------------- #
     try:
-        # 난이도별 LLM 초기화
-        llm_client = LLMClient.from_difficulty(
-            difficulty=difficulty,
-            logger=exp_manager.logger if exp_manager else None
-        )
-        extract_prompt = f"""다음 질문에서 핵심 용어를 추출하세요. 용어만 반환하세요:
-
-                             질문: {question}
-
-                             용어:"""
-
-        term = llm_client.llm.invoke(extract_prompt).content.strip()  # 용어 추출
+        # Langchain @tool 함수 호출
+        result = search_glossary.invoke({
+            "query": question,                            # 검색 쿼리
+            "category": None,                             # 카테고리 필터 없음
+            "difficulty": difficulty,                     # 난이도 모드
+            "mode": "hybrid",                             # 하이브리드 검색
+            "top_k": 3,                                   # 최대 3개 결과
+            "with_scores": True,                          # 유사도 점수 포함
+        })
 
         if tool_logger:
-            tool_logger.write(f"추출된 용어: {term}")
+            tool_logger.write(f"검색 결과: {len(result)} 글자")
+            tool_logger.close()
+
+        # -------------- 최종 답변 저장 -------------- #
+        state["final_answer"] = result                    # 답변 저장
+
     except Exception as e:
         if tool_logger:
-            tool_logger.write(f"용어 추출 실패: {e}")
+            tool_logger.write(f"용어집 검색 실패: {e}")
             tool_logger.close()
-        state["final_answer"] = f"용어 추출 오류: {str(e)}"
-        return state
 
-    # -------------- PostgreSQL glossary 테이블에서 검색 -------------- #
-    try:
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))  # PostgreSQL 연결
-        cursor = conn.cursor()
+        # 에러 메시지 저장
+        state["final_answer"] = f"용어집 검색 오류: {str(e)}"
 
-        query = "SELECT term, definition, easy_explanation, hard_explanation, category FROM glossary WHERE term ILIKE %s"
-
-        if tool_logger:
-            tool_logger.write(f"SQL 쿼리 실행: term ILIKE '%{term}%'")
-
-            # SQL 쿼리 기록
-            if exp_manager:
-                exp_manager.log_sql_query(
-                    query=query,                  # SQL 쿼리
-                    description="용어집 검색",     # 쿼리 설명
-                    tool="rag_glossary"           # 도구 이름
-                )
-
-        cursor.execute(query, (f"%{term}%",))   # 쿼리 실행
-        result = cursor.fetchone()              # 결과 조회
-        cursor.close()                          # 커서 닫기
-        conn.close()                            # 연결 닫기
-    except Exception as e:
-        if tool_logger:
-            tool_logger.write(f"PostgreSQL 조회 실패: {e}")
-            tool_logger.close()
-        state["final_answer"] = f"데이터베이스 조회 오류: {str(e)}"
-        return state
-
-    # -------------- 결과 처리 -------------- #
-    if not result:
-        if tool_logger:
-            tool_logger.write("용어를 찾을 수 없음")
-            tool_logger.close()
-        state["final_answer"] = f"'{term}' 용어를 용어집에서 찾을 수 없습니다."
-        return state
-
-    # 검색 결과 파싱
-    term_name, definition, easy_exp, hard_exp, category = result
-
-    if tool_logger:
-        tool_logger.write(f"용어 발견: {term_name} (카테고리: {category})")
-
-    # -------------- 난이도별 설명 선택 -------------- #
-    if difficulty == "easy":
-        # Easy 모드: 쉬운 설명 사용
-        explanation = easy_exp if easy_exp else definition
-        if tool_logger:
-            tool_logger.write("Easy 모드 설명 사용")
-    else:  # hard
-        # Hard 모드: 어려운 설명 사용
-        explanation = hard_exp if hard_exp else definition
-        if tool_logger:
-            tool_logger.write("Hard 모드 설명 사용")
-
-    # -------------- 최종 답변 구성 -------------- #
-    answer = f"""**용어**: {term_name}
-
-                 **카테고리**: {category}
-
-                 **설명**:
-                 {explanation}"""
-
-    if tool_logger:
-        tool_logger.write(f"답변 생성 완료: {len(answer)} 글자")
-        tool_logger.close()
-
-    # -------------- 최종 답변 저장 -------------- #
-    state["final_answer"] = answer              # 답변 저장
-
-    return state                                # 업데이트된 상태 반환
+    # -------------- 업데이트된 상태 반환 -------------- #
+    return state
