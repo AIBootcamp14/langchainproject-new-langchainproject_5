@@ -83,9 +83,16 @@ def update_chat_title(chat_id: str, first_message: str):
         first_message: 첫 번째 사용자 메시지
     """
     if chat_id in st.session_state.chats:
-        # 제목은 첫 30자로 제한
-        title = first_message[:30]
-        if len(first_message) > 30:
+        # 제목 생성 (최대 50자)
+        title = first_message.strip()
+
+        # 50자로 제한하되, 단어 중간에서 자르지 않도록
+        if len(title) > 50:
+            title = title[:50]
+            # 마지막 공백에서 자르기
+            last_space = title.rfind(' ')
+            if last_space > 30:  # 최소 30자는 유지
+                title = title[:last_space]
             title += "..."
 
         st.session_state.chats[chat_id]["title"] = title
