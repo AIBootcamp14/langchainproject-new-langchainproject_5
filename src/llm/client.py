@@ -26,6 +26,10 @@ from langchain.callbacks import get_openai_callback
 from tenacity import retry, stop_after_attempt, wait_exponential
 # tenacity: 재시도 로직 (Exponential Backoff)
 
+# ------------------------- 프로젝트 모듈 ------------------------- #
+from src.utils.config_loader import get_llm_for_difficulty
+# get_llm_for_difficulty: 난이도별 LLM 모델 선택
+
 
 # ==================== LLM 클라이언트 클래스 ==================== #
 class LLMClient:
