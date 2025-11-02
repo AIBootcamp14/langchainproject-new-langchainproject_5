@@ -24,14 +24,18 @@ from langchain_postgres.vectorstores import PGVector
 
 # PDF 텍스트 추출
 try:
-    import PyPDF2
-    PDF_EXTRACTOR = "PyPDF2"
+    from pypdf import PdfReader
+    PDF_EXTRACTOR = "pypdf"
 except ImportError:
     try:
-        import pdfplumber
-        PDF_EXTRACTOR = "pdfplumber"
+        import PyPDF2
+        PDF_EXTRACTOR = "PyPDF2"
     except ImportError:
-        PDF_EXTRACTOR = None
+        try:
+            import pdfplumber
+            PDF_EXTRACTOR = "pdfplumber"
+        except ImportError:
+            PDF_EXTRACTOR = None
 
 
 # ==================== arXiv 논문 처리 클래스 ==================== #
@@ -239,19 +243,38 @@ class ArxivPaperHandler:
             return None
 
         try:
-            if PDF_EXTRACTOR == "PyPDF2":
+            if PDF_EXTRACTOR == "pypdf":
+                return self._extract_with_pypdf(pdf_path)
+            elif PDF_EXTRACTOR == "PyPDF2":
                 return self._extract_with_pypdf2(pdf_path)
             elif PDF_EXTRACTOR == "pdfplumber":
                 return self._extract_with_pdfplumber(pdf_path)
             else:
                 if self.logger:
-                    self.logger.write("PDF 추출 라이브러리 없음 (PyPDF2 또는 pdfplumber 설치 필요)", print_error=True)
+                    self.logger.write("PDF 추출 라이브러리 없음 (pypdf 또는 pdfplumber 설치 필요)", print_error=True)
                 return None
 
         except Exception as e:
             if self.logger:
                 self.logger.write(f"PDF 텍스트 추출 실패: {e}", print_error=True)
             return None
+
+    def _extract_with_pypdf(self, pdf_path: Path) -> str:
+        """pypdf로 텍스트 추출 (최신 버전)"""
+        from pypdf import PdfReader
+
+        text = []
+        with open(pdf_path, 'rb') as f:
+            reader = PdfReader(f)
+            for page in reader.pages:
+                text.append(page.extract_text())
+
+        full_text = '\n'.join(text)
+
+        if self.logger:
+            self.logger.write(f"pypdf 텍스트 추출 완료: {len(full_text)} 글자")
+
+        return full_text
 
     def _extract_with_pypdf2(self, pdf_path: Path) -> str:
         """PyPDF2로 텍스트 추출"""
