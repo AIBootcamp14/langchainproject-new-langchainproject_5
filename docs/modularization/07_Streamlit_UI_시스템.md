@@ -813,24 +813,82 @@ streamlit run ui/app.py --server.headless true
 
 ---
 
+## 🎯 구현된 고급 기능
+
+### 1. 다크 모드 ✅
+
+**구현 내용:**
+- CSS injection을 통한 다크 모드
+- 사이드바 토글 버튼으로 on/off
+- 배경색, 텍스트 색상, 채팅 메시지 스타일 자동 변경
+- st.session_state로 상태 관리
+
+**파일:**
+- `.streamlit/config.toml`: 기본 테마 설정
+- `ui/components/sidebar.py`: 다크 모드 토글 및 CSS
+
+### 2. LocalStorage 데이터 영속성 ✅
+
+**구현 내용:**
+- 브라우저 LocalStorage에 채팅 데이터 자동 저장
+- 페이지 새로고침 시에도 채팅 기록 유지
+- JSON 직렬화로 데이터 저장
+- 수동 저장 및 저장소 초기화 기능
+
+**파일:**
+- `ui/components/storage.py`: LocalStorage 관리 모듈
+- `ui/components/sidebar.py`: 저장소 관리 UI
+
+**주요 함수:**
+- `save_chats_to_local_storage()`: 자동/수동 저장
+- `load_chats_from_local_storage()`: 데이터 복원
+- `clear_local_storage()`: 저장소 초기화
+
+### 3. 사용자 인증 시스템 ✅
+
+**구현 내용:**
+- streamlit-authenticator 기반 로그인
+- 기본 계정 제공 (demo, admin)
+- 로그인/로그아웃 기능
+- 사용자별 채팅 세션 관리
+- 권한 확인 (일반 사용자 / 관리자)
+
+**파일:**
+- `ui/components/auth.py`: 인증 모듈
+- `ui/app.py`: 로그인 페이지 통합
+
+**데모 계정:**
+- 일반 사용자: `demo` / `demo123`
+- 관리자: `admin` / `admin123`
+
+**주요 함수:**
+- `render_login_page()`: 로그인 UI
+- `render_logout_button()`: 로그아웃 버튼
+- `check_authentication()`: 인증 확인
+- `get_current_user()`: 사용자 정보
+- `is_admin()`: 관리자 권한 확인
+
+---
+
 ## 🎯 향후 개선 사항
 
-### 데이터 영속성
+### 데이터 영속성 확장
 
-- **LocalStorage 통합**: 브라우저 새로고침 시에도 채팅 유지
 - **PostgreSQL 저장**: 사용자 계정별 채팅 기록 DB 저장
+- **채팅 동기화**: LocalStorage와 DB 간 동기화
 
-### 사용자 인증
+### 사용자 기능 확장
 
-- **로그인 시스템**: Streamlit-Authenticator 통합
 - **채팅 공유 기능**: URL로 특정 채팅 공유
+- **사용자 등록**: 새 계정 생성 기능
+- **프로필 관리**: 사용자 정보 수정
 
 ### UI/UX 개선
 
-- **다크 모드**: 테마 전환 기능
-- **검색 기능**: 채팅 목록 검색
+- **검색 기능**: 채팅 목록 및 메시지 검색
 - **메시지 편집**: 사용자 메시지 수정 기능
 - **Streaming 답변**: 실시간 답변 생성 표시
+- **다크 모드 개선**: 자동 테마 감지 (시스템 설정)
 
 ### 성능 최적화
 
@@ -860,6 +918,6 @@ streamlit run ui/app.py --server.headless true
 - [x] 개별 채팅 저장 (.md)
 - [x] Agent 실시간 통합
 - [x] ExperimentManager 로깅
-- [ ] 데이터 영속성 (LocalStorage/DB)
-- [ ] 사용자 인증
-- [ ] 다크 모드
+- [x] 데이터 영속성 (LocalStorage)
+- [x] 사용자 인증
+- [x] 다크 모드
