@@ -24,6 +24,52 @@ from langchain_postgres.vectorstores import PGVector
 from src.utils.config_loader import get_postgres_connection_string, get_db_config
 
 
+# ==================== 용어 추출 유틸리티 ==================== #
+
+def _extract_term_from_question(question: str) -> str:
+    """
+    질문에서 핵심 용어 추출
+
+    Args:
+        question: 사용자 질문 (예: "BLEU Score가 뭐야?")
+
+    Returns:
+        추출된 용어 (예: "BLEU Score")
+
+    처리 규칙:
+    - "가 뭐야", "이 뭐야", "는 뭐야" 등 조사 제거
+    - 물음표 제거
+    - 양쪽 공백 제거
+    """
+    import re
+
+    # 원본 보존
+    term = question.strip()
+
+    # 한국어 질문 패턴 제거
+    patterns = [
+        r'[이가]?\s*뭐야\??',
+        r'[은는]\s*뭐야\??',
+        r'[을를]\s*알려[줘주세요]?\??',
+        r'[에대해대한]\s*설명해[줘주세요]?\??',
+        r'[이가]\s*무엇인가요?\??',
+        r'[은는]\s*무엇인가요?\??',
+        r'\s*정의\??',
+        r'\s*의미\??',
+    ]
+
+    for pattern in patterns:
+        term = re.sub(pattern, '', term, flags=re.IGNORECASE)
+
+    # 물음표 제거
+    term = term.replace('?', '').replace('？', '')
+
+    # 양쪽 공백 제거
+    term = term.strip()
+
+    return term
+
+
 # ==================== 환경/커넥션 유틸리티 ==================== #
 
 def _env(primary: str, alt: str, default: Optional[str] = None) -> Optional[str]:
