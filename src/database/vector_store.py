@@ -1,4 +1,4 @@
-# src/rag/vector_store.py
+# src/database/vector_store.py
 
 # ------------------------- 표준 라이브러리 ------------------------- #
 import os
