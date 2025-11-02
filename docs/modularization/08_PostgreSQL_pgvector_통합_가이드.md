@@ -1039,7 +1039,7 @@ delete_paper(paper_id=100)
 ### 10.1 Langchain PGVector 설정
 
 ```python
-# src/rag/vector_store.py
+# src/database/vector_store.py
 
 # ------------------------- 표준 라이브러리 ------------------------- #
 import os
