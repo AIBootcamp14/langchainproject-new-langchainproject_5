@@ -2,16 +2,19 @@ from __future__ import annotations
 
 """PostgreSQL 초기 스키마 및 pgvector 확장 설정 스크립트."""
 
-import os
+import json
+import sys
 from pathlib import Path
-
-import psycopg2
-from dotenv import load_dotenv
 from typing import Dict, Optional
 
-import json
+import psycopg2
 
-ROOT = Path(__file__).resolve().parents[1]
+# ==================== 프로젝트 루트 경로 설정 ==================== #
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+# ==================== 프로젝트 모듈 임포트 ==================== #
+from src.utils.config_loader import get_postgres_connection_string
 
 
 DDL_CREATE_TABLES = """
@@ -185,10 +188,8 @@ def save_paper_id_mapping(conn, mapping: Optional[Dict[str, int]] = None):
 
 
 def main() -> int:
-    load_dotenv(ROOT / ".env")
-    dsn = os.getenv("DATABASE_URL")
-    if not dsn:
-        raise RuntimeError("DATABASE_URL이 설정되지 않았습니다.")
+    # ---------------------- config_loader로 PostgreSQL 연결 문자열 가져오기 ---------------------- #
+    dsn = get_postgres_connection_string()
 
     # psycopg2는 sqlalchemy dsn과 호환되도록 처리 필요
     # 예: postgresql+psycopg2:// → postgresql:// 로 치환
