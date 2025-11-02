@@ -1,0 +1,1 @@
+데이터베이스 연결 오류: PGVector.__init__() got an unexpected keyword argument 'embedding_function'

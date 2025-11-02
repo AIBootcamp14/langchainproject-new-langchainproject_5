@@ -138,12 +138,14 @@ def summarize_node(state: AgentState, exp_manager=None):
 
         # ExperimentManager pgvector 검색 기록
         if exp_manager:
-            exp_manager.log_pgvector_search(
-                query="",
-                top_k=100,
-                filter={"paper_id": paper_id},
-                result_count=len(docs)
-            )
+            exp_manager.log_pgvector_search({
+                "tool": "summarize",
+                "collection": "paper_chunks",
+                "query_text": "",
+                "top_k": 100,
+                "filter": {"paper_id": paper_id},
+                "result_count": len(docs)
+            })
 
         # 청크가 없는 경우
         if not docs:
