@@ -470,7 +470,7 @@ if __name__ == "__main__":
 **실행:**
 
 ```bash
-python scripts/init_database.py
+python tests/unit/init_database.py
 ```
 
 ---
@@ -744,7 +744,8 @@ print(f"papers 테이블 레코드 수: {result[0][0]}")
 **실행:**
 
 ```bash
-python test_db_connection.py
+# 프로젝트 루트에서 Python 모듈로 실행
+python -m tests.unit.test_db_connection
 ```
 
 ---
