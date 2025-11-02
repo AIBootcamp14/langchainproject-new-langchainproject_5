@@ -61,11 +61,43 @@ class LLMClient:
         # -------------- Solar 클라이언트 생성 -------------- #
         elif provider == "solar":
             self.llm = ChatUpstage(
-                model="solar-1-mini-chat",          # Solar 모델명
+                model=model,                        # Solar 모델명
                 temperature=temperature,            # 창의성 수준
                 api_key=os.getenv("SOLAR_API_KEY"),  # Upstage API 키
                 streaming=True                      # 스트리밍 응답 활성화
             )
+
+    # ---------------------- 난이도별 LLM 클라이언트 생성 (클래스 메서드) ---------------------- #
+    @classmethod
+    def from_difficulty(cls, difficulty: str, language: str = "ko", logger=None):
+        """
+        난이도에 따라 적절한 LLM 클라이언트 생성
+
+        Args:
+            difficulty: 난이도 (easy 또는 hard)
+            language: 언어 코드 (ko, en 등)
+            logger: Logger 인스턴스 (선택 사항)
+
+        Returns:
+            LLMClient 인스턴스
+        """
+        # -------------- config에서 모델 정보 가져오기 -------------- #
+        model_info = get_llm_for_difficulty(difficulty, language)
+
+        provider = model_info["provider"]           # openai 또는 solar
+        model = model_info["model"]                 # 모델명
+
+        # -------------- Temperature 설정 -------------- #
+        # easy 모드: 0.7 (자연스러운 답변)
+        # hard 모드: 0.7 (전문적이지만 자연스러운 답변)
+        temperature = 0.7
+
+        # -------------- 로깅 -------------- #
+        if logger:
+            logger.write(f"난이도별 LLM 선택: difficulty={difficulty}, provider={provider}, model={model}")
+
+        # -------------- LLMClient 인스턴스 생성 -------------- #
+        return cls(provider=provider, model=model, temperature=temperature, logger=logger)
 
     # ---------------------- 재시도 로직이 포함된 LLM 호출 ---------------------- #
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=8))
