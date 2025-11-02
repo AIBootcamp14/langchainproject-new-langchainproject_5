@@ -76,7 +76,7 @@ def initialize_agent():
         agent_executor = create_agent_graph()
 
         exp_manager.logger.write("Streamlit UI 시작")
-        exp_manager.logger.write(f"세션 폴더: {exp_manager.session_dir}")
+        exp_manager.logger.write(f"실험 폴더: {exp_manager.experiment_dir}")
 
         return agent_executor, exp_manager
 
@@ -112,4 +112,4 @@ render_chat_input(
 # ==================== 푸터 ==================== #
 st.divider()
 st.caption("Made with ❤️ by 연결의 민족 팀")
-st.caption("Powered by LangChain, LangGraph, OpenAI GPT-4, PostgreSQL + pgvector")
+st.caption("Powered by LangChain, LangGraph, OpenAI GPT-5, PostgreSQL + pgvector")
