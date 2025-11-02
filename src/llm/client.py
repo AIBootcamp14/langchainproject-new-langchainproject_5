@@ -55,11 +55,14 @@ class LLMClient:
 
         # -------------- OpenAI 클라이언트 생성 -------------- #
         if provider == "openai":
+            # GPT-5 모델은 스트리밍 미지원 (조직 권한 필요)
+            enable_streaming = False if model == "gpt-5" else True
+
             self.llm = ChatOpenAI(
                 model=model,                        # 모델명 (gpt-3.5-turbo, gpt-4)
                 temperature=temperature,            # 창의성 수준
                 openai_api_key=os.getenv("OPENAI_API_KEY"),  # API 키
-                streaming=True                      # 스트리밍 응답 활성화
+                streaming=enable_streaming          # 스트리밍 응답 활성화 (GPT-5 제외)
             )
 
         # -------------- Solar 클라이언트 생성 -------------- #

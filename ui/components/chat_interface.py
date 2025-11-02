@@ -123,10 +123,11 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
         message_placeholder = st.empty()
 
         # -------------- StreamlitCallbackHandler 생성 -------------- #
-        # Agent 실행 과정을 실시간으로 표시
+        # Agent 실행 과정을 접힌 상태의 expander에 표시
+        process_expander = st.expander("🔍 처리 과정 보기", expanded=False)
         st_callback = StreamlitCallbackHandler(
-            parent_container=st.container(),
-            expand_new_thoughts=True,               # 새 단계 자동 펼치기
+            parent_container=process_expander,
+            expand_new_thoughts=False,              # 새 단계 접힌 상태로
             collapse_completed_thoughts=True        # 완료 단계 자동 접기
         )
 
@@ -179,7 +180,7 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 unique_id = abs(hash(answer))  # 양수로 변환
 
                 copy_button_html = f"""
-                <button onclick="copyToClipboard_{unique_id}()" style="
+                <button id="copy_btn_{unique_id}" onclick="copyToClipboard_{unique_id}()" style="
                     background-color: #FF4B4B;
                     color: white;
                     border: none;
@@ -194,8 +195,30 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 <script>
                 function copyToClipboard_{unique_id}() {{
                     const text = {safe_answer};
+                    const button = document.getElementById('copy_btn_{unique_id}');
+
+                    if (!navigator.clipboard) {{
+                        // Clipboard API 미지원 시 fallback
+                        const textArea = document.createElement('textarea');
+                        textArea.value = text;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-9999px';
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {{
+                            document.execCommand('copy');
+                            button.textContent = '✅ 복사됨!';
+                            setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
+                        }} catch (err) {{
+                            alert('❌ 복사 실패: ' + err);
+                        }}
+                        document.body.removeChild(textArea);
+                        return;
+                    }}
+
                     navigator.clipboard.writeText(text).then(function() {{
-                        alert('✅ 답변이 클립보드에 복사되었습니다!');
+                        button.textContent = '✅ 복사됨!';
+                        setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
                     }}, function(err) {{
                         alert('❌ 복사 실패: ' + err);
                     }});
@@ -206,7 +229,6 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
             with col_save:
                 # 파일명 생성
-                from datetime import datetime
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"response_{timestamp}.txt"
 
