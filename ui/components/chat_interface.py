@@ -169,8 +169,7 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             message_placeholder.markdown(answer)
 
             # -------------- 답변 복사 버튼 -------------- #
-            with st.expander("📋 답변 복사"):
-                st.code(answer, language="markdown")
+            st.text_area("📋 복사하려면 텍스트를 선택하세요", value=answer, height=100, key=f"copy_{hash(answer)}")
 
             # -------------- LLM 응답 로그 기록 -------------- #
             if exp_manager:
