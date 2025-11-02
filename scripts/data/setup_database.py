@@ -49,6 +49,11 @@ DDL_ALTER_PAPERS_COLUMNS = """
 ALTER TABLE papers ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE papers ADD COLUMN IF NOT EXISTS publish_date DATE;
 ALTER TABLE papers ADD COLUMN IF NOT EXISTS citation_count INT;
+ALTER TABLE papers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+"""
+
+DDL_ALTER_GLOSSARY_COLUMNS = """
+ALTER TABLE glossary ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 """
 
 DDL_CREATE_INDEXES = """
@@ -194,6 +199,7 @@ def main() -> int:
             ensure_pgvector(conn, cur)
             cur.execute(DDL_CREATE_TABLES)
             cur.execute(DDL_ALTER_PAPERS_COLUMNS)
+            cur.execute(DDL_ALTER_GLOSSARY_COLUMNS)
             cur.execute(DDL_CREATE_INDEXES)
             insert_glossary_data(conn, cur)
             # JSON 메타데이터를 papers 테이블에 삽입
