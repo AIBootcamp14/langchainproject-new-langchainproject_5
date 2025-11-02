@@ -9,10 +9,10 @@ Tavily API로 최신 논문 정보 검색
 
 # ==================== Import ==================== #
 import os
-from langchain_openai import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
 from langchain_community.tools.tavily_search import TavilySearchResults
 from src.agent.state import AgentState
+from src.llm.client import LLMClient
 
 
 # ==================== 도구 4: 웹 검색 노드 ==================== #
@@ -120,13 +120,17 @@ def web_search_node(state: AgentState, exp_manager=None):
         if tool_logger:
             tool_logger.write("LLM 답변 생성 시작")
 
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)  # 웹 검색용 LLM
+        # 난이도별 LLM 초기화
+        llm_client = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
         messages = [
             SystemMessage(content=system_prompt),  # 시스템 프롬프트
             HumanMessage(content=user_prompt)      # 사용자 프롬프트
         ]
 
-        response = llm.invoke(messages)         # LLM 호출
+        response = llm_client.llm.invoke(messages)  # LLM 호출
 
         if tool_logger:
             tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
