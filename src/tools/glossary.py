@@ -46,20 +46,23 @@ def _extract_term_from_question(question: str) -> str:
     # 원본 보존
     term = question.strip()
 
-    # 한국어 질문 패턴 제거
+    # 한국어 질문 패턴 제거 (순서 중요: 긴 패턴부터 매칭)
     patterns = [
-        r'[이가]?\s*뭐야\??',
-        r'[은는]\s*뭐야\??',
-        r'[을를]\s*알려[줘주세요]?\??',
-        r'[에대해대한]\s*설명해[줘주세요]?\??',
+        r'에\s*대해(서)?\s*설명해[줘주세요]*\??',
+        r'에\s*대해(서)?\s*알려[줘주세요]*\??',
         r'[이가]\s*무엇인가요?\??',
         r'[은는]\s*무엇인가요?\??',
+        r'[이가]\s*뭐야\??',
+        r'[은는]\s*뭐야\??',
+        r'[을를]\s*설명해[줘주세요]*\??',
+        r'[을를]\s*알려[줘주세요]*\??',
+        r'\s*뭐야\??',
         r'\s*정의\??',
         r'\s*의미\??',
     ]
 
     for pattern in patterns:
-        term = re.sub(pattern, '', term, flags=re.IGNORECASE)
+        term = re.sub(pattern, '', term, flags=re.IGNORECASE | re.UNICODE)
 
     # 물음표 제거
     term = term.replace('?', '').replace('？', '')
