@@ -25,7 +25,8 @@ from src.utils.experiment_manager import ExperimentManager
 from ui.components.sidebar import render_sidebar
 from ui.components.chat_interface import (
     display_chat_history,
-    render_chat_input
+    render_chat_input,
+    render_chat_export_buttons
 )
 from ui.components.chat_manager import (
     initialize_chat_sessions,
@@ -148,3 +149,6 @@ render_chat_input(
 st.divider()
 st.caption("Made with ❤️ by 연결의 민족 팀")
 st.caption("Powered by LangChain, LangGraph, OpenAI GPT-5, PostgreSQL + pgvector")
+
+# 전체 대화 복사/저장 버튼
+render_chat_export_buttons()

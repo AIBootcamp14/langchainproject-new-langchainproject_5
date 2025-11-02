@@ -414,9 +414,6 @@ def render_chat_input(agent_executor, difficulty: str, exp_manager=None):
         difficulty: 난이도
         exp_manager: ExperimentManager 인스턴스 (선택)
     """
-    # 전체 채팅 저장/복사 버튼 표시
-    render_chat_export_buttons()
-
     # 채팅 입력창 표시
     if prompt := st.chat_input("논문에 대해 질문해보세요..."):
         # 사용자 메시지 추가
