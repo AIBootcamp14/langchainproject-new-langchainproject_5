@@ -25,7 +25,7 @@ except ImportError:
     except ImportError:
         MultiQueryRetriever = None  # MultiQueryRetriever 미지원 환경
 
-from .vector_store import get_pgvector_store
+from src.database.vector_store import get_pgvector_store
 
 
 # ---------- 상수/환경 ----------
