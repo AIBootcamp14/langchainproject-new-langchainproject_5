@@ -26,7 +26,7 @@ from src.utils.experiment_manager import ExperimentManager
 
 # ==================== 테스트 픽스처 ==================== #
 # ---------------------- 실험 폴더 정리 픽스처 ---------------------- #
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 def cleanup_experiments():
     """
     각 테스트 후 실험 폴더 정리
