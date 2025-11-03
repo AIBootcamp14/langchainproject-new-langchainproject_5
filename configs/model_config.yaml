@@ -6,7 +6,7 @@ llm:
   # 개발 환경 설정
   development:
     provider: solar                            # LLM 제공자 (openai, solar)
-    model: solar-pro                           # 모델명 (비용 절감)
+    model: solar-pro2                          # 모델명 (비용 절감)
     temperature: 0.7                           # 답변 생성 창의성 (0.0~1.0)
     max_tokens: 2000                           # 최대 토큰 수
     streaming: true                            # 스트리밍 응답 활성화
@@ -27,7 +27,7 @@ llm:
 solar:
   # 개발 환경
   development:
-    model: solar-pro                            # Solar 모델명
+    model: solar-pro2                           # Solar 모델명
     temperature: 0.7                            # 답변 생성 창의성
     max_tokens: 2000                            # 최대 토큰 수
     streaming: true                             # 스트리밍 응답 활성화
@@ -35,7 +35,7 @@ solar:
 
   # 프로덕션 환경
   production:
-    model: solar-pro                            # Solar 모델명
+    model: solar-pro2                           # Solar 모델명
     temperature: 0.7                            # 답변 생성 창의성
     max_tokens: 3000                            # 최대 토큰 수
     streaming: true                             # 스트리밍 응답 활성화
@@ -50,6 +50,13 @@ embeddings:
   max_retries: 3                                # 최대 재시도 횟수
   request_timeout: 30                           # 요청 타임아웃 (초)
 
+# Text-to-SQL 전용 설정
+text2sql:
+  provider: solar                               # Text-to-SQL 제공자 (solar 권장: 비용 효율)
+  model: solar-pro2                             # Text-to-SQL 모델
+  temperature: 0.0                              # SQL 생성은 결정론적 (0.0 권장)
+  max_retries: 2                                # 최대 재시도 횟수
+
 # RAG 검색 설정
 rag:
   chunk_size: 1000                              # 청크 크기 (문자 단위)
@@ -58,6 +65,11 @@ rag:
   search_type: mmr                              # 검색 타입 (similarity, mmr)
   mmr_lambda: 0.5                               # MMR 다양성 파라미터 (0~1)
   score_threshold: 0.7                          # 유사도 점수 임계값
+  # MultiQueryRetriever용 LLM 설정
+  multiquery_llm:
+    provider: solar                             # MultiQuery용 LLM 제공자 (비용 효율)
+    model: solar-pro2                           # MultiQuery용 모델
+    temperature: 0.0                            # 쿼리 생성은 결정론적
 
 # Temperature 용도별 설정
 temperature_settings:
@@ -83,7 +95,7 @@ hybrid_strategy:
         language: ko                            # 한국어
       model:
         provider: solar                         # Solar 사용 (한국어 특화)
-        name: solar-pro
+        name: solar-pro2
 
     - condition:
         difficulty: hard                        # Hard 모드
@@ -95,4 +107,4 @@ hybrid_strategy:
         default: true                           # 기본값
       model:
         provider: solar                         # Solar 사용 (비용 절감)
-        name: solar-pro
+        name: solar-pro2

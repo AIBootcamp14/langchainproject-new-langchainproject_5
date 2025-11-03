@@ -14,7 +14,6 @@ import hashlib
 from typing import List, Dict, Any, Optional, Tuple
 
 from langchain_core.documents import Document
-from langchain_openai import ChatOpenAI
 # ---------- MultiQueryRetriever 임포트(버전 호환) ----------
 # - 다양한 langchain 버전 지원을 위한 임포트
 try:
@@ -26,11 +25,25 @@ except ImportError:
         MultiQueryRetriever = None  # MultiQueryRetriever 미지원 환경
 
 from src.database.vector_store import get_pgvector_store
+from src.utils.config_loader import get_model_config
+from src.llm.client import LLMClient
 
 
 # ---------- 상수/환경 ----------
 COLLECTION_CHUNKS = os.getenv("PGV_COLLECTION_CHUNKS", "paper_chunks")
-DEFAULT_LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5")
+
+# MultiQueryRetriever용 LLM 설정을 config에서 읽기
+try:
+    _model_config = get_model_config()
+    _multiquery_config = _model_config.get("rag", {}).get("multiquery_llm", {})
+    DEFAULT_LLM_PROVIDER = _multiquery_config.get("provider", "solar")
+    DEFAULT_LLM_MODEL = _multiquery_config.get("model", "solar-pro2")
+    DEFAULT_LLM_TEMPERATURE = _multiquery_config.get("temperature", 0.0)
+except Exception:
+    # config 로드 실패 시 기본값
+    DEFAULT_LLM_PROVIDER = "solar"
+    DEFAULT_LLM_MODEL = "solar-pro2"
+    DEFAULT_LLM_TEMPERATURE = 0.0
 
 # ---------- 유틸: 문서 중복 제거 ----------
 def _dedup_docs(docs: List[Document]) -> List[Document]:
@@ -100,8 +113,9 @@ class RAGRetriever:
 
 
         # LLM/MQR 설정 (없으면 자동 폴백)
+        self.llm_provider = DEFAULT_LLM_PROVIDER
         self.llm_model = llm_model or DEFAULT_LLM_MODEL
-        self.llm_temperature = llm_temperature
+        self.llm_temperature = llm_temperature if llm_temperature is not None else DEFAULT_LLM_TEMPERATURE
         self._multi_query_retriever: Optional[MultiQueryRetriever] = None # type: ignore
         self._maybe_build_multiquery()
 
@@ -125,12 +139,21 @@ class RAGRetriever:
 
     # ---------- 내부: MultiQueryRetriever 구성 (있으면 사용) ----------
     def _maybe_build_multiquery(self):
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or MultiQueryRetriever is None:
+        # API 키 확인 (provider에 따라)
+        solar_key = os.getenv("SOLAR_API_KEY")
+        openai_key = os.getenv("OPENAI_API_KEY")
+
+        if MultiQueryRetriever is None or (not solar_key and not openai_key):
             self._multi_query_retriever = None
             return
         try:
-            llm = ChatOpenAI(model=self.llm_model, temperature=self.llm_temperature)
+            # LLMClient 사용 (config 기반)
+            llm_client = LLMClient(
+                provider=self.llm_provider,
+                model=self.llm_model,
+                temperature=self.llm_temperature
+            )
+
             base = self.vectorstore.as_retriever(
                 search_type=self.search_type,
                 search_kwargs={
@@ -144,7 +167,7 @@ class RAGRetriever:
             )
             self._multi_query_retriever = MultiQueryRetriever.from_llm(
                 retriever=base,
-                llm=llm,
+                llm=llm_client.llm,  # LLMClient의 내부 llm 전달
             )
         except Exception:
             # LLM/네트워크 문제 등 발생 시 폴백
