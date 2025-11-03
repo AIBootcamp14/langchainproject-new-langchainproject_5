@@ -45,3 +45,6 @@ streamlit-authenticator>=0.4.2
 
 # pgvector Python 클라이언트
 pgvector==0.3.6
+
+# 의존성 충돌 해결용
+uv==0.9.7
