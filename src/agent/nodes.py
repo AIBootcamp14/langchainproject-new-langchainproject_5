@@ -10,6 +10,7 @@ LangGraph Agent의 노드 함수들:
 # ==================== 라이브러리 Import ==================== #
 from src.agent.state import AgentState
 from src.llm.client import LLMClient
+from src.prompts import get_routing_prompt
 
 # ==================== 도구 Import ==================== #
 from src.tools.general_answer import general_answer_node
@@ -40,45 +41,9 @@ def router_node(state: AgentState, exp_manager=None):
     if exp_manager:
         exp_manager.logger.write(f"라우터 노드 실행: {question}")
 
-    # -------------- 라우팅 결정 프롬프트 구성 -------------- #
-    routing_prompt = f"""사용자 질문을 분석하여 적절한 도구를 선택하세요:
-
-                         도구 목록:
-                         - search_paper: 논문 데이터베이스에서 검색
-                           * 예시: "Transformer 논문", "BERT 논문 찾아줘", "GPT 관련 논문"
-                           * 특정 논문이나 연구를 찾을 때 사용
-
-                         - web_search: 웹에서 최신 논문 검색
-                           * 예시: "2024년 최신 논문", "최근 연구 동향"
-                           * 최신 정보나 실시간 검색이 필요할 때 사용
-
-                         - glossary: 단일 용어의 정의만 검색
-                           * 예시: "Attention이 뭐야", "BLEU Score 정의"
-                           * ❌ 비교/차이 질문은 해당 안됨: "A와 B의 차이", "A vs B"
-                           * 오직 하나의 용어 정의만 물어볼 때 사용
-
-                         - summarize: 논문 요약
-                           * 예시: "논문 요약해줘", "이 논문 요약"
-                           * 논문의 요약을 요청할 때 사용
-
-                         - save_file: 파일 저장
-                           * 예시: "파일로 저장해줘", "다운로드"
-                           * 답변을 파일로 저장하고 싶을 때 사용
-
-                         - general: 일반 답변 (기본 도구)
-                           * 예시: "A와 B의 차이는?", "설명해줘", "어떻게 작동해?"
-                           * 비교 질문, 설명 요청, 개념 질문 등
-                           * 위의 특수 도구들에 해당하지 않는 모든 경우
-
-                         중요한 규칙:
-                         - "차이", "비교", "vs", "구별" 등의 단어가 있으면 → general
-                         - 두 개 이상의 용어를 비교하는 질문 → general
-                         - 개념 설명 요청 → general
-
-                         질문: {question}
-
-                         하나의 도구 이름만 반환하세요 (예: search_paper):
-                         """
+    # -------------- JSON 프롬프트 로드 -------------- #
+    routing_prompt_template = get_routing_prompt()    # JSON 파일에서 프롬프트 로드
+    routing_prompt = routing_prompt_template.format(question=question)  # 질문 삽입
 
     # -------------- 난이도별 LLM 초기화 -------------- #
     difficulty = state.get("difficulty", "easy")  # 난이도 (기본값: easy)
