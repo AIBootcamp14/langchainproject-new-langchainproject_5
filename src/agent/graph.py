@@ -25,7 +25,8 @@ from src.agent.nodes import (
     search_paper_node,
     web_search_node,
     glossary_node,
-    summarize_node
+    summarize_node,
+    text2sql_node
 )
 # AgentState: Agent 상태 정의
 # 노드 함수들: router + 6개 도구
@@ -75,6 +76,7 @@ def create_agent_graph(exp_manager=None):
     web_search_with_exp = partial(web_search_node, exp_manager=exp_manager)
     glossary_with_exp = partial(glossary_node, exp_manager=exp_manager)
     summarize_with_exp = partial(summarize_node, exp_manager=exp_manager)
+    text2sql_with_exp = partial(text2sql_node, exp_manager=exp_manager)
 
     # -------------- 노드 추가 -------------- #
     workflow.add_node("router", router_with_exp)                    # 라우터 노드
@@ -84,6 +86,7 @@ def create_agent_graph(exp_manager=None):
     workflow.add_node("web_search", web_search_with_exp)            # 웹 검색 노드
     workflow.add_node("glossary", glossary_with_exp)                # 용어집 노드
     workflow.add_node("summarize", summarize_with_exp)              # 논문 요약 노드
+    workflow.add_node("text2sql", text2sql_with_exp)                # Text-to-SQL 노드
 
     # -------------- 시작점 설정 -------------- #
     workflow.set_entry_point("router")          # 라우터를 시작점으로 설정
@@ -99,13 +102,14 @@ def create_agent_graph(exp_manager=None):
             "search_paper": "search_paper",     # search_paper → search_paper_node
             "web_search": "web_search",         # web_search → web_search_node
             "glossary": "glossary",             # glossary → glossary_node
-            "summarize": "summarize"            # summarize → summarize_node
+            "summarize": "summarize",           # summarize → summarize_node
+            "text2sql": "text2sql"              # text2sql → text2sql_node
         }
     )
 
     # -------------- 종료 엣지 설정 -------------- #
     # 모든 도구 노드에서 종료
-    for node in ["general", "save_file", "search_paper", "web_search", "glossary", "summarize"]:
+    for node in ["general", "save_file", "search_paper", "web_search", "glossary", "summarize", "text2sql"]:
         workflow.add_edge(node, END)            # 각 노드 → END
 
     # -------------- 그래프 컴파일 -------------- #
