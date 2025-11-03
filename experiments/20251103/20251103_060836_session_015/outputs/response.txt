@@ -1,0 +1,1 @@
+논문 요약 중 오류 발생: PGVector.__init__() got an unexpected keyword argument 'embedding_function'

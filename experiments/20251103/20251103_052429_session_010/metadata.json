@@ -1,0 +1,10 @@
+{
+  "session_id": "010",
+  "start_time": "2025-11-03T05:24:29.404611",
+  "difficulty": "hard",
+  "tool_used": "glossary",
+  "user_query": "BERT 논문의 방법론 부분만 요약해줘",
+  "success": null,
+  "response_time_ms": null,
+  "end_time": null
+}
