@@ -15,8 +15,11 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from langchain_core.tools import tool
 from langchain_core.documents import Document
+from langchain.schema import SystemMessage, HumanMessage
 
 from src.rag.retriever import RAGRetriever
+from src.prompts import get_tool_prompt
+from src.llm.client import LLMClient
 
 
 # ==================== 내부 유틸: 환경/DB ==================== #
@@ -256,7 +259,7 @@ def search_paper_node(state, exp_manager=None):
     # -------------- search_paper_database 도구 호출 -------------- #
     try:
         # Langchain @tool 함수 호출
-        result = search_paper_database.invoke({
+        raw_results = search_paper_database.invoke({
             "query": question,                            # 검색 쿼리
             "year_gte": None,                             # 연도 필터 없음
             "author": None,                               # 저자 필터 없음
@@ -268,11 +271,43 @@ def search_paper_node(state, exp_manager=None):
         })
 
         if tool_logger:
-            tool_logger.write(f"검색 결과: {len(result)} 글자")
+            tool_logger.write(f"검색 결과: {len(raw_results)} 글자")
+
+        # -------------- JSON 프롬프트 로드 -------------- #
+        system_prompt = get_tool_prompt("search_paper", difficulty)  # JSON 파일에서 시스템 프롬프트 로드
+
+        # -------------- 난이도별 LLM 초기화 -------------- #
+        llm_client = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
+
+        # -------------- 메시지 구성 -------------- #
+        user_content = f"""[논문 검색 결과]
+{raw_results}
+
+[질문]
+{question}
+
+위 검색 결과를 바탕으로 질문에 답변해주세요."""
+
+        messages = [
+            SystemMessage(content=system_prompt),  # 시스템 프롬프트
+            HumanMessage(content=user_content)     # 검색 결과 + 질문
+        ]
+
+        if tool_logger:
+            tool_logger.write("LLM 답변 생성 시작")
+
+        # -------------- LLM 호출 -------------- #
+        response = llm_client.llm.invoke(messages)  # LLM 응답 생성
+
+        if tool_logger:
+            tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
             tool_logger.close()
 
         # -------------- 최종 답변 저장 -------------- #
-        state["final_answer"] = result                    # 답변 저장
+        state["final_answer"] = response.content    # 답변 저장
 
     except Exception as e:
         if tool_logger:
