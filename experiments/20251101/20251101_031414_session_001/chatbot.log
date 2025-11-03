@@ -1,0 +1,43 @@
+2025-11-01 03:14:14 | 세션 시작: session_001
+2025-11-01 03:14:14 | 폴더 경로: experiments/20251101/20251101_031414_session_001
+2025-11-01 03:14:14 | ============================================================
+2025-11-01 03:14:14 | AI Agent 실행 시작
+2025-11-01 03:14:14 | ============================================================
+2025-11-01 03:14:14 | Agent 그래프 생성 시작
+2025-11-01 03:14:14 | Agent 그래프 생성 시작
+2025-11-01 03:14:14 | Agent 그래프 컴파일 완료
+2025-11-01 03:14:14 | Agent 그래프 생성 완료
+2025-11-01 03:14:14 | ChatMemoryManager 초기화 완료
+2025-11-01 03:14:14 | ------------------------------------------------------------
+2025-11-01 03:14:14 | 질문 1: Transformer 모델의 핵심 개념을 설명해줘
+2025-11-01 03:14:14 | 난이도: easy
+2025-11-01 03:14:14 | Agent invoke 시작
+2025-11-01 03:14:17 | 오류: 오류 발생: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-11-01 03:14:17 | ------------------------------------------------------------
+2025-11-01 03:14:17 | 질문 2: Attention is All You Need 논문을 요약해줘
+2025-11-01 03:14:17 | 난이도: hard
+2025-11-01 03:14:17 | Agent invoke 시작
+2025-11-01 03:14:19 | 오류: 오류 발생: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-11-01 03:14:19 | ------------------------------------------------------------
+2025-11-01 03:14:19 | 질문 3: Self-Attention이 뭐야?
+2025-11-01 03:14:19 | 난이도: easy
+2025-11-01 03:14:19 | Agent invoke 시작
+2025-11-01 03:14:21 | 오류: 오류 발생: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-11-01 03:14:21 | ------------------------------------------------------------
+2025-11-01 03:14:21 | 질문 4: BERT와 GPT의 차이점을 논문 검색해서 알려줘
+2025-11-01 03:14:21 | 난이도: hard
+2025-11-01 03:14:21 | Agent invoke 시작
+2025-11-01 03:14:24 | 오류: 오류 발생: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-11-01 03:14:24 | ------------------------------------------------------------
+2025-11-01 03:14:24 | 질문 5: NLP 논문 최신 동향을 웹에서 검색해줘
+2025-11-01 03:14:24 | 난이도: easy
+2025-11-01 03:14:24 | Agent invoke 시작
+2025-11-01 03:14:27 | 오류: 오류 발생: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+2025-11-01 03:14:27 | ============================================================
+2025-11-01 03:14:27 | AI Agent 실행 완료
+2025-11-01 03:14:27 | 총 질문 수: 5개
+2025-11-01 03:14:27 | 대화 메모리 메시지 수: 0개
+2025-11-01 03:14:27 | ============================================================
+2025-11-01 03:14:27 | ==================================================
+2025-11-01 03:14:27 | 실험 종료
+2025-11-01 03:14:27 | ==================================================

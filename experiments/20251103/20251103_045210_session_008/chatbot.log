@@ -1,0 +1,77 @@
+2025-11-03 04:52:10 | 세션 시작: session_008
+2025-11-03 04:52:10 | 폴더 경로: experiments/20251103/20251103_045210_session_008
+2025-11-03 04:52:10 | Streamlit UI 시작
+2025-11-03 04:52:10 | 실험 폴더: experiments/20251103/20251103_045210_session_008
+2025-11-03 04:52:10 | 메타데이터 업데이트: ['difficulty']
+2025-11-03 04:54:15 | 메타데이터 업데이트: ['user_query']
+2025-11-03 04:54:20 | 메타데이터 업데이트: ['tool_used']
+2025-11-03 04:54:20 | 결과물 저장: response.txt
+2025-11-03 04:54:20 | 용어 추출 시작
+2025-11-03 04:54:20 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-03 04:54:20 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-03 04:54:23 | LLM 응답: ```json
+{
+  "terms": [
+    {
+      "term": "머신러닝",
+      "definition": "데이터로부터 패턴을 학습하여 작업 성능을 자동으로 개선하는 알고리즘 및 기술",
+      "category": "Machine Learning"
+    },
+    {
+      "term": "추천 시스템",
+      "de...
+2025-11-03 04:54:23 | 추출된 용어 수: 5
+2025-11-03 04:54:23 | PostgreSQL 연결 실패: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "ieyeppo" does not exist
+2025-11-03 04:57:35 | 메타데이터 업데이트: ['user_query']
+2025-11-03 04:57:47 | 메타데이터 업데이트: ['tool_used']
+2025-11-03 04:57:47 | 결과물 저장: response.txt
+2025-11-03 04:57:47 | 용어 추출 시작
+2025-11-03 04:57:47 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-03 04:57:47 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-03 04:57:51 | LLM 응답: ```json
+{
+  "terms": [
+    {
+      "term": "LLM (대형 언어 모델)",
+      "definition": "대규모 텍스트 데이터를 학습하여 자연어 이해 및 생성 작업을 수행하는 심층 학습 모델",
+      "category": "NLP"
+    },
+    {
+      "term": "ATF",
+      "def...
+2025-11-03 04:57:51 | 추출된 용어 수: 5
+2025-11-03 04:57:51 | PostgreSQL 연결 실패: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "ieyeppo" does not exist
+2025-11-03 04:59:47 | 메타데이터 업데이트: ['user_query']
+2025-11-03 04:59:49 | 메타데이터 업데이트: ['tool_used']
+2025-11-03 04:59:49 | 결과물 저장: response.txt
+2025-11-03 04:59:49 | 용어 추출 시작
+2025-11-03 04:59:49 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-03 04:59:49 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-03 04:59:50 | LLM 응답: 주어진 답변에는 AI/ML 관련 전문 용어가 포함되어 있지 않습니다. 해당 내용은 PostgreSQL 데이터베이스 연결 오류에 관한 설명이므로, 요청하신 형식에 따라 빈 리스트를 반환합니다.
+
+```json
+{
+  "terms": []
+}
+```...
+2025-11-03 04:59:50 | 추출된 용어 수: 0
+2025-11-03 05:00:21 | 메타데이터 업데이트: ['user_query']
+2025-11-03 05:00:23 | 메타데이터 업데이트: ['tool_used']
+2025-11-03 05:00:23 | 결과물 저장: response.txt
+2025-11-03 05:00:23 | 용어 추출 시작
+2025-11-03 05:00:23 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-03 05:00:23 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-03 05:00:24 | LLM 응답: 주어진 텍스트에는 AI/ML 관련 전문 용어가 포함되어 있지 않습니다. 해당 내용은 데이터베이스 연결 오류와 관련된 시스템 관리 이슈에 해당합니다.
+
+```json
+{
+  "terms": []
+}
+```...
+2025-11-03 05:00:24 | 추출된 용어 수: 0
+2025-11-03 05:03:57 | 메타데이터 업데이트: ['difficulty']
+2025-11-03 05:03:58 | 메타데이터 업데이트: ['difficulty']
+2025-11-03 05:04:01 | 메타데이터 업데이트: ['difficulty']
+2025-11-03 05:04:02 | 메타데이터 업데이트: ['difficulty']
+2025-11-03 05:04:03 | 메타데이터 업데이트: ['difficulty']
+2025-11-03 05:04:04 | 메타데이터 업데이트: ['difficulty']
