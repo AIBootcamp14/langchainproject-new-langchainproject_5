@@ -1,3 +1,0 @@
-2025-11-03 06:03:42 | RAG 검색 노드 실행: BERT 논문들을 알려줘
-2025-11-03 06:03:42 | 난이도: hard
-2025-11-03 06:03:42 | Vector DB 초기화 실패: PGVector.__init__() got an unexpected keyword argument 'embedding_function'
