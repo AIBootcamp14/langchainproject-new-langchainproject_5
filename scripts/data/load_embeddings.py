@@ -103,29 +103,62 @@ def main() -> int:
         # 배치 처리
         batch_size = 50
         total = 0
+        failed_batches = []
         num_batches = (len(enriched_docs) + batch_size - 1) // batch_size
 
         for i in range(0, len(enriched_docs), batch_size):
             batch = enriched_docs[i : i + batch_size]
             batch_num = i // batch_size + 1
+            max_retries = 3
+            retry_count = 0
+            success = False
 
-            try:
-                vectorstore.add_documents(batch)
-                total += len(batch)
-                print(f"   배치 {batch_num}/{num_batches}: {len(batch)}개 문서 저장 완료 (총: {total})")
+            while retry_count < max_retries and not success:
+                try:
+                    vectorstore.add_documents(batch)
+                    total += len(batch)
+                    success = True
+                    print(f"   배치 {batch_num}/{num_batches}: {len(batch)}개 문서 저장 완료 (총: {total})")
 
-                # Rate Limit 대응
-                if i + batch_size < len(enriched_docs):
-                    time.sleep(0.1)
+                    # Rate Limit 대응
+                    if i + batch_size < len(enriched_docs):
+                        time.sleep(0.1)
 
-            except Exception as e:
-                print(f"   ⚠️  배치 {batch_num} 실패: {e}")
-                if "rate limit" in str(e).lower() or "429" in str(e):
-                    print("   Rate limit 감지, 5초 대기...")
-                    time.sleep(5)
-                continue
+                except Exception as e:
+                    retry_count += 1
+                    error_msg = str(e).lower()
 
-        print(f"\n✅ {total}개 문서가 Vector DB에 저장되었습니다.")
+                    if "rate limit" in error_msg or "429" in error_msg:
+                        wait_time = 5 * retry_count  # 5초, 10초, 15초
+                        print(f"   ⚠️  배치 {batch_num} Rate limit 발생, {wait_time}초 대기 후 재시도 ({retry_count}/{max_retries})...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"   ⚠️  배치 {batch_num} 오류 발생: {e}")
+                        if retry_count < max_retries:
+                            print(f"   재시도 중... ({retry_count}/{max_retries})")
+                            time.sleep(1)
+                        else:
+                            print(f"   ❌ 배치 {batch_num} 최대 재시도 횟수 초과, 실패 목록에 추가")
+                            failed_batches.append((batch_num, batch))
+
+        # 실패한 배치 재시도
+        if failed_batches:
+            print(f"\n⚠️  {len(failed_batches)}개 배치 실패, 재시도 중...")
+            for batch_num, batch in failed_batches:
+                try:
+                    print(f"   재시도: 배치 {batch_num}...")
+                    vectorstore.add_documents(batch)
+                    total += len(batch)
+                    print(f"   ✅ 배치 {batch_num} 재시도 성공 ({len(batch)}개 문서)")
+                except Exception as e:
+                    print(f"   ❌ 배치 {batch_num} 재시도 실패: {e}")
+
+        success_rate = (total / len(enriched_docs) * 100) if enriched_docs else 0
+        print(f"\n✅ {total}/{len(enriched_docs)}개 문서가 Vector DB에 저장되었습니다. (성공률: {success_rate:.1f}%)")
+
+        if total < len(enriched_docs):
+            print(f"⚠️  {len(enriched_docs) - total}개 문서가 저장되지 않았습니다.")
+
         return 0
 
     except Exception as e:
