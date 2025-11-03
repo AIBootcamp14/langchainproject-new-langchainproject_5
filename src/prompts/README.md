@@ -1,15 +1,93 @@
-# 프롬프트 파일 매핑 가이드
+# 프롬프트 모듈 가이드
 
 ## 📁 프롬프트 파일 구조
 
 ```
-src/prompts/
+prompts/                           # 프롬프트 데이터 (프로젝트 최상위)
 ├── routing_prompts.json          # 라우팅 프롬프트 + Few-shot 예시
 ├── tool_prompts.json              # 6개 도구별 프롬프트
 ├── evaluation_prompts.json        # 평가 프롬프트
 ├── question_generation_prompts.json  # 질문 생성 프롬프트
-├── golden_dataset.json            # Golden Dataset (테스트용 질문)
+└── golden_dataset.json            # Golden Dataset (테스트용 질문)
+
+src/prompts/                       # 프롬프트 로더 코드
+├── __init__.py                    # 모듈 초기화 및 Export
+├── loader.py                      # JSON 파일 로더 유틸리티
 └── README.md                      # 이 파일
+```
+
+**설계 원칙**: 데이터(`prompts/`)와 코드(`src/prompts/`) 분리
+
+---
+
+## 🚀 빠른 시작
+
+### 프롬프트 로더 사용 예제
+
+```python
+# src/agent/nodes.py 예시
+
+from src.prompts import get_routing_prompt, get_few_shot_examples
+
+def router_node(state: AgentState, exp_manager=None):
+    """라우터 노드: 질문을 분석하여 적절한 도구 선택"""
+
+    question = state["question"]
+
+    # 라우팅 프롬프트 로드
+    routing_prompt_template = get_routing_prompt()
+    routing_prompt = routing_prompt_template.format(question=question)
+
+    # LLM 호출
+    tool_choice = llm.invoke(routing_prompt).content.strip()
+
+    state["tool_choice"] = tool_choice
+    return state
+```
+
+```python
+# src/tools/general_answer.py 예시
+
+from src.prompts import get_tool_prompt
+
+def general_answer_node(state: AgentState, exp_manager=None):
+    """일반 답변 노드"""
+
+    question = state["question"]
+    difficulty = state.get("difficulty", "easy")
+
+    # 난이도별 프롬프트 로드
+    system_prompt = get_tool_prompt("general_answer", difficulty)
+
+    # LLM 호출
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=question)
+    ]
+    response = llm.invoke(messages)
+
+    state["final_answer"] = response.content
+    return state
+```
+
+```python
+# 테스트 스크립트 예시
+
+from src.prompts import get_golden_questions
+
+# Golden Dataset 테스트
+questions = get_golden_questions()
+
+for item in questions:
+    result = agent.invoke({
+        "question": item["question"],
+        "difficulty": item["difficulty"]
+    })
+
+    if result["tool_choice"] == item["expected_tool"]:
+        print(f"✅ {item['question']}")
+    else:
+        print(f"❌ {item['question']}: Expected {item['expected_tool']}, Got {result['tool_choice']}")
 ```
 
 ---
@@ -24,10 +102,16 @@ src/prompts/
 
 **사용 방법**:
 ```python
+# 방법 1: 로더 함수 사용 (권장)
+from src.prompts import get_routing_prompt, get_few_shot_examples
+
+routing_prompt = get_routing_prompt()
+few_shot_examples = get_few_shot_examples()
+
+# 방법 2: 직접 로드 (비권장)
 import json
 
-# JSON 프롬프트 로드
-with open("src/prompts/routing_prompts.json", "r", encoding="utf-8") as f:
+with open("prompts/routing_prompts.json", "r", encoding="utf-8") as f:
     routing_data = json.load(f)
 
 routing_prompt = routing_data["routing_prompt"]
@@ -52,13 +136,19 @@ few_shot_examples = routing_data["few_shot_examples"]
 
 **사용 방법**:
 ```python
-import json
-
-with open("src/prompts/tool_prompts.json", "r", encoding="utf-8") as f:
-    tool_prompts = json.load(f)
+# 방법 1: 로더 함수 사용 (권장)
+from src.prompts import get_tool_prompt
 
 # 난이도별 프롬프트
 difficulty = "easy"  # or "hard"
+system_prompt = get_tool_prompt("general_answer", difficulty)
+
+# 방법 2: 직접 로드 (비권장)
+import json
+
+with open("prompts/tool_prompts.json", "r", encoding="utf-8") as f:
+    tool_prompts = json.load(f)
+
 system_prompt = tool_prompts["general_answer_prompts"][difficulty]["system_prompt"]
 ```
 
