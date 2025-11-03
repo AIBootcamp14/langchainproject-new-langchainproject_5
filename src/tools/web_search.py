@@ -14,6 +14,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from src.agent.state import AgentState
 from src.llm.client import LLMClient
 from src.tools.arxiv_handler import ArxivPaperHandler
+from src.prompts import get_tool_prompt, get_web_search_user_prompt_template
 
 
 # ==================== 도구 4: 웹 검색 노드 ==================== #
@@ -115,36 +116,13 @@ def web_search_node(state: AgentState, exp_manager=None):
         for i, result in enumerate(search_results)
     ])
 
-    # -------------- 난이도별 프롬프트 설정 -------------- #
-    if difficulty == "easy":
-        # Easy 모드: 초심자용 설명
-        system_prompt = """당신은 최신 논문 정보를 쉽게 설명하는 전문가입니다.
-                           초심자도 이해할 수 있도록 검색 결과를 정리해주세요.
-                           - 핵심 내용을 간단히 요약하세요
-                           - 쉬운 언어를 사용하세요
-                           - 중요한 정보만 선별하세요
-                           - 친근하고 이해하기 쉬운 톤을 유지하세요"""
-    else:  # hard
-        # Hard 모드: 전문가용 설명
-        system_prompt = """당신은 논문 분석 전문가입니다.
-                           검색 결과를 전문적으로 정리해주세요.
-                           - 기술적 세부사항을 포함하세요
-                           - 최신 연구 동향을 분석하세요
-                           - 관련 논문들을 비교하세요
-                           - 전문가 수준의 정확성을 유지하세요"""
-
-    user_prompt = f"""[웹 검색 결과]
-                      {formatted_results}
-
-                      [질문]
-                      {question}
-
-                      위 검색 결과를 바탕으로 질문에 답변해주세요.
-                      **중요**: 각 논문이나 정보 출처의 URL을 반드시 포함하세요.
-                      예시 형식:
-                      - 논문 제목 ([링크](URL))
-                      또는
-                      🔗 출처: [제목](URL)"""
+    # -------------- JSON 프롬프트 로드 -------------- #
+    system_prompt = get_tool_prompt("web_search", difficulty)  # JSON 파일에서 시스템 프롬프트 로드
+    user_prompt_template = get_web_search_user_prompt_template(difficulty)  # JSON 파일에서 사용자 프롬프트 템플릿 로드
+    user_prompt = user_prompt_template.format(
+        formatted_results=formatted_results,
+        question=question
+    )
 
     # -------------- 프롬프트 저장 -------------- #
     if exp_manager:
