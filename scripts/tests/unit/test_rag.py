@@ -12,7 +12,7 @@ import pytest
 from langchain_core.documents import Document
 
 from src.rag.retriever import RAGRetriever
-from src.tools.rag_search import search_paper_database
+from src.tools.search_paper import search_paper_database
 from src.tools.glossary import search_glossary
 
 # ---------- 환경 스위치 ----------
