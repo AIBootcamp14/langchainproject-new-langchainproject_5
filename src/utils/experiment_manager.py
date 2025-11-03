@@ -343,6 +343,9 @@ class ExperimentManager:
         Args:
             session_data: 세션 데이터 딕셔너리
         """
+        # ui 폴더 존재 확인 및 생성
+        self.ui_dir.mkdir(parents=True, exist_ok=True)
+
         with open(self.ui_dir / "streamlit_session.json", 'w', encoding='utf-8') as f:
             json.dump(session_data, f, ensure_ascii=False, indent=2)
 
@@ -357,6 +360,9 @@ class ExperimentManager:
         Args:
             interaction: 인터랙션 설명
         """
+        # ui 폴더 존재 확인 및 생성
+        self.ui_dir.mkdir(parents=True, exist_ok=True)
+
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_line = f"{timestamp} | {interaction}\n"
 
@@ -372,6 +378,9 @@ class ExperimentManager:
         Args:
             event: 이벤트 딕셔너리
         """
+        # ui 폴더 존재 확인 및 생성
+        self.ui_dir.mkdir(parents=True, exist_ok=True)
+
         event['timestamp'] = datetime.now().isoformat()
 
         # 기존 이벤트 읽기
