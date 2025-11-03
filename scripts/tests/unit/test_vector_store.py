@@ -10,7 +10,7 @@ Langchain PGVector를 사용하여 문서 추가 및 유사도 검색을 테스�
 from langchain.schema import Document
 
 # ------------------------- 프로젝트 모듈 ------------------------- #
-from src.database.vector_store import PaperVectorStore
+from src.database.vector_store import get_pgvector_store
 
 
 # ==================== 메인 테스트 ==================== #
@@ -19,11 +19,11 @@ if __name__ == "__main__":
     print("PGVector 벡터 검색 테스트 시작")
     print("=" * 80)
 
-    # ---------------------- 1. PaperVectorStore 인스턴스 생성 ---------------------- #
-    print("\n[1] PaperVectorStore 초기화")
+    # ---------------------- 1. VectorStore 인스턴스 생성 ---------------------- #
+    print("\n[1] VectorStore 초기화")
     print("-" * 80)
-    vector_store = PaperVectorStore(collection_name="paper_chunks")
-    print("✅ PaperVectorStore 초기화 완료")
+    vector_store = get_pgvector_store(collection_name="paper_chunks")
+    print("✅ VectorStore 초기화 완료")
 
     # ---------------------- 2. 샘플 문서 추가 ---------------------- #
     print("\n[2] 샘플 문서 추가")
@@ -54,6 +54,7 @@ if __name__ == "__main__":
 
     try:
         ids = vector_store.add_documents(sample_documents)
+        print(f"✅ {len(ids)}개 문서 추가 완료")
         print(f"문서 ID: {ids}")
     except Exception as e:
         print(f"⚠️  문서 추가 중 오류 발생: {e}")
@@ -68,6 +69,7 @@ if __name__ == "__main__":
     print()
 
     docs = vector_store.similarity_search(query, k=3)
+    print(f"✅ {len(docs)}개 유사 문서 검색 완료")
 
     print("\n검색 결과:")
     for i, doc in enumerate(docs, 1):
@@ -82,7 +84,8 @@ if __name__ == "__main__":
     print(f"검색 쿼리: '{query}'")
     print()
 
-    docs = vector_store.mmr_search(query, k=3, lambda_mult=0.5)
+    docs = vector_store.max_marginal_relevance_search(query, k=3, lambda_mult=0.5)
+    print(f"✅ {len(docs)}개 다양한 문서 검색 완료")
 
     print("\n검색 결과 (다양성 고려):")
     for i, doc in enumerate(docs, 1):
