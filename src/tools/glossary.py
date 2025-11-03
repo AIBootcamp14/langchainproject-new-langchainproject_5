@@ -22,6 +22,9 @@ from langchain_postgres.vectorstores import PGVector
 
 # ------------------------- 프로젝트 모듈 ------------------------- #
 from src.utils.config_loader import get_postgres_connection_string, get_db_config
+from src.prompts import get_tool_prompt
+from src.llm.client import LLMClient
+from langchain.schema import SystemMessage, HumanMessage
 
 
 # ==================== 용어 추출 유틸리티 ==================== #
@@ -447,7 +450,7 @@ def glossary_node(state, exp_manager=None):
     # -------------- search_glossary 도구 호출 -------------- #
     try:
         # Langchain @tool 함수 호출
-        result = search_glossary.invoke({
+        raw_results = search_glossary.invoke({
             "query": question,                            # 검색 쿼리
             "category": None,                             # 카테고리 필터 없음
             "difficulty": difficulty,                     # 난이도 모드
@@ -457,11 +460,43 @@ def glossary_node(state, exp_manager=None):
         })
 
         if tool_logger:
-            tool_logger.write(f"검색 결과: {len(result)} 글자")
+            tool_logger.write(f"검색 결과: {len(raw_results)} 글자")
+
+        # -------------- JSON 프롬프트 로드 -------------- #
+        system_prompt = get_tool_prompt("glossary", difficulty)  # JSON 파일에서 시스템 프롬프트 로드
+
+        # -------------- 난이도별 LLM 초기화 -------------- #
+        llm_client = LLMClient.from_difficulty(
+            difficulty=difficulty,
+            logger=exp_manager.logger if exp_manager else None
+        )
+
+        # -------------- 메시지 구성 -------------- #
+        user_content = f"""[용어집 검색 결과]
+{raw_results}
+
+[질문]
+{question}
+
+위 검색 결과를 바탕으로 질문에 답변해주세요."""
+
+        messages = [
+            SystemMessage(content=system_prompt),  # 시스템 프롬프트
+            HumanMessage(content=user_content)     # 검색 결과 + 질문
+        ]
+
+        if tool_logger:
+            tool_logger.write("LLM 답변 생성 시작")
+
+        # -------------- LLM 호출 -------------- #
+        response = llm_client.llm.invoke(messages)  # LLM 응답 생성
+
+        if tool_logger:
+            tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
             tool_logger.close()
 
         # -------------- 최종 답변 저장 -------------- #
-        state["final_answer"] = result                    # 답변 저장
+        state["final_answer"] = response.content    # 답변 저장
 
     except Exception as e:
         if tool_logger:
