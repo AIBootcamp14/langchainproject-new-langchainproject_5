@@ -1,0 +1,100 @@
+## 검색된 논문
+
+### 1. Attention-Only Transformers and Implementing MLPs with Attention Heads
+- **저자**: Robert Huben, Valerie Morris
+- **출판일**: 2023-09-15
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2309.08593v1
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.5129
+
+Hatﬁeld-Dodds, Danny Hernandez, Andy Jones, Jackson Kernion , Liane Lovitt, Kamal Ndousse, Dario
+Amodei, Tom Brown, Jack Clark, Jared Kaplan, Sam McCandlish, and C hris Olah. A mathemat-
+ical framework for transformer circuits. Transformer Circuits Thread , 2021. https://transformer-
+circuits.pub/2021/framework/index.html.
+Stefan Heimersheim and Alex Turner. Residual stream norms grow e xponentially over the
+forward pass, 2023. URL https://www.alignmentforum.org/posts/8mizBCm3dyc432 nK8/
+residual-stream-norms-grow-exponentially-over-the-f orward. Accessed: 2023-09-04.
+Dan Hendrycks and Kevin G...
+
+---
+
+### 2. Formal Aspects of Language Modeling
+- **저자**: Ryan Cotterell, Anej Svete, Clara Meister, Tianyu Liu, Li Du
+- **출판일**: 2023-11-07
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2311.04329v2
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.5259
+
+models: the transformer.24We introduce them and discuss their theoretical underpinnings in the
+next section.
+24We will not discuss the issues with the training speed and parallelization of RNNs in detail. Some of these issues
+will be highlighted in the latter parts of the course.
+
+---
+
+### 3. Attention-Only Transformers and Implementing MLPs with Attention Heads
+- **저자**: Robert Huben, Valerie Morris
+- **출판일**: 2023-09-15
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2309.08593v1
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.5509
+
+Deﬁnition 5. A transformer is a function t:MN,D→MN,Dof the form X0↦→X1↦→...↦→Xm=t(X0),
+where
+Xj+1=
+
+LayerNorm( Xj+∑
+ihj,i(Xj))or
+LayerNorm( Xj+fj(Xj))
+for some attention heads hj,ior MLPs with a single hidden layer fj. Note the use of Layer Normalization
+(Ba et al., 2016) and skip connections , where one performs some computation fonXjand deﬁnes Xj+1=
+LayerNorm( Xj+f(Xj)), as opposed to Xj+1=f(Xj).
+Classically, transformers alternate between attention sublayers and MLP sublayers, but we allow the
+existence of other architectures, including attention-only trans formers and “MLP-only” transfo...
+
+---
+
+### 4. Formal Aspects of Language Modeling
+- **저자**: Ryan Cotterell, Anej Svete, Clara Meister, Tianyu Liu, Li Du
+- **출판일**: 2023-11-07
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2311.04329v2
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.5518
+
+transformer language models, as well as the tightness of various other neural architectures, is the
+following basic fact in topology.
+35Note that, there is, of course, some sense of recurrence in the transformer—the composition of the transformer
+layers, which are stacked on top of each other, and of course require sequential computation. However, crucially, the
+number of layers does not depend on the length of the string —the number of sequential steps required to process a
+string, therefore, does not depend on its length, which is what we wanted to achieve.
+
+---
+
+### 5. Armour: Generalizable Compact Self-Attention for Vision Transformers
+- **저자**: Lingchuan Meng
+- **출판일**: 2021-08-03
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2108.01778v1
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.5596
+
+serving as “a raising tide that lifts all boats". By providing an easy-to-implement drop-in replacement,
+for self-attention, numerous transformer models across many application domains can be seamlessly
+improved in model size, power and latency. These optimized models can yield an immediate impact
+on real-life applications, especially in settings with resource constraints.
+Acknowledgments and Disclosure of Funding
+We are grateful to Benjamin Graham, Hugo Touvron, and Francisco Massa for their generous help in
+reproducing the published results.
+References
+[1]Jimmy Lei Ba, Jamie Ryan Kiros, and ...
+
+---
