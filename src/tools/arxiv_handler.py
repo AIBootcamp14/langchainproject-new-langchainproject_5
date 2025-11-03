@@ -52,7 +52,7 @@ class ArxivPaperHandler:
     6. 임베딩 생성 및 pgvector 저장
     """
 
-    def __init__(self, data_dir: str = "data/raw", logger=None):
+    def __init__(self, data_dir: str = "data/raw/pdfs", logger=None):
         """
         초기화
 
