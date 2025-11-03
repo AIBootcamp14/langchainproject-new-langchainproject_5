@@ -19,6 +19,7 @@ from src.tools.search_paper import search_paper_node
 from src.tools.web_search import web_search_node
 from src.tools.glossary import glossary_node
 from src.tools.summarize import summarize_node
+from src.tools.text2sql import text2sql
 
 
 # ==================== 라우터 노드 ==================== #
@@ -70,6 +71,47 @@ def router_node(state: AgentState, exp_manager=None):
     return state                                # 업데이트된 상태 반환
 
 
+# ==================== Text-to-SQL 노드 ==================== #
+# ---------------------- 논문 통계 정보 조회 ---------------------- #
+def text2sql_node(state: AgentState, exp_manager=None):
+    """
+    Text-to-SQL 노드: 자연어 질문을 SQL로 변환하여 논문 통계 조회
+
+    Args:
+        state (AgentState): Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+
+    Returns:
+        AgentState: 업데이트된 상태 (final_answer 포함)
+    """
+    # -------------- 상태에서 질문 추출 -------------- #
+    question = state["question"]                # 사용자 질문
+
+    # -------------- 로깅 -------------- #
+    if exp_manager:
+        exp_manager.logger.write(f"Text-to-SQL 노드 실행: {question}")
+
+    # -------------- Text-to-SQL 도구 호출 -------------- #
+    try:
+        result = text2sql.run(question)         # Tool 객체의 run() 메서드 호출
+
+        # -------------- 로깅 -------------- #
+        if exp_manager:
+            exp_manager.logger.write(f"SQL 실행 완료: {len(result)} 글자")
+
+        # -------------- 최종 답변 저장 -------------- #
+        state["final_answer"] = result          # 통계 조회 결과 저장
+
+    except Exception as e:
+        # -------------- 오류 처리 -------------- #
+        if exp_manager:
+            exp_manager.logger.write(f"Text-to-SQL 실행 오류: {e}", print_error=True)
+
+        state["final_answer"] = f"논문 통계 조회 중 오류가 발생했습니다: {str(e)}"
+
+    return state                                # 업데이트된 상태 반환
+
+
 # ==================== Export 목록 ==================== #
 __all__ = [
     'router_node',
@@ -79,4 +121,5 @@ __all__ = [
     'web_search_node',
     'glossary_node',
     'summarize_node',
+    'text2sql_node',
 ]
