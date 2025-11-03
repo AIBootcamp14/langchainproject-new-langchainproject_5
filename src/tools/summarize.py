@@ -17,6 +17,7 @@ from langchain.prompts import PromptTemplate
 import psycopg2
 from src.agent.state import AgentState
 from src.llm.client import LLMClient
+from src.prompts import get_summarize_title_extraction_prompt, get_summarize_template
 
 
 # ==================== 도구 6: 논문 요약 노드 ==================== #
@@ -55,12 +56,9 @@ def summarize_node(state: AgentState, exp_manager=None):
             difficulty=difficulty,
             logger=exp_manager.logger if exp_manager else None
         )
-        extract_prompt = f"""다음 질문에서 요약하려는 논문의 제목을 추출하세요.
-                             논문 제목만 정확히 반환하세요. 다른 설명은 불필요합니다.
-
-                             질문: {question}
-
-                             논문 제목:"""
+        # JSON 프롬프트 로드
+        extract_prompt_template = get_summarize_title_extraction_prompt()
+        extract_prompt = extract_prompt_template.format(question=question)
 
         if tool_logger:
             tool_logger.write(f"논문 제목 추출 프롬프트: {extract_prompt}")
@@ -152,20 +150,23 @@ def summarize_node(state: AgentState, exp_manager=None):
             return state
 
         # ============================================================ #
-        #        4단계: 난이도별 프롬프트 설정 및 요약 생성            #
+        #        4단계: JSON 프롬프트 로드 및 요약 생성                #
         # ============================================================ #
-        if difficulty == "easy":
-            system_content = """당신은 논문을 쉽게 설명하는 AI 어시스턴트입니다.
-                                초심자도 이해할 수 있도록 다음 논문을 요약해주세요:
-                                - 핵심 내용을 간단하고 명확하게 설명
-                                - 전문 용어는 쉬운 말로 풀어서 설명
-                                - 3-5개의 주요 포인트로 정리"""
-        else:  # hard
-            system_content = """당신은 전문적인 논문 분석 AI 어시스턴트입니다.
-                                다음 논문을 전문적으로 요약해주세요:
-                                - 연구 목적, 방법론, 주요 결과, 결론을 포함
-                                - 기술적 세부사항과 핵심 기여도 강조
-                                - 학술적 관점에서 종합적으로 분석"""
+        # JSON에서 요약 템플릿 로드
+        summary_template_str = get_summarize_template(difficulty)
+
+        # 논문 내용 결합
+        combined_text = "\n\n".join([doc.page_content for doc in docs[:20]])  # 처음 20개 청크만 사용
+
+        # 템플릿에 논문 정보 포맷팅
+        system_content = summary_template_str.format(
+            system_prompt=f"난이도: {difficulty}",
+            title=title,
+            authors=authors if authors else "N/A",
+            publish_date=publish_date if publish_date else "N/A",
+            abstract=abstract if abstract else "N/A",
+            combined_text=combined_text
+        )
 
         # SystemMessage 저장
         if exp_manager:
