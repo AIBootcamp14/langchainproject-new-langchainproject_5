@@ -1,1 +1,0 @@
-논문 요약 중 오류 발생: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "ieyeppo" does not exist
