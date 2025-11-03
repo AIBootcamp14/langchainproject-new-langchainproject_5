@@ -10,6 +10,7 @@ LLM의 자체 지식으로 직접 답변 생성
 from langchain.schema import SystemMessage, HumanMessage
 from src.agent.state import AgentState
 from src.llm.client import LLMClient
+from src.prompts import get_tool_prompt
 
 
 # ==================== 도구 1: 일반 답변 노드 ==================== #
@@ -33,23 +34,9 @@ def general_answer_node(state: AgentState, exp_manager=None):
         exp_manager.logger.write(f"일반 답변 노드 실행: {question}")
         exp_manager.logger.write(f"난이도: {difficulty}")
 
-    # -------------- 난이도별 SystemMessage 설정 -------------- #
-    if difficulty == "easy":
-        # Easy 모드: 초심자용 설명
-        system_content = """당신은 친절한 AI 어시스턴트입니다.
-                            초심자도 이해할 수 있도록 쉽고 명확하게 답변해주세요.
-                            - 전문 용어는 최소화하고 일상적인 언어를 사용하세요
-                            - 복잡한 개념은 간단한 비유로 설명하세요
-                            - 친근하고 이해하기 쉬운 톤을 유지하세요"""
-    else:  # hard
-        # Hard 모드: 전문가용 설명
-        system_content = """당신은 전문적인 AI 어시스턴트입니다.
-                            기술적인 세부사항을 포함하여 정확하고 전문적으로 답변해주세요.
-                            - 기술 용어와 전문 개념을 자유롭게 사용하세요
-                            - 깊이 있는 설명과 상세한 정보를 제공하세요
-                            - 전문가 수준의 정확성을 유지하세요"""
-
-    system_msg = SystemMessage(content=system_content)  # SystemMessage 객체 생성
+    # -------------- JSON 프롬프트 로드 -------------- #
+    system_content = get_tool_prompt("general_answer", difficulty)  # JSON 파일에서 프롬프트 로드
+    system_msg = SystemMessage(content=system_content)              # SystemMessage 객체 생성
 
     # -------------- 난이도별 LLM 초기화 -------------- #
     llm_client = LLMClient.from_difficulty(
