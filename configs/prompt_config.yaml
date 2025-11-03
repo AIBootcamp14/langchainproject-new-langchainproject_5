@@ -1,5 +1,18 @@
 # ------------------------------- 프롬프트 설정 ------------------------------- #
-# 난이도별 프롬프트 템플릿 설정 파일
+# ⚠️ DEPRECATED: 이 파일은 더 이상 사용되지 않습니다.
+#
+# 현재 prompts/*.json 파일들을 사용하고 있습니다:
+#   - prompts/routing_prompts.json          (라우팅 프롬프트)
+#   - prompts/tool_prompts.json             (도구별 프롬프트)
+#   - prompts/evaluation_prompts.json       (평가 프롬프트)
+#   - prompts/question_generation_prompts.json (질문 생성)
+#   - prompts/golden_dataset.json           (테스트 데이터)
+#
+# 참고: src/prompts/loader.py에서 JSON 파일 로더 구현
+# 마지막 업데이트: 2025-11-04
+# ------------------------------- #
+
+# 난이도별 프롬프트 템플릿 설정 파일 (LEGACY)
 
 # Easy 모드 프롬프트 (초급자용)
 easy_mode:
