@@ -197,16 +197,16 @@ def get_llm_for_task(task_type, logger=None):
 
     # -------------- 라우팅용 (빠른 응답) -------------- #
     if task_type == "routing":
-        return LLMClient(provider="solar", model="solar-1-mini-chat", temperature=0, logger=logger)
+        return LLMClient(provider="solar", model="solar-pro", temperature=0, logger=logger)
 
     # -------------- 답변 생성용 (높은 정확도) -------------- #
     elif task_type == "generation":
-        return LLMClient(provider="openai", model="gpt-4", temperature=0.7, logger=logger)
+        return LLMClient(provider="openai", model="gpt-5", temperature=0.7, logger=logger)
 
     # -------------- 요약용 (품질 중요) -------------- #
     elif task_type == "summarization":
-        return LLMClient(provider="openai", model="gpt-4", temperature=0, logger=logger)
+        return LLMClient(provider="openai", model="gpt-5", temperature=0, logger=logger)
 
     # -------------- 기본값 (비용 효율) -------------- #
     else:
-        return LLMClient(provider="openai", model="gpt-3.5-turbo", temperature=0.7, logger=logger)
+        return LLMClient(provider="solar", model="solar-pro", temperature=0.7, logger=logger)
