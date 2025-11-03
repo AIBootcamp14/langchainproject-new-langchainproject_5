@@ -8,8 +8,11 @@ import psycopg2.extras
 from typing import List, Tuple, Any, Optional
 
 from langchain.tools import tool
-from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+
+# LLMClient import 추가 (config 기반)
+from src.utils.config_loader import get_model_config
+from src.llm.client import LLMClient
 
 load_dotenv()
 # ==============================================================================
@@ -22,8 +25,8 @@ load_dotenv()
 #
 # 📌 환경 변수(필수/선택)
 #   - POSTGRES_HOST/PORT/USER/PASSWORD/DB      : DB 접속 정보
-#   - TEXT2SQL_MODEL                           : LLM 모델명 (기본: gpt-4o-mini)
-#   - OPENAI_API_KEY                           : OpenAI Key (ChatOpenAI 내부 사용)
+#   - SOLAR_API_KEY 또는 OPENAI_API_KEY       : LLM API Key (config에서 지정된 provider에 따라)
+#   ⚠️ configs/model_config.yaml의 text2sql 섹션에서 모델 설정
 #
 # 🔎 사용 예시
 #   >>> from text2sql import text2sql
@@ -326,8 +329,22 @@ def text2sql(user_question: str) -> str:
       - "AI 관련 논문 중 가장 인용이 많은 건?"
     """
     t0 = time.time()
-    model_name = os.getenv("TEXT2SQL_MODEL", "gpt-4o-mini")
-    llm = ChatOpenAI(model=model_name, temperature=0)
+
+    # ==================== config에서 text2sql 모델 설정 읽기 ==================== #
+    try:
+        model_config = get_model_config()
+        text2sql_config = model_config.get("text2sql", {})
+        provider = text2sql_config.get("provider", "solar")
+        model = text2sql_config.get("model", "solar-pro2")
+        temperature = text2sql_config.get("temperature", 0.0)
+    except Exception:
+        # config 로드 실패 시 기본값
+        provider = "solar"
+        model = "solar-pro2"
+        temperature = 0.0
+
+    # LLMClient 생성 (config 기반)
+    llm_client = LLMClient(provider=provider, model=model, temperature=temperature)
 
     schema = _fetch_schema_snapshot()
     sys_prompt = _SYS_PROMPT.format(schema=schema)
@@ -335,10 +352,11 @@ def text2sql(user_question: str) -> str:
     user_block = f"-- Q: {user_question}\n-- Generate ONE SQL ONLY."
 
     # LLM 호출
-    raw = llm.invoke(
+    from langchain.schema import SystemMessage, HumanMessage
+    raw = llm_client.llm.invoke(
         [
-            {"role": "system", "content": sys_prompt},
-            {"role": "user", "content": few_shot + "\n\n" + user_block},
+            SystemMessage(content=sys_prompt),
+            HumanMessage(content=few_shot + "\n\n" + user_block),
         ]
     ).content
 

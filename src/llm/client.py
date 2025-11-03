@@ -176,37 +176,3 @@ class LLMClient:
         # -------------- 비동기 스트리밍 -------------- #
         async for chunk in self.llm.astream(messages):  # 청크 단위로 응답 수신
             yield chunk                             # 청크 반환
-
-
-# ==================== 작업 유형별 LLM 선택 함수 ==================== #
-# ---------------------- 작업 유형별 최적 LLM 선택 ---------------------- #
-def get_llm_for_task(task_type, logger=None):
-    """
-    작업 유형별 최적 LLM 선택
-
-    Args:
-        task_type (str): 작업 유형 (routing, generation, summarization, 기타)
-        logger: Logger 인스턴스 (선택 사항)
-
-    Returns:
-        LLMClient 인스턴스
-    """
-    # -------------- 로깅 -------------- #
-    if logger:
-        logger.write(f"작업 유형별 LLM 선택: {task_type}")
-
-    # -------------- 라우팅용 (빠른 응답) -------------- #
-    if task_type == "routing":
-        return LLMClient(provider="solar", model="solar-pro", temperature=0, logger=logger)
-
-    # -------------- 답변 생성용 (높은 정확도) -------------- #
-    elif task_type == "generation":
-        return LLMClient(provider="openai", model="gpt-5", temperature=0.7, logger=logger)
-
-    # -------------- 요약용 (품질 중요) -------------- #
-    elif task_type == "summarization":
-        return LLMClient(provider="openai", model="gpt-5", temperature=0, logger=logger)
-
-    # -------------- 기본값 (비용 효율) -------------- #
-    else:
-        return LLMClient(provider="solar", model="solar-pro", temperature=0.7, logger=logger)
