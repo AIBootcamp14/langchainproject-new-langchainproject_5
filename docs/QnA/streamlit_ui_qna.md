@@ -632,6 +632,9 @@ $\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 1. 사용자 질문 → Agent 답변 생성
 2. 답변 표시 → "📊 답변 품질 평가 중..." 스피너 표시
 3. `AnswerEvaluator` 클래스가 GPT-5로 평가 수행
+   - `configs/model_config.yaml`의 `llm.production.model` 설정을 최우선시
+   - 기본값: `gpt-5`
+   - 재시도: `llm.production.max_retries` 설정값 사용 (기본값: 3번)
 4. 평가 결과 DB 저장 + evaluation 폴더 저장
 5. UI에 토스트 메시지 표시: "✅ 답변 평가 완료: 34/40점"
 6. 답변 하단에 expander로 상세 결과 표시
