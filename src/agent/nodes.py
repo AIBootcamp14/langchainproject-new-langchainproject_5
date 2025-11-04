@@ -8,9 +8,12 @@ LangGraph Agent의 노드 함수들:
 """
 
 # ==================== 라이브러리 Import ==================== #
+from datetime import datetime
 from src.agent.state import AgentState
 from src.llm.client import LLMClient
 from src.prompts import get_routing_prompt
+from src.agent.config_loader import get_priority_chain, get_max_retries, get_max_validation_retries
+from src.agent.question_classifier import classify_question
 
 # ==================== 도구 Import ==================== #
 from src.tools.general_answer import general_answer_node
@@ -112,6 +115,227 @@ def text2sql_node(state: AgentState, exp_manager=None):
     return state                                # 업데이트된 상태 반환
 
 
+# ==================== Fallback Router 노드 ==================== #
+# ---------------------- 도구 실패 시 다음 도구 선택 ---------------------- #
+def fallback_router_node(state: AgentState, exp_manager=None):
+    """
+    Fallback Router 노드: 도구 실행 실패 시 다음 우선순위 도구 선택
+
+    Args:
+        state (AgentState): Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+
+    Returns:
+        AgentState: 업데이트된 상태 (tool_choice 포함)
+    """
+    # -------------- 현재 상태 정보 추출 -------------- #
+    question = state["question"]
+    failed_tool = state.get("tool_choice", "unknown")
+    retry_count = state.get("retry_count", 0)
+    max_retries = state.get("max_retries", 3)
+    fallback_chain = state.get("fallback_chain", [])
+    failed_tools = state.get("failed_tools", [])
+
+    # -------------- 로깅 -------------- #
+    if exp_manager:
+        exp_manager.logger.write("=" * 60)
+        exp_manager.logger.write("Fallback Router 실행")
+        exp_manager.logger.write(f"실패한 도구: {failed_tool}")
+        exp_manager.logger.write(f"재시도 횟수: {retry_count}/{max_retries}")
+
+    # -------------- 실패한 도구 기록 -------------- #
+    if failed_tool not in failed_tools:
+        failed_tools.append(failed_tool)
+        state["failed_tools"] = failed_tools
+
+    # -------------- 재시도 횟수 증가 -------------- #
+    retry_count += 1
+    state["retry_count"] = retry_count
+
+    # -------------- 최대 재시도 초과 확인 -------------- #
+    if retry_count > max_retries:
+        if exp_manager:
+            exp_manager.logger.write(f"최대 재시도 횟수 초과 ({max_retries}회)")
+            exp_manager.logger.write("최종 Fallback: general 도구로 강제 전환")
+
+        state["tool_choice"] = "general"
+        return state
+
+    # -------------- Fallback Chain에서 다음 도구 선택 -------------- #
+    next_tool = None
+
+    for tool in fallback_chain:
+        if tool not in failed_tools:
+            next_tool = tool
+            break
+
+    # 모든 도구 시도 완료
+    if next_tool is None:
+        if exp_manager:
+            exp_manager.logger.write("모든 도구 시도 완료")
+            exp_manager.logger.write("최종 Fallback: general 도구 선택")
+
+        next_tool = "general"
+
+    # -------------- 로깅 -------------- #
+    if exp_manager:
+        exp_manager.logger.write(f"다음 도구 선택: {next_tool}")
+        exp_manager.logger.write(f"Fallback Chain: {' → '.join(fallback_chain)}")
+        exp_manager.logger.write("=" * 60)
+
+    # -------------- 상태 업데이트 -------------- #
+    state["tool_choice"] = next_tool
+
+    # -------------- 타임라인 기록 -------------- #
+    timeline = state.get("tool_timeline", [])
+    timeline.append({
+        "timestamp": datetime.now().isoformat(),
+        "event": "fallback",
+        "from_tool": failed_tool,
+        "to_tool": next_tool,
+        "retry_count": retry_count
+    })
+    state["tool_timeline"] = timeline
+
+    return state
+
+
+# ==================== Router 검증 노드 ==================== #
+# ---------------------- Router 선택 검증 및 재라우팅 ---------------------- #
+def validate_tool_choice_node(state: AgentState, exp_manager=None):
+    """
+    Router 검증 노드: Router가 선택한 도구가 적절한지 LLM으로 검증
+
+    Args:
+        state (AgentState): Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+
+    Returns:
+        AgentState: 업데이트된 상태 (validation_failed 포함)
+    """
+    # -------------- 상태 정보 추출 -------------- #
+    question = state["question"]
+    tool_choice = state.get("tool_choice", "general")
+    validation_retries = state.get("validation_retries", 0)
+    max_validation = state.get("max_validation", 2)
+
+    # -------------- 도구 설명 --------- ---- #
+    TOOL_DESCRIPTIONS = {
+        "general": "일반 질문에 LLM 지식으로 답변",
+        "glossary": "AI/ML 용어 정의 검색",
+        "search_paper": "논문 DB에서 RAG 검색",
+        "web_search": "웹에서 최신 논문 검색",
+        "summarize": "논문 요약 생성",
+        "text2sql": "논문 통계 정보 SQL 조회",
+        "save_file": "답변을 파일로 저장"
+    }
+
+    tool_desc = TOOL_DESCRIPTIONS.get(tool_choice, "알 수 없는 도구")
+
+    # -------------- 로깅 -------------- #
+    if exp_manager:
+        exp_manager.logger.write("=" * 60)
+        exp_manager.logger.write("Router 검증 시작")
+        exp_manager.logger.write(f"선택된 도구: {tool_choice}")
+        exp_manager.logger.write(f"도구 설명: {tool_desc}")
+
+    # -------------- 검증 프롬프트 생성 -------------- #
+    validation_prompt = f"""질문: {question}
+
+선택된 도구: {tool_choice}
+도구 설명: {tool_desc}
+
+이 도구 선택이 질문에 적절한가요?
+
+- yes: 적절함 (도구를 사용하여 질문에 답변 가능)
+- no: 부적절함 (다른 도구를 사용해야 함)
+
+답변 (yes/no):"""
+
+    # -------------- LLM 초기화 -------------- #
+    difficulty = state.get("difficulty", "easy")
+    llm_client = LLMClient.from_difficulty(
+        difficulty=difficulty,
+        logger=exp_manager.logger if exp_manager else None
+    )
+
+    # -------------- LLM 호출 -------------- #
+    try:
+        response = llm_client.llm.invoke(validation_prompt).content.strip().lower()
+
+        # 응답 파싱
+        is_valid = "yes" in response or "적절" in response
+
+        # -------------- 검증 결과 처리 -------------- #
+        if is_valid:
+            if exp_manager:
+                exp_manager.logger.write("검증 결과: 적절함 (PASS)")
+                exp_manager.logger.write("=" * 60)
+
+            state["validation_failed"] = False
+
+        else:
+            if exp_manager:
+                exp_manager.logger.write("검증 결과: 부적절함 (FAIL)")
+
+            # 검증 재시도 횟수 증가
+            validation_retries += 1
+            state["validation_retries"] = validation_retries
+
+            # 최대 검증 재시도 초과 확인
+            if validation_retries > max_validation:
+                if exp_manager:
+                    exp_manager.logger.write(f"최대 검증 재시도 초과 ({max_validation}회)")
+                    exp_manager.logger.write("강제로 general 도구 선택")
+                    exp_manager.logger.write("=" * 60)
+
+                state["tool_choice"] = "general"
+                state["validation_failed"] = False  # 더 이상 재검증 안 함
+
+            else:
+                if exp_manager:
+                    exp_manager.logger.write(f"재라우팅 진행 (재시도 {validation_retries}/{max_validation})")
+                    exp_manager.logger.write("=" * 60)
+
+                state["validation_failed"] = True
+
+        return state
+
+    except Exception as e:
+        if exp_manager:
+            exp_manager.logger.write(f"검증 실패: {e}", print_error=True)
+            exp_manager.logger.write("검증 통과로 간주")
+            exp_manager.logger.write("=" * 60)
+
+        # 검증 실패 시 통과로 간주
+        state["validation_failed"] = False
+        return state
+
+
+# ==================== 최종 Fallback 노드 ==================== #
+# ---------------------- 강제로 general 도구 실행 ---------------------- #
+def final_fallback_node(state: AgentState, exp_manager=None):
+    """
+    최종 Fallback 노드: 모든 시도 실패 시 general 도구 강제 실행
+
+    Args:
+        state (AgentState): Agent 상태
+        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+
+    Returns:
+        AgentState: 업데이트된 상태
+    """
+    # -------------- 로깅 -------------- #
+    if exp_manager:
+        exp_manager.logger.write("=" * 60)
+        exp_manager.logger.write("최종 Fallback 노드 실행")
+        exp_manager.logger.write("general 도구로 강제 전환")
+        exp_manager.logger.write("=" * 60)
+
+    # -------------- general 도구 실행 -------------- #
+    return general_answer_node(state, exp_manager)
+
+
 # ==================== Export 목록 ==================== #
 __all__ = [
     'router_node',
@@ -122,4 +346,7 @@ __all__ = [
     'glossary_node',
     'summarize_node',
     'text2sql_node',
+    'fallback_router_node',
+    'validate_tool_choice_node',
+    'final_fallback_node',
 ]
