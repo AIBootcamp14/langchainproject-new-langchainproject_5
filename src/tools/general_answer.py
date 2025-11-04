@@ -38,6 +38,17 @@ def general_answer_node(state: AgentState, exp_manager=None):
     system_content = get_tool_prompt("general_answer", difficulty)  # JSON 파일에서 프롬프트 로드
     system_msg = SystemMessage(content=system_content)              # SystemMessage 객체 생성
 
+    # 프롬프트 저장 (prompts 폴더)
+    if exp_manager:
+        exp_manager.save_system_prompt(system_content, {
+            "tool": "general_answer",
+            "difficulty": difficulty
+        })
+        exp_manager.save_user_prompt(question, {
+            "tool": "general_answer",
+            "difficulty": difficulty
+        })
+
     # -------------- 난이도별 LLM 초기화 -------------- #
     llm_client = LLMClient.from_difficulty(
         difficulty=difficulty,
