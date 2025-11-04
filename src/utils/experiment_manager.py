@@ -502,6 +502,64 @@ class ExperimentManager:
 
         self.logger.write("테스트 결과 저장 완료")
 
+    # ---------------------- 답변 평가 결과 저장 ---------------------- #
+    def save_evaluation_result(self, evaluation_data: Dict):
+        """
+        답변 평가 결과 저장
+
+        Args:
+            evaluation_data: 평가 결과 데이터 딕셔너리
+        """
+        evaluation_data['timestamp'] = datetime.now().isoformat()
+
+        # evaluation 폴더에 타임스탬프별 파일로 저장
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        eval_file = self.evaluation_dir / f"evaluation_{timestamp}.json"
+
+        with open(eval_file, 'w', encoding='utf-8') as f:
+            json.dump(evaluation_data, f, ensure_ascii=False, indent=2)
+
+        self.logger.write(f"평가 결과 저장: {eval_file.name}")
+
+    # ---------------------- 전체 대화 저장 ---------------------- #
+    def save_conversation(self, conversation_data: list):
+        """
+        전체 대화 기록 저장
+
+        Args:
+            conversation_data: 대화 기록 리스트
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        conv_file = self.outputs_dir / f"conversation_{timestamp}.json"
+
+        with open(conv_file, 'w', encoding='utf-8') as f:
+            json.dump(conversation_data, f, ensure_ascii=False, indent=2)
+
+        self.logger.write(f"전체 대화 저장: {conv_file.name}")
+
+    # ---------------------- SQL 쿼리 플러시 ---------------------- #
+    def flush_queries_to_file(self):
+        """
+        수집된 SQL 쿼리를 database 폴더에 저장
+        """
+        if not self.db_queries:
+            return
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        query_file = self.database_dir / f"queries_{timestamp}.sql"
+
+        with open(query_file, 'w', encoding='utf-8') as f:
+            f.write("-- SQL Queries Log\n")
+            f.write(f"-- Generated at: {datetime.now().isoformat()}\n\n")
+
+            for i, query_info in enumerate(self.db_queries, 1):
+                f.write(f"-- Query {i}\n")
+                f.write(f"-- Time: {query_info.get('timestamp', 'N/A')}\n")
+                f.write(f"-- Execution Time: {query_info.get('execution_time_ms', 'N/A')} ms\n")
+                f.write(f"{query_info['query']}\n\n")
+
+        self.logger.write(f"SQL 쿼리 저장: {query_file.name} ({len(self.db_queries)}개)")
+
 
     # ==================== 디버그 관련 메서드 ==================== #
     # ---------------------- 디버그 정보 저장 ---------------------- #
@@ -589,6 +647,9 @@ class ExperimentManager:
     # ---------------------- 실험 종료 ---------------------- #
     def close(self):
         """실험 종료"""
+        # SQL 쿼리 플러시 (database 폴더에 저장)
+        self.flush_queries_to_file()
+
         # 종료 시간 기록
         self.metadata['end_time'] = datetime.now().isoformat()
 
