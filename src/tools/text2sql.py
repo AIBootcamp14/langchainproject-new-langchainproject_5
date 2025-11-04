@@ -360,6 +360,14 @@ def text2sql(user_question: str) -> str:
         ]
     ).content
 
+    # LLM 응답 로깅
+    if tool_logger:
+        tool_logger.write(f"LLM 응답 생성 완료: {len(raw)} 글자")
+        tool_logger.write("=" * 80)
+        tool_logger.write("[LLM 생성 SQL 전체 내용]")
+        tool_logger.write(raw)
+        tool_logger.write("=" * 80)
+
     # SQL 추출/검증/보정
     sql_generated = _extract_sql(raw)
     try:
