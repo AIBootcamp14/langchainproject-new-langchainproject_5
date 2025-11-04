@@ -92,25 +92,32 @@ graph LR
 ### AI Agent 통합
 
 ```mermaid
-graph TB
+graph LR
     subgraph UI["🔸 사용자 인터페이스"]
-        direction LR
-        Input[사용자 입력] --> ChatIF[chat_interface.py]
+        direction TB
+        Input[사용자 입력]
+        ChatIF[chat_interface.py]
+        Input --> ChatIF
     end
 
     subgraph Agent["🔹 AI Agent 실행"]
-        direction LR
-        Invoke[agent_executor.invoke] --> LG[LangGraph Agent]
-        LG --> Tools[7가지 도구 실행]
+        direction TB
+        Invoke[agent_executor.invoke]
+        LG[LangGraph Agent]
+        Tools[7가지 도구 실행]
+        Invoke --> LG
+        LG --> Tools
     end
 
     subgraph Output["🔺 응답 생성"]
-        direction LR
-        Generate[답변 생성] --> Display[UI에 표시]
+        direction TB
+        Generate[답변 생성]
+        Display[UI에 표시]
+        Generate --> Display
     end
 
-    ChatIF --> Invoke
-    Tools --> Generate
+    UI --> Agent
+    Agent --> Output
 
     %% Subgraph 스타일
     style UI fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
