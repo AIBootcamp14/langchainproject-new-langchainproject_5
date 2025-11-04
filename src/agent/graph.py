@@ -58,6 +58,61 @@ def route_to_tool(state: AgentState):
     return state["tool_choice"]                 # 선택된 도구 이름 반환
 
 
+# ==================== 다중 요청 처리 함수 ==================== #
+# ---------------------- tool_pipeline 순차 실행 판단 ---------------------- #
+def should_continue_pipeline(state: AgentState) -> str:
+    """
+    tool_pipeline에 남은 도구가 있는지 확인
+
+    Args:
+        state (AgentState): Agent 상태
+
+    Returns:
+        str: "continue" (다음 도구 실행) 또는 "end" (종료)
+    """
+    # -------------- pipeline 정보 추출 -------------- #
+    tool_pipeline = state.get("tool_pipeline", [])
+    pipeline_index = state.get("pipeline_index", 0)
+
+    # -------------- pipeline이 없으면 종료 -------------- #
+    if not tool_pipeline:
+        return "end"
+
+    # -------------- 다음 도구가 있으면 계속 실행 -------------- #
+    if pipeline_index < len(tool_pipeline):
+        return "continue"
+
+    # -------------- 모든 도구 실행 완료 시 종료 -------------- #
+    return "end"
+
+
+# ==================== Pipeline 다음 도구 선택 ==================== #
+# ---------------------- tool_pipeline에서 다음 도구 반환 ---------------------- #
+def route_next_pipeline_tool(state: AgentState) -> str:
+    """
+    tool_pipeline에서 다음 실행할 도구 선택
+
+    Args:
+        state (AgentState): Agent 상태
+
+    Returns:
+        str: 다음 도구 이름
+    """
+    # -------------- pipeline 정보 추출 -------------- #
+    tool_pipeline = state.get("tool_pipeline", [])
+    pipeline_index = state.get("pipeline_index", 0)
+
+    # -------------- 다음 도구 반환 -------------- #
+    if pipeline_index < len(tool_pipeline):
+        next_tool = tool_pipeline[pipeline_index]
+        state["tool_choice"] = next_tool
+        state["pipeline_index"] = pipeline_index + 1
+        return next_tool
+
+    # -------------- 기본값 (도달하지 않아야 함) -------------- #
+    return "general"
+
+
 # ==================== Fallback 판단 함수 ==================== #
 # ---------------------- 도구 실행 후 Fallback 여부 결정 ---------------------- #
 def should_fallback(state: AgentState) -> str:
@@ -218,17 +273,68 @@ def create_agent_graph(exp_manager=None):
             }
         )
 
-        # 각 도구 → Fallback 체크
+        # 각 도구 → Pipeline 계속 실행 또는 Fallback 체크
+        def check_pipeline_or_fallback(state: AgentState) -> str:
+            """도구 실행 후 Pipeline 계속 또는 Fallback 체크"""
+            # 1단계: tool_pipeline이 있는지 확인
+            tool_pipeline = state.get("tool_pipeline", [])
+            pipeline_index = state.get("pipeline_index", 0)
+
+            # 2단계: Pipeline이 있고 다음 도구가 있으면 계속 실행
+            if tool_pipeline and pipeline_index < len(tool_pipeline):
+                # Pipeline 계속 실행
+                return should_continue_pipeline(state)
+
+            # 3단계: Pipeline이 끝났거나 없으면 Fallback 체크
+            return should_fallback(state)
+
+        # 각 도구 → Pipeline 또는 Fallback
         for tool_name in ["glossary", "search_paper", "web_search", "summarize", "text2sql", "save_file"]:
             workflow.add_conditional_edges(
                 tool_name,
-                should_fallback,
+                check_pipeline_or_fallback,
                 {
+                    "continue": "pipeline_router",      # Pipeline 계속 → 다음 도구
                     "end": END,                         # 성공 → 종료
                     "retry": "fallback_router",         # 실패 → Fallback Router
                     "final_fallback": "final_fallback"  # 최대 재시도 초과 → 최종 Fallback
                 }
             )
+
+        # Pipeline Router 노드 추가 (다음 도구 선택)
+        def pipeline_router(state: AgentState, exp_manager=None):
+            """Pipeline에서 다음 도구 선택"""
+            tool_pipeline = state.get("tool_pipeline", [])
+            pipeline_index = state.get("pipeline_index", 0)
+
+            if exp_manager:
+                exp_manager.logger.write(f"Pipeline 진행: {pipeline_index}/{len(tool_pipeline)}")
+
+            # 다음 도구로 이동 (route_next_pipeline_tool이 state 업데이트)
+            route_next_pipeline_tool(state)
+
+            if exp_manager:
+                exp_manager.logger.write(f"다음 도구 실행: {state['tool_choice']}")
+
+            return state
+
+        pipeline_router_with_exp = partial(pipeline_router, exp_manager=exp_manager)
+        workflow.add_node("pipeline_router", pipeline_router_with_exp)
+
+        # Pipeline Router → 다음 도구
+        workflow.add_conditional_edges(
+            "pipeline_router",
+            route_to_tool,
+            {
+                "general": "general",
+                "glossary": "glossary",
+                "search_paper": "search_paper",
+                "web_search": "web_search",
+                "summarize": "summarize",
+                "text2sql": "text2sql",
+                "save_file": "save_file"
+            }
+        )
 
         # Fallback Router → 다음 도구
         workflow.add_conditional_edges(

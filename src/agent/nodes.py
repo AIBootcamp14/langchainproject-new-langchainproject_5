@@ -59,10 +59,12 @@ def router_node(state: AgentState, exp_manager=None):
         if all(kw in question for kw in keywords):
             if exp_manager:
                 exp_manager.logger.write(f"다중 요청 감지: {keywords} → {tools}")
+                exp_manager.logger.write(f"순차 실행 도구: {' → '.join(tools)}")
 
             # tool_pipeline 설정 (순차 실행 도구 목록)
             state["tool_pipeline"] = tools
             state["tool_choice"] = tools[0]  # 첫 번째 도구부터 실행
+            state["pipeline_index"] = 1      # 첫 번째 도구 실행 후 index는 1
 
             return state
 
@@ -92,6 +94,7 @@ def router_node(state: AgentState, exp_manager=None):
     # 상태 업데이트
     state["tool_choice"] = tool_choice          # 선택된 도구 저장
     state["tool_pipeline"] = [tool_choice]      # 단일 도구도 파이프라인으로 관리
+    state["pipeline_index"] = 1                 # 단일 도구 실행 후 종료
 
     return state                                # 업데이트된 상태 반환
 
