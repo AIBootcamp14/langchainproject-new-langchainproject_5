@@ -326,7 +326,7 @@ def get_chat_model() -> BaseChatModel:
         )
     
     try:
-        model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        model_name = os.getenv("OPENAI_MODEL", "gpt-5")
         model = ChatOpenAI(
             model=model_name,
             temperature=0.2,
@@ -877,7 +877,7 @@ def main() -> None:
                 key_preview = openai_key[:7] + "..." + openai_key[-4:] if len(openai_key) > 11 else "설정됨"
                 st.caption(f"🔑 API 키: {key_preview}")
                 # 모델 정보 표시
-                model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+                model_name = os.getenv("OPENAI_MODEL", "gpt-5")
                 st.caption(f"🤖 모델: {model_name}")
             else:
                 st.caption("🔑 API 키: 미설정")
