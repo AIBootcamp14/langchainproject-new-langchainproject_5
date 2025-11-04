@@ -206,6 +206,10 @@ def summarize_node(state: AgentState, exp_manager=None):
 
         if tool_logger:
             tool_logger.write(f"요약 생성 완료 - 길이: {len(summary)} 문자")
+            tool_logger.write("=" * 80)
+            tool_logger.write("[LLM 요약 전체 내용]")
+            tool_logger.write(summary)
+            tool_logger.write("=" * 80)
 
         # ============================================================ #
         #                  5단계: 최종 답변 구성                       #
