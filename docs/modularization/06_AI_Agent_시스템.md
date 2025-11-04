@@ -122,7 +122,7 @@ src/agent/
 - `state["tool_choice"]`에 선택된 도구 이름 저장
 
 **구현 내용:**
-- LLM: OpenAI GPT-3.5-turbo (temperature=0)
+- LLM: OpenAI GPT-5 (temperature=0)
 - 프롬프트: 질문 + 도구 목록 → 도구 이름 반환
 - 로깅: ExperimentManager로 라우팅 결정 기록
 
@@ -186,7 +186,7 @@ sequenceDiagram
     participant RAG as RAG 도구
     participant VDB as Vector DB
     participant PG as PostgreSQL
-    participant LLM as OpenAI GPT-4
+    participant LLM as OpenAI GPT-5
 
     U->>UI: 질문 입력 + 난이도 선택
     UI->>A: 질문 전달
