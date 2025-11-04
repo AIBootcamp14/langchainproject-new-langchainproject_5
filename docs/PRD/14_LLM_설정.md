@@ -16,31 +16,22 @@
 - `langchain_openai` - OpenAI LLM 연동
 - `langchain_upstage` - Upstage Solar LLM 연동
 
-**Option 1: GPT-3.5-turbo (비용 절감)**
+**Easy 모드 (초심자용)**
 
 | 항목 | 값 | 설명 |
 |------|-----|------|
-| 모델명 | gpt-3.5-turbo | 빠르고 저렴한 모델 |
-| Temperature | 0.0 | 일관된 답변 생성 |
+| 모델명 | solar-pro2 | 한국어에 최적화된 모델 |
+| Temperature | 0.7 | 자연스러운 답변 생성 |
 | Max Tokens | 2000 | 최대 출력 토큰 수 |
 | Streaming | True | 실시간 응답 출력 |
 
-**Option 2: Solar-pro (한국어 특화)**
+### 1.2 Hard 모드 LLM 설정
+
+**Hard 모드 (전문가용)**
 
 | 항목 | 값 | 설명 |
 |------|-----|------|
-| 모델명 | solar-pro | 한국어에 최적화된 모델 |
-| Temperature | 0.0 | 일관된 답변 생성 |
-| Max Tokens | 2000 | 최대 출력 토큰 수 |
-| Streaming | True | 실시간 응답 출력 |
-
-### 1.2 프로덕션 환경 LLM 설정
-
-**Option 1: GPT-4 (높은 품질)**
-
-| 항목 | 값 | 설명 |
-|------|-----|------|
-| 모델명 | gpt-4 | 높은 성능과 정확도 |
+| 모델명 | gpt-5 | 높은 성능과 정확도 |
 | Temperature | 0.7 | 자연스러운 답변 |
 | Max Tokens | 3000 | 긴 답변 지원 |
 | Streaming | True | 실시간 응답 출력 |
