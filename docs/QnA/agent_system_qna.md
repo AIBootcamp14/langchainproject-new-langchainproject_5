@@ -182,50 +182,390 @@ summarize → save_file → END
 
 ### Q3-1. 도구는 어떻게 실행되나요?
 
-**A:** **LangGraph 노드 함수**로 실행됩니다.
+**A:** **5단계 프로세스로 자동 실행**됩니다.
 
-**코드 구조:**
-```python
-# src/agent/graph.py
-workflow.add_node("search_paper", search_paper_with_exp)
+**전체 흐름 (초보자 설명):**
 
-# src/agent/nodes.py
-from src.tools.search_paper import search_paper_node
+사용자가 질문을 하면, AI가 다음 순서로 답변을 만듭니다:
 
-# src/tools/search_paper.py
-def search_paper_node(state: AgentState, exp_manager=None):
-    question = state["question"]
-    difficulty = state.get("difficulty", "easy")
+```
+사용자 질문: "Transformer 논문 검색해줘"
+    ↓
+[1단계] Router가 질문 분석
+    → "논문 검색" + "Transformer" 키워드 발견
+    → 결정: search_paper 도구 사용
+    ↓
+[2단계] Router 검증 (선택 사항)
+    → 다른 LLM이 "search_paper 선택이 적절한가?" 확인
+    → 적절함 → 통과
+    → 부적절함 → 다시 [1단계]로 (최대 2번 재검증)
+    ↓
+[3단계] 도구 실행
+    → search_paper 도구가 논문 DB 검색
+    → 검색 결과를 LLM에게 전달
+    → LLM이 검색 결과로 답변 생성
+    ↓
+[4단계] 성공 확인
+    → 성공: [5단계]로 이동
+    → 실패: Fallback Chain 작동 (다음 도구 시도)
+    ↓
+[5단계] 답변 반환
+    → 사용자에게 최종 답변 표시
+```
 
-    # RAG 검색 수행
-    raw_results = search_paper_database.invoke({"query": question})
+**각 단계 상세 설명:**
 
-    # LLM 답변 생성
-    response = llm_client.llm.invoke(messages)
+**[1단계] Router가 질문 분석**
 
-    # 상태 업데이트
-    state["final_answer"] = response.content
-    return state
+Router는 **LLM (GPT-4o 또는 Solar Pro)에게 질문을 주고 어떤 도구를 사용할지 물어봅니다**.
+
+```
+Router 프롬프트:
+"다음 질문에 가장 적합한 도구를 선택하세요:
+- general: 일반 질문
+- search_paper: 논문 DB 검색
+- web_search: 웹 검색
+- glossary: 용어 정의
+- summarize: 논문 요약
+- text2sql: 논문 통계
+- save_file: 파일 저장
+
+질문: Transformer 논문 검색해줘"
+
+LLM 응답: "search_paper"
+```
+
+**[2단계] Router 검증 (Fallback 활성화 시)**
+
+다른 LLM이 **Router의 선택이 적절한지 2차 검증**합니다.
+
+```
+검증 LLM 프롬프트:
+"질문: Transformer 논문 검색해줘
+선택된 도구: search_paper
+도구 설명: 논문 DB에서 RAG 검색
+
+이 도구 선택이 적절한가요? (yes/no)"
+
+검증 LLM 응답: "yes"
+```
+
+**만약 "no"라면?**
+- 다시 [1단계] Router로 돌아가서 다른 도구 선택
+- 최대 2번까지 재검증 (설정 변경 가능)
+- 2번 실패 시 강제로 "general" 도구 사용
+
+**[3단계] 도구 실행**
+
+선택된 도구가 실제로 작업을 수행합니다.
+
+**search_paper 도구 실행 과정:**
+```
+1. 질문 추출: state["question"] 읽기
+2. DB 검색: PostgreSQL + pgvector에서 관련 논문 검색
+3. 검색 결과: 상위 5개 논문 청크 가져오기
+4. 프롬프트 구성:
+   [시스템] "당신은 논문 검색 전문가입니다. 검색 결과를 바탕으로 답변하세요."
+   [검색 결과] "논문 5개..."
+   [질문] "Transformer 논문 검색해줘"
+5. LLM 호출: 답변 생성
+6. 상태 저장: state["final_answer"] = "Transformer는..."
+```
+
+**[4단계] 성공 확인 (Fallback Chain 활성화 시)**
+
+도구 실행이 성공했는지 확인합니다.
+
+**성공 조건:**
+- `state["tool_status"] = "success"` (도구가 명시적으로 설정)
+- 에러 발생 안 함
+- `final_answer`에 유효한 답변 저장됨
+
+**실패 시 Fallback Chain 작동:**
+
+```
+질문 유형별 우선순위 체인:
+
+[학술 논문 질문]
+1순위: search_paper → 실패
+2순위: web_search   → 실패
+3순위: general      → 최종 답변 (항상 성공)
+
+[용어 정의 질문]
+1순위: glossary     → 실패
+2순위: search_paper → 실패
+3순위: general      → 최종 답변
+
+[통계 질문]
+1순위: text2sql     → 실패
+2순위: search_paper → 실패
+3순위: general      → 최종 답변
+```
+
+**재시도 규칙:**
+- **최대 재시도**: 3번 (설정 파일: `configs/fallback_config.yaml`)
+- **실패한 도구 기록**: 같은 도구는 다시 시도 안 함
+- **최종 보장**: 3번 실패 시 무조건 "general" 도구 실행
+
+**예시: 2번 Fallback**
+```
+질문: "Transformer 논문 검색해줘"
+    ↓
+Router: search_paper 선택
+    ↓
+search_paper 실행 → 실패 (DB 연결 오류)
+    ↓
+Fallback Router: "search_paper 실패, 다음 도구는?"
+    → 질문 유형: "학술 논문"
+    → 우선순위: [search_paper(실패), web_search, general]
+    → 선택: web_search
+    ↓
+web_search 실행 → 실패 (API 키 없음)
+    ↓
+Fallback Router: "web_search 실패, 다음 도구는?"
+    → 우선순위: [search_paper(실패), web_search(실패), general]
+    → 선택: general
+    ↓
+general 실행 → 성공 (LLM 지식으로 답변)
+    ↓
+답변 반환
+```
+
+**[5단계] 답변 반환**
+
+최종 답변을 사용자에게 표시합니다.
+
+```
+state["final_answer"] = "Transformer는 2017년 구글이 발표한..."
+    ↓
+Streamlit UI에 표시
+    ↓
+답변 평가 (LLM-as-a-Judge) 자동 실행
+    ↓
+평가 결과 표시 (정확도 9/10, 관련성 10/10...)
 ```
 
 ---
 
-### Q3-2. 도구 실행 순서는?
+### Q3-2. 도구 선택 우선순위는 어떻게 결정되나요?
 
-**A:**
-1. **Router** 실행 (질문 분석)
-2. **도구 선택** (`state["tool_choice"]` 저장)
-3. **선택된 도구** 실행
-4. **최종 답변** 저장 (`state["final_answer"]`)
-5. **END**
+**A:** **질문 유형을 분류한 후, 미리 정의된 우선순위 체인을 사용**합니다.
+
+**질문 유형 분류 (`src/agent/question_classifier.py`):**
+
+```python
+def classify_question(question, difficulty, logger):
+    """
+    질문을 8가지 유형으로 분류
+
+    1. greeting: 인사 ("안녕하세요")
+    2. glossary: 용어 정의 ("Attention이 뭐야?")
+    3. paper_search: 논문 검색 ("Transformer 논문 찾아줘")
+    4. paper_summary: 논문 요약 ("BERT 논문 요약해줘")
+    5. statistics: 통계 조회 ("2024년 논문 개수는?")
+    6. latest_info: 최신 정보 ("2025년 최신 연구는?")
+    7. save_request: 저장 요청 ("파일로 저장해줘")
+    8. general: 기타 일반 질문
+    """
+```
+
+**우선순위 체인 (`configs/fallback_config.yaml`):**
+
+```yaml
+priority_chains:
+  greeting:
+    - general
+
+  glossary:
+    - glossary        # 1순위: 용어집 DB 검색
+    - search_paper    # 2순위: 논문에서 검색
+    - general         # 3순위: LLM 지식
+
+  paper_search:
+    - search_paper    # 1순위: 논문 DB
+    - web_search      # 2순위: 웹 검색
+    - general         # 3순위: LLM 지식
+
+  paper_summary:
+    - summarize       # 1순위: 요약 도구
+    - search_paper    # 2순위: 논문 검색
+    - general         # 3순위: LLM 지식
+
+  statistics:
+    - text2sql        # 1순위: SQL 쿼리
+    - search_paper    # 2순위: 논문 검색
+    - general         # 3순위: LLM 지식
+
+  latest_info:
+    - web_search      # 1순위: 웹 검색
+    - search_paper    # 2순위: 논문 DB
+    - general         # 3순위: LLM 지식
+
+  save_request:
+    - save_file       # 1순위: 파일 저장
+    - general         # 2순위: LLM 답변
+
+  general:
+    - general         # 일반 질문은 바로 general
+```
+
+**동작 원리:**
+
+```
+질문: "2024년 논문 개수는?"
+    ↓
+질문 분류: "statistics" (통계 질문)
+    ↓
+우선순위 체인 로드:
+  1순위: text2sql
+  2순위: search_paper
+  3순위: general
+    ↓
+Router: text2sql 선택
+    ↓
+text2sql 실행 → 성공
+    ↓
+답변 반환
+```
+
+**만약 text2sql 실패한다면:**
+
+```
+text2sql 실패 (예: DB 연결 오류)
+    ↓
+Fallback Router 작동
+    ↓
+우선순위 체인 확인:
+  1순위: text2sql (실패, 제외)
+  2순위: search_paper (다음 시도)
+  3순위: general (최후 보루)
+    ↓
+search_paper 실행 → 성공
+    ↓
+답변 반환
+```
 
 ---
 
-### Q3-3. 도구 실행 중 에러가 발생하면?
+### Q3-3. Fallback은 몇 번까지 실행되나요?
 
-**A:** **에러 메시지를 `final_answer`에 저장**하고 종료합니다.
+**A:** **최대 3번까지 재시도**합니다 (설정 변경 가능).
 
-**코드 예시:**
+**재시도 카운트 규칙:**
+
+```yaml
+# configs/fallback_config.yaml
+max_retries: 3          # 최대 재시도 횟수
+validation_retries: 2   # Router 검증 재시도 횟수
+```
+
+**예시: 3번 Fallback 후 최종 보장**
+
+```
+질문: "Quantum Computing 논문 찾아줘"
+질문 유형: paper_search
+우선순위: [search_paper, web_search, general]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[시도 1] search_paper 실행
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+결과: 실패 (PostgreSQL 연결 오류)
+retry_count: 0 → 1
+failed_tools: [search_paper]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Fallback 1] Fallback Router 작동
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+다음 도구: web_search (search_paper 제외)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[시도 2] web_search 실행
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+결과: 실패 (Tavily API 키 없음)
+retry_count: 1 → 2
+failed_tools: [search_paper, web_search]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Fallback 2] Fallback Router 작동
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+다음 도구: general (나머지 모두 실패)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[시도 3] general 실행
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+결과: 성공 (LLM 지식으로 답변)
+retry_count: 2 → 3
+
+답변: "Quantum Computing은..."
+```
+
+**만약 3번 모두 실패한다면?**
+
+```
+retry_count > max_retries (3)
+    ↓
+강제로 "final_fallback" 노드로 이동
+    ↓
+general 도구 강제 실행
+    ↓
+general은 항상 성공 (LLM 지식 기반)
+```
+
+**재시도 타임라인 기록:**
+
+```python
+# state["tool_timeline"] 예시
+[
+  {
+    "timestamp": "2025-11-04T19:00:00",
+    "event": "tool_start",
+    "tool": "search_paper",
+    "retry_count": 0
+  },
+  {
+    "timestamp": "2025-11-04T19:00:01",
+    "event": "tool_failed",
+    "tool": "search_paper",
+    "error": "PostgreSQL connection error"
+  },
+  {
+    "timestamp": "2025-11-04T19:00:01",
+    "event": "fallback",
+    "from_tool": "search_paper",
+    "to_tool": "web_search",
+    "retry_count": 1
+  },
+  {
+    "timestamp": "2025-11-04T19:00:02",
+    "event": "tool_failed",
+    "tool": "web_search",
+    "error": "API key not found"
+  },
+  {
+    "timestamp": "2025-11-04T19:00:02",
+    "event": "fallback",
+    "from_tool": "web_search",
+    "to_tool": "general",
+    "retry_count": 2
+  },
+  {
+    "timestamp": "2025-11-04T19:00:05",
+    "event": "tool_success",
+    "tool": "general"
+  }
+]
+```
+
+---
+
+### Q3-4. 도구 실행 중 에러가 발생하면?
+
+**A:** **Fallback 활성화 여부에 따라 다르게 동작**합니다.
+
+**[케이스 1] Fallback Chain 비활성화 (기본 동작)**
+
+에러 메시지를 사용자에게 바로 표시하고 종료합니다.
+
 ```python
 try:
     # 도구 로직
@@ -240,6 +580,81 @@ return state
 **사용자에게 표시:**
 ```
 ❌ 오류 발생: PostgreSQL 연결 실패
+```
+
+**[케이스 2] Fallback Chain 활성화 (`configs/fallback_config.yaml` enabled: true)**
+
+에러 발생 시 자동으로 다음 우선순위 도구로 전환합니다.
+
+```
+질문: "Transformer 논문 검색해줘"
+    ↓
+search_paper 실행 → 에러 발생 (DB 연결 실패)
+    ↓
+state["tool_status"] = "failed" 설정
+    ↓
+Fallback Router 자동 작동
+    ↓
+web_search 도구로 재시도
+    ↓
+성공 → 답변 반환 (사용자는 에러를 모름)
+```
+
+**도구별 에러 처리 (Fallback 활성화 시):**
+
+```python
+# src/agent/tool_wrapper.py
+def wrap_tool_node(tool_func, tool_name):
+    """
+    도구를 래핑하여 자동 에러 처리 및 Fallback 지원
+    """
+    def wrapper(state, exp_manager=None):
+        try:
+            # 도구 실행
+            state = tool_func(state, exp_manager)
+
+            # 성공 표시
+            state["tool_status"] = "success"
+
+        except Exception as e:
+            # 실패 표시
+            state["tool_status"] = "failed"
+            state["error_message"] = str(e)
+
+            if exp_manager:
+                exp_manager.logger.write(
+                    f"{tool_name} 실행 실패: {e}",
+                    print_error=True
+                )
+
+        return state
+
+    return wrapper
+```
+
+**Fallback 동작 흐름:**
+
+```
+[도구 실행]
+    ↓
+tool_status = "success" → END (답변 반환)
+    ↓
+tool_status = "failed" → Fallback Router
+    ↓
+다음 우선순위 도구 선택
+    ↓
+재시도 (최대 3번)
+    ↓
+모두 실패 → general 도구 강제 실행 (최종 보장)
+```
+
+**로그 기록 (experiments 폴더):**
+
+```
+# chatbot.log
+[2025-11-04 19:00:00] search_paper 실행 실패: PostgreSQL connection error
+[2025-11-04 19:00:01] Fallback Router: search_paper → web_search
+[2025-11-04 19:00:03] web_search 실행 성공
 ```
 
 ---
