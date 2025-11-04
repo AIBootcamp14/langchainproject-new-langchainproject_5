@@ -465,6 +465,13 @@ def glossary_node(state, exp_manager=None):
         # -------------- JSON 프롬프트 로드 -------------- #
         system_prompt = get_tool_prompt("glossary", difficulty)  # JSON 파일에서 시스템 프롬프트 로드
 
+        # 프롬프트 저장 (prompts 폴더)
+        if exp_manager:
+            exp_manager.save_system_prompt(system_prompt, {
+                "tool": "glossary",
+                "difficulty": difficulty
+            })
+
         # -------------- 난이도별 LLM 초기화 -------------- #
         llm_client = LLMClient.from_difficulty(
             difficulty=difficulty,
@@ -479,6 +486,14 @@ def glossary_node(state, exp_manager=None):
 {question}
 
 위 검색 결과를 바탕으로 질문에 답변해주세요."""
+
+        # 사용자 프롬프트 저장
+        if exp_manager:
+            exp_manager.save_user_prompt(user_content, {
+                "tool": "glossary",
+                "difficulty": difficulty,
+                "search_results_length": len(raw_results)
+            })
 
         messages = [
             SystemMessage(content=system_prompt),  # 시스템 프롬프트
