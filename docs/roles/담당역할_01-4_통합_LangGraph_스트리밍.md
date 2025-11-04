@@ -40,115 +40,89 @@ LangGraph Agent의 응답을 실시간으로 스트리밍하여 사용자에게 
 **파일 경로**: `ui/app_streaming.py`
 
 #### 1단계: StreamlitCallbackHandler 생성
-```python
-from langchain.callbacks.streamlit import StreamlitCallbackHandler
-import streamlit as st
 
-# 콜백 핸들러 초기화
-callback_container = st.container()
-callback_handler = StreamlitCallbackHandler(callback_container)
-```
+**필수 임포트:**
+
+| 모듈 | 용도 |
+|------|------|
+| `langchain.callbacks.streamlit.StreamlitCallbackHandler` | Streamlit 콜백 핸들러 |
+| `streamlit` | Streamlit 라이브러리 |
+
+**초기화 단계:**
+
+| 순서 | 작업 | 코드 |
+|------|------|------|
+| 1 | 컨테이너 생성 | `callback_container = st.container()` |
+| 2 | 콜백 핸들러 초기화 | `callback_handler = StreamlitCallbackHandler(callback_container)` |
 
 #### 2단계: 응답 표시용 placeholder 생성
-```python
-# 빈 컨테이너 생성
-response_placeholder = st.empty()
-full_response = ""
-```
+
+| 순서 | 작업 | 코드 |
+|------|------|------|
+| 1 | 빈 컨테이너 생성 | `response_placeholder = st.empty()` |
+| 2 | 전체 응답 변수 초기화 | `full_response = ""` |
 
 #### 3단계: Agent 스트리밍 실행
-```python
-from src.agent.graph import create_agent_graph
 
-# Agent 초기화
-agent = create_agent_graph()
+**스트리밍 처리 흐름:**
 
-# 스트리밍 실행
-async for event in agent.astream_events(
-    {
-        "question": question,
-        "difficulty": difficulty
-    },
-    version="v1"
-):
-    # 이벤트 처리
-    if event["event"] == "on_chat_model_stream":
-        chunk = event["data"]["chunk"].content
-        full_response += chunk
-
-        # 실시간 업데이트 (커서 효과)
-        response_placeholder.markdown(full_response + "▌")
-
-# 최종 응답 표시
-response_placeholder.markdown(full_response)
-```
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | Agent 그래프 임포트 | `from src.agent.graph import create_agent_graph` |
+| 2 | Agent 초기화 | `agent = create_agent_graph()` |
+| 3 | 비동기 스트리밍 시작 | `async for event in agent.astream_events(...)` |
+| 4 | 입력 데이터 전달 | `{"question": question, "difficulty": difficulty}` |
+| 5 | 이벤트 타입 확인 | `if event["event"] == "on_chat_model_stream":` |
+| 6 | 청크 데이터 추출 | `chunk = event["data"]["chunk"].content` |
+| 7 | 전체 응답 누적 | `full_response += chunk` |
+| 8 | 실시간 업데이트 표시 | `response_placeholder.markdown(full_response + "▌")` (커서 효과) |
+| 9 | 최종 응답 표시 | `response_placeholder.markdown(full_response)` |
 
 #### 4단계: 전체 코드 예제
-```python
-# ui/app_streaming.py
 
-import streamlit as st
-import asyncio
-from src.agent.graph import create_agent_graph
-from langchain.callbacks.streamlit import StreamlitCallbackHandler
+**파일**: `ui/app_streaming.py`
 
-st.title("논문 리뷰 챗봇 (스트리밍)")
+**필수 임포트:**
 
-# 난이도 선택
-difficulty = st.sidebar.radio("난이도", ["easy", "hard"])
+| 모듈 | 용도 |
+|------|------|
+| `streamlit` | Streamlit UI |
+| `asyncio` | 비동기 실행 |
+| `create_agent_graph` | Agent 그래프 생성 |
+| `StreamlitCallbackHandler` | 스트리밍 콜백 |
 
-# 채팅 히스토리 초기화
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+**초기화 및 설정:**
 
-# 채팅 히스토리 표시
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+| 순서 | 작업 | 코드/설명 |
+|------|------|-----------|
+| 1 | 제목 설정 | `st.title("논문 리뷰 챗봇 (스트리밍)")` |
+| 2 | 난이도 선택 위젯 | `st.sidebar.radio("난이도", ["easy", "hard"])` |
+| 3 | 채팅 히스토리 초기화 | `st.session_state.messages = []` (없으면 생성) |
+| 4 | 채팅 히스토리 표시 | `for` 루프로 기존 메시지 렌더링 |
 
-# 사용자 입력
-if prompt := st.chat_input("질문을 입력하세요"):
-    # 사용자 메시지 추가
-    st.session_state.messages.append({"role": "user", "content": prompt})
+**사용자 입력 처리:**
 
-    with st.chat_message("user"):
-        st.markdown(prompt)
+| 순서 | 작업 | 설명 |
+|------|------|------|
+| 1 | 입력 대기 | `st.chat_input("질문을 입력하세요")` |
+| 2 | 사용자 메시지 저장 | `append({"role": "user", "content": prompt})` |
+| 3 | 사용자 메시지 표시 | `st.chat_message("user")` 컨테이너에 렌더링 |
 
-    # AI 응답 스트리밍
-    with st.chat_message("assistant"):
-        response_placeholder = st.empty()
-        full_response = ""
+**AI 응답 스트리밍:**
 
-        # Agent 초기화
-        agent = create_agent_graph()
-
-        # 스트리밍 실행
-        async def stream_response():
-            global full_response
-
-            async for event in agent.astream_events(
-                {
-                    "question": prompt,
-                    "difficulty": difficulty
-                },
-                version="v1"
-            ):
-                if event["event"] == "on_chat_model_stream":
-                    chunk = event["data"]["chunk"].content
-                    full_response += chunk
-
-                    # 실시간 업데이트 (커서 효과)
-                    response_placeholder.markdown(full_response + "▌")
-
-            # 최종 응답 표시
-            response_placeholder.markdown(full_response)
-
-        # 비동기 실행
-        asyncio.run(stream_response())
-
-        # 응답 저장
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
-```
+| 순서 | 작업 | 설명 |
+|------|------|------|
+| 1 | Assistant 컨테이너 생성 | `with st.chat_message("assistant"):` |
+| 2 | Placeholder 생성 | `response_placeholder = st.empty()` |
+| 3 | 응답 변수 초기화 | `full_response = ""` |
+| 4 | Agent 초기화 | `agent = create_agent_graph()` |
+| 5 | 비동기 함수 정의 | `async def stream_response():` |
+| 6 | 이벤트 스트리밍 시작 | `async for event in agent.astream_events(...)` |
+| 7 | 청크 처리 | 이벤트 타입이 `on_chat_model_stream`이면 청크 누적 |
+| 8 | 실시간 업데이트 | `response_placeholder.markdown(full_response + "▌")` |
+| 9 | 최종 응답 표시 | `response_placeholder.markdown(full_response)` |
+| 10 | 비동기 실행 | `asyncio.run(stream_response())` |
+| 11 | 응답 저장 | `append({"role": "assistant", "content": full_response})` |
 
 ### 참고 자료
 - [StreamlitCallbackHandler](https://python.langchain.com/docs/integrations/callbacks/streamlit)
@@ -176,66 +150,36 @@ if prompt := st.chat_input("질문을 입력하세요"):
    - HumanMessage: 프롬프트
 7. 최종 답변을 state["final_answer"]에 저장 후 반환
 
-**예제 코드**:
-```python
-# src/agent/nodes.py
+**함수: `web_search_node_example(state: AgentState, exp_manager=None)`**
 
-from src.agent.state import AgentState
-from src.tools.web_search import web_search_node
+**파라미터:**
 
-# 웹 검색 노드는 이미 src/tools/web_search.py에 구현됨
-# nodes.py에서는 import만 하면 됨
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `state` | `AgentState` | 에이전트 상태 객체 |
+| `exp_manager` | `Optional` | 실험 관리자 (선택) |
 
-# 또는 직접 구현:
-def web_search_node_example(state: AgentState, exp_manager=None):
-    """웹 검색 노드 예시"""
-    from langchain_community.tools.tavily_search import TavilySearchResults
-    import os
+**처리 흐름:**
 
-    question = state["question"]
+| 순서 | 작업 | 설명 |
+|------|------|------|
+| 1 | 질문 추출 | `question = state["question"]` |
+| 2 | Tavily Search 도구 초기화 | `TavilySearchResults(max_results=5, api_key=...)` |
+| 3 | 검색 실행 | `search_tool.invoke({"query": question})` |
+| 4 | 검색 결과 포맷팅 | 각 결과를 "[결과 N]\n제목:...\n내용:...\nURL:..." 형식으로 변환 |
+| 5 | 난이도 확인 | `state.get("difficulty", "easy")` |
+| 6 | LLM 클라이언트 생성 | `LLMClient.from_difficulty(difficulty)` |
+| 7 | 메시지 구성 | SystemMessage + HumanMessage (검색 결과 + 질문 포함) |
+| 8 | LLM 호출 | `llm_client.llm.invoke(messages)` |
+| 9 | 상태 업데이트 | `state["tool_result"]`, `state["final_answer"]` 설정 |
+| 10 | 상태 반환 | `return state` |
 
-    # Tavily Search 도구 초기화
-    search_tool = TavilySearchResults(
-        max_results=5,
-        api_key=os.getenv("TAVILY_API_KEY")
-    )
+**SystemMessage**: "당신은 최신 AI/ML 정보를 제공하는 전문가입니다."
 
-    # 검색 실행
-    search_results = search_tool.invoke({"query": question})
-
-    # 검색 결과 포맷팅
-    formatted_results = "\n\n".join([
-        f"[결과 {i+1}]\n제목: {result.get('title', 'N/A')}\n내용: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}"
-        for i, result in enumerate(search_results)
-    ])
-
-    # LLM 프롬프트 구성
-    from langchain.schema import SystemMessage, HumanMessage
-    from src.llm.client import LLMClient
-
-    difficulty = state.get("difficulty", "easy")
-    llm_client = LLMClient.from_difficulty(difficulty)
-
-    messages = [
-        SystemMessage(content="당신은 최신 AI/ML 정보를 제공하는 전문가입니다."),
-        HumanMessage(content=f"""[검색 결과]
-{formatted_results}
-
-[질문]
-{question}
-
-위 검색 결과를 바탕으로 질문에 답변해주세요.""")
-    ]
-
-    # LLM 호출
-    response = llm_client.llm.invoke(messages)
-
-    # 상태 업데이트
-    state["tool_result"] = formatted_results
-    state["final_answer"] = response.content
-
-    return state
-```
+**HumanMessage 구조**:
+- [검색 결과]: formatted_results
+- [질문]: question
+- 요청: "위 검색 결과를 바탕으로 질문에 답변해주세요."
 
 ### 2.2 파일 저장 노드
 
@@ -251,38 +195,29 @@ def web_search_node_example(state: AgentState, exp_manager=None):
 4. 답변이 없으면 "저장할 내용이 없습니다." 메시지 반환
 5. state 반환
 
-**예제 코드**:
-```python
-# src/agent/nodes.py
+**함수: `save_file_node_example(state: AgentState, exp_manager=None)`**
 
-from src.agent.state import AgentState
+**파라미터:**
 
-def save_file_node_example(state: AgentState, exp_manager=None):
-    """파일 저장 노드 예시"""
-    from src.tools.file_save import save_to_file
-    from datetime import datetime
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `state` | `AgentState` | 에이전트 상태 객체 |
+| `exp_manager` | `Optional` | 실험 관리자 (선택) |
 
-    # 이전 답변 추출
-    final_answer = state.get("final_answer", "")
+**처리 흐름:**
 
-    if not final_answer:
-        state["final_answer"] = "저장할 내용이 없습니다."
-        return state
+| 순서 | 작업 | 설명 |
+|------|------|------|
+| 1 | 이전 답변 추출 | `final_answer = state.get("final_answer", "")` |
+| 2 | 답변 존재 확인 | `if not final_answer:` 검사 |
+| 3 | 답변 없으면 메시지 반환 | `state["final_answer"] = "저장할 내용이 없습니다."` |
+| 4 | 타임스탬프 생성 | `datetime.now().strftime("%Y%m%d_%H%M%S")` |
+| 5 | 파일명 생성 | `f"paper_review_{timestamp}.txt"` |
+| 6 | 파일 저장 도구 호출 | `save_to_file.invoke({"content": ..., "filename": ...})` |
+| 7 | 저장 결과로 상태 업데이트 | `state["final_answer"] = result` |
+| 8 | 상태 반환 | `return state` |
 
-    # 파일 저장 도구 호출
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"paper_review_{timestamp}.txt"
-
-    result = save_to_file.invoke({
-        "content": final_answer,
-        "filename": filename
-    })
-
-    # 저장 결과 업데이트
-    state["final_answer"] = result
-
-    return state
-```
+**파일명 형식**: `paper_review_YYYYMMDD_HHMMSS.txt`
 
 ### 2.3 기타 노드 (일반 답변, 논문 검색, 용어집, 요약)
 
@@ -293,26 +228,20 @@ def save_file_node_example(state: AgentState, exp_manager=None):
 - `summarize_node` - `src/tools/summarize.py`
 
 **노드 구현 패턴:**
-```python
-def tool_node(state: AgentState, exp_manager=None):
-    """도구 노드 패턴"""
-    # 1. 상태에서 질문 추출
-    question = state["question"]
-    difficulty = state.get("difficulty", "easy")
 
-    # 2. 도구별 로거 생성
-    tool_logger = exp_manager.get_tool_logger('tool_name') if exp_manager else None
+**함수 시그니처**: `def tool_node(state: AgentState, exp_manager=None):`
 
-    # 3. 도구 실행 (검색, LLM 호출 등)
-    # ...
+**표준 처리 흐름:**
 
-    # 4. 결과를 state에 저장
-    state["tool_result"] = "도구 실행 결과"
-    state["final_answer"] = "최종 답변"
-
-    # 5. 상태 반환
-    return state
-```
+| 단계 | 작업 | 코드/설명 |
+|------|------|-----------|
+| 1 | 상태에서 질문 추출 | `question = state["question"]` |
+| 2 | 난이도 확인 | `difficulty = state.get("difficulty", "easy")` |
+| 3 | 도구별 로거 생성 | `tool_logger = exp_manager.get_tool_logger('tool_name')` (exp_manager 있으면) |
+| 4 | 도구 실행 | 검색, LLM 호출 등 도구별 로직 수행 |
+| 5 | 도구 결과 저장 | `state["tool_result"] = "도구 실행 결과"` |
+| 6 | 최종 답변 저장 | `state["final_answer"] = "최종 답변"` |
+| 7 | 상태 반환 | `return state` |
 
 ---
 
@@ -330,43 +259,34 @@ def tool_node(state: AgentState, exp_manager=None):
 4. 파일 경로 생성 및 파일 저장
 5. 저장 성공 메시지 반환
 
-**예제 코드**:
-```python
-# src/tools/file_save.py
+**함수: `save_to_file(content: str, filename: str = None) -> str`**
 
-from langchain.tools import tool
-import os
-from datetime import datetime
+**데코레이터**: `@tool`
 
-@tool
-def save_to_file(content: str, filename: str = None) -> str:
-    """
-    내용을 텍스트 파일로 저장합니다.
+**파라미터:**
 
-    Args:
-        content: 저장할 내용
-        filename: 파일명 (선택, 없으면 자동 생성)
+| 파라미터 | 타입 | 기본값 | 설명 |
+|----------|------|--------|------|
+| `content` | `str` | - | 저장할 내용 |
+| `filename` | `str` | `None` | 파일명 (선택, 없으면 자동 생성) |
 
-    Returns:
-        저장된 파일 경로
-    """
-    # 파일명이 없으면 타임스탬프 기반으로 자동 생성
-    if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"paper_review_{timestamp}.txt"
+**반환값**: 저장된 파일 경로 메시지 (문자열)
 
-    # data/outputs 폴더에 저장
-    output_dir = "data/outputs"
-    os.makedirs(output_dir, exist_ok=True)
+**처리 흐름:**
 
-    filepath = os.path.join(output_dir, filename)
+| 순서 | 작업 | 코드/설명 |
+|------|------|-----------|
+| 1 | 파일명 확인 | `if filename is None:` 체크 |
+| 2 | 타임스탬프 생성 | `datetime.now().strftime("%Y%m%d_%H%M%S")` |
+| 3 | 자동 파일명 생성 | `f"paper_review_{timestamp}.txt"` |
+| 4 | 출력 디렉토리 설정 | `output_dir = "data/outputs"` |
+| 5 | 디렉토리 생성 | `os.makedirs(output_dir, exist_ok=True)` |
+| 6 | 전체 경로 생성 | `os.path.join(output_dir, filename)` |
+| 7 | 파일 저장 | `with open(..., "w", encoding="utf-8") as f:` |
+| 8 | 내용 쓰기 | `f.write(content)` |
+| 9 | 성공 메시지 반환 | `f"파일이 저장되었습니다: {filepath}"` |
 
-    # 파일 저장
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(content)
-
-    return f"파일이 저장되었습니다: {filepath}"
-```
+**자동 생성 파일명 형식**: `paper_review_YYYYMMDD_HHMMSS.txt`
 
 ### 3.2 Markdown 형식 저장
 
@@ -379,46 +299,37 @@ def save_to_file(content: str, filename: str = None) -> str:
 4. output_dir 생성 및 파일 저장
 5. 저장 성공 메시지 반환
 
-**예제 코드**:
-```python
-@tool
-def save_to_markdown(content: str, title: str = "논문 리뷰", filename: str = None) -> str:
-    """
-    내용을 Markdown 형식으로 저장합니다.
+**함수: `save_to_markdown(content: str, title: str = "논문 리뷰", filename: str = None) -> str`**
 
-    Args:
-        content: 저장할 내용
-        title: 문서 제목
-        filename: 파일명 (선택, 없으면 자동 생성)
+**데코레이터**: `@tool`
 
-    Returns:
-        저장된 파일 경로
-    """
-    # 파일명이 없으면 타임스탬프 기반으로 자동 생성
-    if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"paper_review_{timestamp}.md"
+**파라미터:**
 
-    # Markdown 형식으로 포맷팅
-    markdown_content = f"# {title}\n\n"
-    markdown_content += f"**생성일**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-    markdown_content += "---\n\n"
-    markdown_content += content
-    markdown_content += "\n\n---\n\n"
-    markdown_content += "*이 문서는 논문 리뷰 챗봇에서 자동 생성되었습니다.*\n"
+| 파라미터 | 타입 | 기본값 | 설명 |
+|----------|------|--------|------|
+| `content` | `str` | - | 저장할 내용 |
+| `title` | `str` | `"논문 리뷰"` | 문서 제목 |
+| `filename` | `str` | `None` | 파일명 (선택, 없으면 자동 생성) |
 
-    # data/outputs 폴더에 저장
-    output_dir = "data/outputs"
-    os.makedirs(output_dir, exist_ok=True)
+**반환값**: 저장된 파일 경로 메시지 (문자열)
 
-    filepath = os.path.join(output_dir, filename)
+**처리 흐름:**
 
-    # 파일 저장
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(markdown_content)
+| 순서 | 작업 | 설명 |
+|------|------|------|
+| 1 | 파일명 확인 및 생성 | `filename`이 None이면 `paper_review_YYYYMMDD_HHMMSS.md` 생성 |
+| 2 | Markdown 헤더 생성 | `# {title}\n\n` |
+| 3 | 생성일 추가 | `**생성일**: YYYY-MM-DD HH:MM:SS\n\n` |
+| 4 | 구분선 추가 | `---\n\n` |
+| 5 | 본문 추가 | `content` 삽입 |
+| 6 | 하단 구분선 추가 | `\n\n---\n\n` |
+| 7 | 푸터 추가 | `*이 문서는 논문 리뷰 챗봇에서 자동 생성되었습니다.*\n` |
+| 8 | 출력 디렉토리 생성 | `os.makedirs("data/outputs", exist_ok=True)` |
+| 9 | 파일 경로 생성 | `os.path.join(output_dir, filename)` |
+| 10 | 파일 저장 | `with open(..., "w", encoding="utf-8")` |
+| 11 | 성공 메시지 반환 | `f"Markdown 파일이 저장되었습니다: {filepath}"` |
 
-    return f"Markdown 파일이 저장되었습니다: {filepath}"
-```
+**자동 생성 파일명 형식**: `paper_review_YYYYMMDD_HHMMSS.md`
 
 ### 3.3 Streamlit 다운로드 버튼 연동
 
@@ -435,58 +346,34 @@ def save_to_markdown(content: str, title: str = "논문 리뷰", filename: str =
    - 타임스탬프 기반 파일명
    - MIME 타입: text/plain
 
-**예제 코드**:
-```python
-# ui/app.py (파일 저장 섹션)
+**함수: `add_file_download_to_sidebar()`**
 
-import streamlit as st
-from datetime import datetime
+**위치**: `ui/app.py` (파일 저장 섹션)
 
-def add_file_download_to_sidebar():
-    """사이드바에 파일 다운로드 기능 추가"""
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("### 파일 저장")
+**처리 흐름:**
 
-        # 저장 내용 선택
-        save_option = st.radio(
-            "저장할 내용",
-            ["대화 내용", "마지막 답변만"]
-        )
+| 순서 | 작업 | 설명 |
+|------|------|------|
+| 1 | 사이드바 진입 | `with st.sidebar:` |
+| 2 | 구분선 및 제목 표시 | `st.markdown("---")`, `st.markdown("### 파일 저장")` |
+| 3 | 저장 옵션 선택 | `st.radio("저장할 내용", ["대화 내용", "마지막 답변만"])` |
+| 4 | 파일 저장 버튼 확인 | `if st.button("파일 저장"):` |
+| 5 | 옵션별 내용 생성 | - |
+| 5a | 대화 내용 선택 시 | 모든 메시지 순회, `[역할]\n내용\n\n` 형식으로 변환 |
+| 5b | 마지막 답변만 선택 시 | messages 역순 순회, 첫 assistant 메시지 추출 |
+| 6 | 타임스탬프 생성 | `datetime.now().strftime("%Y%m%d_%H%M%S")` |
+| 7 | 파일명 생성 | `f"conversation_{timestamp}.txt"` |
+| 8 | 다운로드 버튼 생성 | `st.download_button(label, data, file_name, mime)` |
+| 9 | 성공 메시지 표시 | `st.success("다운로드 준비 완료!")` |
 
-        if st.button("파일 저장"):
-            # 대화 내용 텍스트로 변환
-            if save_option == "대화 내용":
-                conversation_text = ""
-                for msg in st.session_state.messages:
-                    role = "사용자" if msg["role"] == "user" else "AI"
-                    conversation_text += f"[{role}]\n{msg['content']}\n\n"
+**st.download_button 파라미터:**
 
-                content = conversation_text
-            else:
-                # 마지막 assistant 메시지 찾기
-                last_assistant_msg = None
-                for msg in reversed(st.session_state.messages):
-                    if msg["role"] == "assistant":
-                        last_assistant_msg = msg["content"]
-                        break
-
-                content = last_assistant_msg if last_assistant_msg else "저장할 내용이 없습니다."
-
-            # 파일명 생성
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"conversation_{timestamp}.txt"
-
-            # st.download_button으로 다운로드 제공
-            st.download_button(
-                label="다운로드",
-                data=content,
-                file_name=filename,
-                mime="text/plain"
-            )
-
-            st.success("다운로드 준비 완료!")
-```
+| 파라미터 | 값 | 설명 |
+|----------|-----|------|
+| `label` | `"다운로드"` | 버튼 텍스트 |
+| `data` | `content` | 저장할 내용 |
+| `file_name` | `f"conversation_{timestamp}.txt"` | 다운로드 파일명 |
+| `mime` | `"text/plain"` | MIME 타입 |
 
 ---
 
@@ -529,64 +416,51 @@ graph TB
 
 **파일 경로**: `src/agent/graph.py`
 
-```python
-from langgraph.graph import StateGraph
-from src.agent.state import AgentState
-from src.agent.nodes import (
-    router_node,
-    general_answer_node,
-    search_paper_node,
-    web_search_node,
-    glossary_node,
-    summarize_node,
-    save_file_node
-)
+**함수: `create_agent_graph()`**
 
-def create_agent_graph():
-    """LangGraph Agent 그래프 생성"""
+**필수 임포트:**
 
-    # 그래프 초기화
-    graph = StateGraph(AgentState)
+| 모듈 | 용도 |
+|------|------|
+| `langgraph.graph.StateGraph` | LangGraph 상태 그래프 |
+| `src.agent.state.AgentState` | 에이전트 상태 타입 |
+| `src.agent.nodes.*` | 7개 노드 함수 (router, general, search_paper, web_search, glossary, summarize, save_file) |
 
-    # 노드 추가
-    graph.add_node("router", router_node)
-    graph.add_node("general", general_answer_node)
-    graph.add_node("search_paper", search_paper_node)
-    graph.add_node("web_search", web_search_node)
-    graph.add_node("glossary", glossary_node)
-    graph.add_node("summarize", summarize_node)
-    graph.add_node("save_file", save_file_node)
+**처리 흐름:**
 
-    # 엣지 추가
-    graph.set_entry_point("router")
+| 순서 | 작업 | 코드 |
+|------|------|------|
+| 1 | 그래프 초기화 | `graph = StateGraph(AgentState)` |
+| 2 | 라우터 노드 추가 | `graph.add_node("router", router_node)` |
+| 3 | 도구 노드 추가 (6개) | `add_node("general", ...)`, `add_node("search_paper", ...)`, 등 |
+| 4 | 시작점 설정 | `graph.set_entry_point("router")` |
+| 5 | 라우팅 함수 정의 | `def route_to_tool(state): return state["tool_choice"]` |
+| 6 | 조건부 엣지 추가 | `graph.add_conditional_edges("router", route_to_tool, {...})` |
+| 7 | 종료점 설정 (6개) | `set_finish_point("general")`, `set_finish_point("search_paper")`, 등 |
+| 8 | 그래프 컴파일 | `return graph.compile()` |
 
-    # 라우터에서 도구로 분기
-    def route_to_tool(state: AgentState):
-        return state["tool_choice"]
+**노드 목록 (7개):**
 
-    graph.add_conditional_edges(
-        "router",
-        route_to_tool,
-        {
-            "general": "general",
-            "search_paper": "search_paper",
-            "web_search": "web_search",
-            "glossary": "glossary",
-            "summarize": "summarize",
-            "save_file": "save_file"
-        }
-    )
+| 노드 ID | 함수 | 설명 |
+|---------|------|------|
+| `router` | `router_node` | 도구 선택 라우터 |
+| `general` | `general_answer_node` | 일반 답변 |
+| `search_paper` | `search_paper_node` | 논문 검색 |
+| `web_search` | `web_search_node` | 웹 검색 |
+| `glossary` | `glossary_node` | 용어 설명 |
+| `summarize` | `summarize_node` | 논문 요약 |
+| `save_file` | `save_file_node` | 파일 저장 |
 
-    # 모든 도구 노드에서 종료
-    graph.set_finish_point("general")
-    graph.set_finish_point("search_paper")
-    graph.set_finish_point("web_search")
-    graph.set_finish_point("glossary")
-    graph.set_finish_point("summarize")
-    graph.set_finish_point("save_file")
+**라우팅 매핑:**
 
-    return graph.compile()
-```
+| tool_choice 값 | 대상 노드 |
+|----------------|-----------|
+| `"general"` | `general` |
+| `"search_paper"` | `search_paper` |
+| `"web_search"` | `web_search"` |
+| `"glossary"` | `glossary` |
+| `"summarize"` | `summarize` |
+| `"save_file"` | `save_file` |
 
 ---
 
@@ -596,41 +470,37 @@ def create_agent_graph():
 
 **모든 노드에서 로깅 및 실험 추적을 위해 ExperimentManager 사용**
 
-```python
-def example_node(state: AgentState, exp_manager=None):
-    """ExperimentManager를 사용하는 노드 예시"""
+**함수: `example_node(state: AgentState, exp_manager=None)`**
 
-    # 도구별 로거 생성
-    tool_logger = exp_manager.get_tool_logger('tool_name') if exp_manager else None
+**파라미터:**
 
-    if tool_logger:
-        tool_logger.write("노드 실행 시작")
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `state` | `AgentState` | 에이전트 상태 |
+| `exp_manager` | `Optional[ExperimentManager]` | 실험 관리자 (선택) |
 
-    # 프롬프트 저장
-    if exp_manager:
-        exp_manager.save_system_prompt(system_prompt, metadata={"tool": "tool_name"})
-        exp_manager.save_user_prompt(user_prompt, metadata={"question": question})
+**ExperimentManager 사용 패턴:**
 
-    # SQL 쿼리 로깅
-    if exp_manager:
-        exp_manager.log_sql_query(
-            query=query,
-            params=params,
-            result_count=len(results)
-        )
+| 순서 | 작업 | 코드 | 조건 |
+|------|------|------|------|
+| 1 | 도구별 로거 생성 | `tool_logger = exp_manager.get_tool_logger('tool_name')` | exp_manager 존재 시 |
+| 2 | 로그 기록 | `tool_logger.write("노드 실행 시작")` | tool_logger 존재 시 |
+| 3 | 시스템 프롬프트 저장 | `exp_manager.save_system_prompt(system_prompt, metadata={...})` | exp_manager 존재 시 |
+| 4 | 사용자 프롬프트 저장 | `exp_manager.save_user_prompt(user_prompt, metadata={...})` | exp_manager 존재 시 |
+| 5 | SQL 쿼리 로깅 | `exp_manager.log_sql_query(query, params, result_count)` | exp_manager 존재 시 |
+| 6 | pgvector 검색 로깅 | `exp_manager.log_pgvector_search({...})` | exp_manager 존재 시 |
+| 7 | 상태 반환 | `return state` | 항상 |
 
-    # pgvector 검색 로깅
-    if exp_manager:
-        exp_manager.log_pgvector_search({
-            "tool": "tool_name",
-            "collection": "collection_name",
-            "query_text": query_text,
-            "top_k": k,
-            "result_count": len(results)
-        })
+**로깅 메서드 사용 예:**
 
-    return state
-```
+| 메서드 | 파라미터 예시 | 설명 |
+|--------|---------------|------|
+| `save_system_prompt` | `system_prompt`, `metadata={"tool": "tool_name"}` | 시스템 프롬프트 및 메타데이터 저장 |
+| `save_user_prompt` | `user_prompt`, `metadata={"question": question}` | 사용자 프롬프트 저장 |
+| `log_sql_query` | `query=query, params=params, result_count=len(results)` | SQL 쿼리 실행 기록 |
+| `log_pgvector_search` | `{"tool": "...", "collection": "...", "query_text": "...", "top_k": k, "result_count": len(results)}` | pgvector 검색 기록 |
+
+**안전한 사용 패턴**: 모든 ExperimentManager 메서드 호출 전 `if exp_manager:` 체크
 
 ---
 
