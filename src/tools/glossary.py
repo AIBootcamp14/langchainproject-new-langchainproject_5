@@ -462,6 +462,18 @@ def glossary_node(state, exp_manager=None):
         if tool_logger:
             tool_logger.write(f"검색 결과: {len(raw_results)} 글자")
 
+        # -------------- pgvector 검색 기록 -------------- #
+        if exp_manager:
+            exp_manager.log_pgvector_search({
+                "tool": "glossary",
+                "collection": "glossary_embeddings",
+                "query_text": question,
+                "search_mode": "hybrid",
+                "top_k": 3,
+                "with_scores": True,
+                "result_length": len(raw_results)
+            })
+
         # -------------- JSON 프롬프트 로드 -------------- #
         system_prompt = get_tool_prompt("glossary", difficulty)  # JSON 파일에서 시스템 프롬프트 로드
 

@@ -273,8 +273,27 @@ def search_paper_node(state, exp_manager=None):
         if tool_logger:
             tool_logger.write(f"검색 결과: {len(raw_results)} 글자")
 
+        # -------------- pgvector 검색 기록 -------------- #
+        if exp_manager:
+            exp_manager.log_pgvector_search({
+                "tool": "search_paper",
+                "collection": "paper_chunks",
+                "query_text": question,
+                "search_mode": "similarity",
+                "top_k": 5,
+                "use_multi_query": False,
+                "result_length": len(raw_results)
+            })
+
         # -------------- JSON 프롬프트 로드 -------------- #
         system_prompt = get_tool_prompt("search_paper", difficulty)  # JSON 파일에서 시스템 프롬프트 로드
+
+        # 프롬프트 저장 (prompts 폴더)
+        if exp_manager:
+            exp_manager.save_system_prompt(system_prompt, {
+                "tool": "search_paper",
+                "difficulty": difficulty
+            })
 
         # -------------- 난이도별 LLM 초기화 -------------- #
         llm_client = LLMClient.from_difficulty(
@@ -290,6 +309,14 @@ def search_paper_node(state, exp_manager=None):
 {question}
 
 위 검색 결과를 바탕으로 질문에 답변해주세요."""
+
+        # 사용자 프롬프트 저장
+        if exp_manager:
+            exp_manager.save_user_prompt(user_content, {
+                "tool": "search_paper",
+                "difficulty": difficulty,
+                "search_results_length": len(raw_results)
+            })
 
         messages = [
             SystemMessage(content=system_prompt),  # 시스템 프롬프트
