@@ -268,59 +268,54 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             col_copy, col_save = st.columns(2)
 
             with col_copy:
-                # HTML + JavaScript를 사용한 클립보드 복사 버튼
-                import json
-                # JavaScript에서 안전하게 사용하기 위해 JSON 인코딩
-                safe_answer = json.dumps(answer)
-                unique_id = abs(hash(answer))  # 양수로 변환
+                # HTTPS 환경 확인
+                import os
+                is_https = os.environ.get('STREAMLIT_SERVER_ENABLE_HTTPS', 'false').lower() == 'true'
 
-                copy_button_html = f"""
-                <button id="copy_btn_{unique_id}" onclick="copyToClipboard_{unique_id}()" style="
-                    background-color: #FF4B4B;
-                    color: white;
-                    border: none;
-                    padding: 0.5rem 1rem;
-                    border-radius: 0.25rem;
-                    cursor: pointer;
-                    width: 100%;
-                    font-size: 1rem;
-                    font-weight: 500;
-                ">📋 복사</button>
+                if is_https:
+                    # HTTPS 환경: JavaScript 복사 버튼 사용
+                    import json
+                    safe_answer = json.dumps(answer)
+                    unique_id = abs(hash(answer))
 
-                <script>
-                function copyToClipboard_{unique_id}() {{
-                    const text = {safe_answer};
-                    const button = document.getElementById('copy_btn_{unique_id}');
+                    copy_button_html = f"""
+                    <button id="copy_btn_{unique_id}" onclick="copyToClipboard_{unique_id}()" style="
+                        background-color: #FF4B4B;
+                        color: white;
+                        border: none;
+                        padding: 0.5rem 1rem;
+                        border-radius: 0.25rem;
+                        cursor: pointer;
+                        width: 100%;
+                        font-size: 1rem;
+                        font-weight: 500;
+                    ">📋 복사</button>
 
-                    if (!navigator.clipboard) {{
-                        // Clipboard API 미지원 시 fallback
-                        const textArea = document.createElement('textarea');
-                        textArea.value = text;
-                        textArea.style.position = 'fixed';
-                        textArea.style.left = '-9999px';
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        try {{
-                            document.execCommand('copy');
+                    <script>
+                    function copyToClipboard_{unique_id}() {{
+                        const text = {safe_answer};
+                        const button = document.getElementById('copy_btn_{unique_id}');
+
+                        navigator.clipboard.writeText(text).then(function() {{
                             button.textContent = '✅ 복사됨!';
                             setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
-                        }} catch (err) {{
-                            alert('❌ 복사 실패: ' + err);
-                        }}
-                        document.body.removeChild(textArea);
-                        return;
+                        }}, function(err) {{
+                            button.textContent = '❌ 복사 실패';
+                            setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
+                        }});
                     }}
-
-                    navigator.clipboard.writeText(text).then(function() {{
-                        button.textContent = '✅ 복사됨!';
-                        setTimeout(() => {{ button.textContent = '📋 복사'; }}, 2000);
-                    }}, function(err) {{
-                        alert('❌ 복사 실패: ' + err);
-                    }});
-                }}
-                </script>
-                """
-                st.markdown(copy_button_html, unsafe_allow_html=True)
+                    </script>
+                    """
+                    st.markdown(copy_button_html, unsafe_allow_html=True)
+                else:
+                    # HTTP 환경: expander로 대체 (JavaScript 제한으로 복사 버튼 작동 안 할 수 있음)
+                    with st.expander("📋 답변 복사하기 (클릭)", expanded=False):
+                        st.info(
+                            "💡 **수동 복사 방법**\n\n"
+                            "아래 텍스트 블록을 마우스로 드래그하여 선택한 후 "
+                            "`Ctrl+C` (Windows/Linux) 또는 `Cmd+C` (Mac)를 눌러 복사하세요."
+                        )
+                        st.code(answer, language=None)
 
             with col_save:
                 # 파일명 생성
