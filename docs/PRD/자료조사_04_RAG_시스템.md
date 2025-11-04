@@ -111,18 +111,18 @@ graph TB
 - HTML → `BeautifulSoup4`
 - LaTeX → `pandoc`
 
-**구현 예시:**
-```python
-from langchain.document_loaders import PyPDFLoader, ArxivLoader
+**필요 라이브러리:** `langchain.document_loaders.PyPDFLoader`, `langchain.document_loaders.ArxivLoader`
 
-# PDF 파일 로드
-pdf_loader = PyPDFLoader("data/raw/transformer_paper.pdf")
-documents = pdf_loader.load()
+**문서 로더 설정:**
 
-# arXiv에서 직접 로드
-arxiv_loader = ArxivLoader(query="attention mechanism", max_docs=10)
-arxiv_docs = arxiv_loader.load()
-```
+| 로더 | 파라미터 | 설명 |
+|------|----------|------|
+| PyPDFLoader | file_path | PDF 파일 경로 지정 |
+| ArxivLoader | query, max_docs | 검색 쿼리 및 최대 문서 수 |
+
+**사용 방법:**
+1. PDF 파일 로드: PyPDFLoader로 로컬 PDF 파일 읽기
+2. arXiv 직접 로드: ArxivLoader로 arXiv API에서 논문 검색 및 로드
 
 ### 3.3 메타데이터 추출
 
@@ -136,31 +136,31 @@ arxiv_docs = arxiv_loader.load()
 - 초록 (Abstract)
 
 **PostgreSQL 저장:**
-```python
-import psycopg2
 
-def save_paper_metadata(paper_data):
-    conn = psycopg2.connect("postgresql://user:password@localhost/papers")
-    cursor = conn.cursor()
+**필요 라이브러리:** `psycopg2`
 
-    cursor.execute("""
-        INSERT INTO papers (title, authors, publish_date, source, url, abstract, category)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        RETURNING paper_id
-    """, (
-        paper_data['title'],
-        paper_data['authors'],
-        paper_data['publish_date'],
-        paper_data['source'],
-        paper_data['url'],
-        paper_data['abstract'],
-        paper_data['category']
-    ))
+**함수: save_paper_metadata**
 
-    paper_id = cursor.fetchone()[0]
-    conn.commit()
-    return paper_id
-```
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| paper_data | dict | 논문 메타데이터 딕셔너리 |
+
+**paper_data 필드:**
+- title: 논문 제목
+- authors: 저자 목록
+- publish_date: 출판일
+- source: 출처 (arXiv, IEEE 등)
+- url: 논문 URL
+- abstract: 초록
+- category: 카테고리
+
+**반환값:** paper_id (int)
+
+**처리 흐름:**
+1. PostgreSQL 연결
+2. papers 테이블에 INSERT 실행
+3. RETURNING으로 생성된 paper_id 반환
+4. 커밋 및 연결 종료
 
 ---
 
@@ -176,18 +176,18 @@ def save_paper_metadata(paper_data):
 
 **RecursiveCharacterTextSplitter (추천)**
 
-```python
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+**필요 라이브러리:** `langchain.text_splitter.RecursiveCharacterTextSplitter`
 
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,  # 청크 크기 (문자 수)
-    chunk_overlap=200,  # 청크 간 중복 (맥락 유지)
-    separators=["\n\n", "\n", ". ", " ", ""],  # 분할 우선순위
-    length_function=len
-)
+**설정 파라미터:**
 
-chunks = text_splitter.split_documents(documents)
-```
+| 파라미터 | 권장값 | 설명 |
+|---------|--------|------|
+| chunk_size | 1000 | 청크 크기 (문자 수) |
+| chunk_overlap | 200 | 청크 간 중복 (맥락 유지) |
+| separators | ["\n\n", "\n", ". ", " ", ""] | 분할 우선순위 (단락 → 문장 → 단어) |
+| length_function | len | 길이 측정 함수 |
+
+**사용 방법:** split_documents(documents)로 문서 리스트를 청크로 분할
 
 **논문 구조 기반 분할 (고급)**
 
@@ -199,17 +199,20 @@ chunks = text_splitter.split_documents(documents)
 - Experiments (실험)
 - Conclusion (결론)
 
-```python
-def split_by_sections(paper_text):
-    sections = {
-        "abstract": extract_section(paper_text, "Abstract"),
-        "introduction": extract_section(paper_text, "Introduction"),
-        "method": extract_section(paper_text, "Method"),
-        "experiments": extract_section(paper_text, "Experiments"),
-        "conclusion": extract_section(paper_text, "Conclusion")
-    }
-    return sections
-```
+**함수: split_by_sections**
+
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| paper_text | str | 논문 전체 텍스트 |
+
+**반환값:** dict - 섹션별로 분리된 텍스트 딕셔너리
+
+**추출 섹션:**
+- abstract: 초록
+- introduction: 서론
+- method: 방법론
+- experiments: 실험
+- conclusion: 결론
 
 **청크 크기 권장사항:**
 - **Small (500-800자)**: 정확한 검색, 작은 질문에 적합
@@ -230,37 +233,35 @@ def split_by_sections(paper_text):
 | text-embedding-3-large | 3072 | $0.13 | 높은 정확도 필요 시 |
 | text-embedding-ada-002 | 1536 | $0.10 | 구버전 |
 
-**구현 예시:**
-```python
-from langchain.embeddings import OpenAIEmbeddings
+**필요 라이브러리:** `langchain.embeddings.OpenAIEmbeddings`
 
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key="your-api-key"
-)
+**OpenAIEmbeddings 설정:**
 
-# 텍스트 임베딩
-vector = embeddings.embed_query("Transformer architecture")
-print(len(vector))  # 1536
-```
+| 파라미터 | 권장값 | 설명 |
+|---------|--------|------|
+| model | "text-embedding-3-small" | 임베딩 모델명 |
+| openai_api_key | 환경변수에서 로드 | OpenAI API 키 |
+
+**사용 방법:**
+- embed_query(text): 단일 텍스트 임베딩
+- 반환 벡터 차원: 1536 (text-embedding-3-small)
 
 ### 5.2 임베딩 저장
 
 **Vector DB에 저장:**
 
-```python
-from langchain_postgres.vectorstores import PGVector
+**필요 라이브러리:** `langchain_postgres.vectorstores.PGVector`
 
-# pgvector 초기화
-vectorstore = PGVector(
-    collection_name="paper_embeddings",
-    embedding_function=embeddings,
-    connection_string="postgresql://user:password@localhost:5432/papers"
-)
+**PGVector 초기화 파라미터:**
 
-# 문서 추가
-vectorstore.add_documents(chunks)
-```
+| 파라미터 | 설명 |
+|---------|------|
+| collection_name | 컬렉션명 (예: "paper_embeddings") |
+| embedding_function | OpenAIEmbeddings 인스턴스 |
+| connection_string | PostgreSQL 연결 문자열 |
+
+**사용 방법:**
+- add_documents(chunks): 문서 청크 리스트를 벡터 DB에 저장
 
 ---
 
@@ -284,31 +285,19 @@ vectorstore.add_documents(chunks)
 
 ### 6.2 컬렉션별 구현
 
-```python
-# PostgreSQL + pgvector 연결 문자열
-CONNECTION_STRING = "postgresql://user:password@localhost:5432/papers"
+**연결 문자열:** `postgresql://user:password@localhost:5432/papers`
 
-# 1. 논문 본문 컬렉션
-paper_chunks_store = PGVector(
-    collection_name="paper_chunks",
-    embedding_function=embeddings,
-    connection_string=CONNECTION_STRING
-)
+**3개의 PGVector 컬렉션:**
 
-# 2. 논문 초록 컬렉션
-abstract_store = PGVector(
-    collection_name="paper_abstracts",
-    embedding_function=embeddings,
-    connection_string=CONNECTION_STRING
-)
+| 컬렉션명 | collection_name | 용도 |
+|---------|----------------|------|
+| paper_chunks_store | "paper_chunks" | 논문 본문 청크 저장 |
+| abstract_store | "paper_abstracts" | 논문 초록 저장 |
+| glossary_store | "glossary_embeddings" | 용어집 임베딩 저장 |
 
-# 3. 용어집 컬렉션
-glossary_store = PGVector(
-    collection_name="glossary_embeddings",
-    embedding_function=embeddings,
-    connection_string=CONNECTION_STRING
-)
-```
+**공통 설정:**
+- embedding_function: embeddings 인스턴스
+- connection_string: CONNECTION_STRING
 
 ---
 
@@ -360,130 +349,91 @@ VALUES (
 - 사용자 질문에 용어가 포함되면 자동으로 검색됨
 - 유사한 용어도 함께 찾아줌 (예: "어텐션" → "Attention")
 
-**구현:**
-```python
-# 용어집 데이터를 Vector DB에 저장
-def add_glossary_to_vectordb():
-    conn = psycopg2.connect("postgresql://user:password@localhost/papers")
-    cursor = conn.cursor()
+**구현 방법:**
 
-    cursor.execute("SELECT term, definition, easy_explanation, category FROM glossary")
-    glossary_items = cursor.fetchall()
+**함수: add_glossary_to_vectordb**
 
-    documents = []
-    for term, definition, easy_exp, category in glossary_items:
-        doc_content = f"용어: {term}\n정의: {definition}\n쉬운 설명: {easy_exp}"
-        documents.append(Document(
-            page_content=doc_content,
-            metadata={"term": term, "category": category, "type": "glossary"}
-        ))
+**처리 흐름:**
 
-    glossary_store.add_documents(documents)
-
-add_glossary_to_vectordb()
-```
+| 단계 | 동작 |
+|------|------|
+| 1 | PostgreSQL 용어집 테이블 조회 (term, definition, easy_explanation, category) |
+| 2 | 각 용어를 Document 객체로 변환 |
+| 3 | page_content: "용어: {term}\n정의: {definition}\n쉬운 설명: {easy_exp}" |
+| 4 | metadata: term, category, type="glossary" 설정 |
+| 5 | glossary_store.add_documents()로 벡터 DB에 저장 |
 
 #### 방안 2: 질문 분석 시 용어 자동 추출 및 컨텍스트 추가
 
-**구현:**
-```python
-def extract_and_add_glossary_context(user_query):
-    """
-    사용자 질문에서 전문 용어를 추출하여 용어집 정의를 프롬프트에 추가
-    """
-    # 용어집에서 용어 검색
-    conn = psycopg2.connect("postgresql://user:password@localhost/papers")
-    cursor = conn.cursor()
+**함수: extract_and_add_glossary_context**
 
-    # 질문에서 용어 찾기 (간단한 매칭)
-    cursor.execute("""
-        SELECT term, definition, easy_explanation
-        FROM glossary
-        WHERE %s ILIKE '%' || term || '%'
-    """, (user_query,))
+**목적:** 사용자 질문에서 전문 용어를 추출하여 용어집 정의를 프롬프트에 추가
 
-    terms_found = cursor.fetchall()
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| user_query | str | 사용자 질문 |
 
-    if terms_found:
-        glossary_context = "\n\n[용어 정의]\n"
-        for term, definition, easy_exp in terms_found:
-            glossary_context += f"- **{term}**: {easy_exp}\n"
+**반환값:** str - 용어 정의 컨텍스트 (또는 빈 문자열)
 
-        return glossary_context
-    return ""
+**처리 흐름:**
 
-# 사용 예시
-user_query = "Attention Mechanism이 뭐야?"
-glossary_context = extract_and_add_glossary_context(user_query)
+| 단계 | 동작 |
+|------|------|
+| 1 | PostgreSQL 연결 |
+| 2 | SQL ILIKE로 질문에 포함된 용어 검색 |
+| 3 | 발견된 용어들의 easy_explanation 수집 |
+| 4 | "[용어 정의]" 섹션 형식으로 컨텍스트 구성 |
+| 5 | 최종 프롬프트에 glossary_context 추가 |
 
-final_prompt = f"""
-{glossary_context}
-
-사용자 질문: {user_query}
-
-답변:
-"""
+**SQL 쿼리:**
+```sql
+SELECT term, definition, easy_explanation
+FROM glossary
+WHERE %s ILIKE '%' || term || '%'
 ```
 
 #### 방안 3: 하이브리드 검색 (Hybrid Search)
 
 **용어집 + 논문 본문 동시 검색:**
 
-```python
-def hybrid_search(query, difficulty="easy"):
-    """
-    용어집과 논문 본문을 동시에 검색하여 최적의 답변 생성
-    """
-    # 1. 용어집 검색
-    glossary_results = glossary_store.similarity_search(query, k=2)
+**함수: hybrid_search**
 
-    # 2. 논문 본문 검색
-    paper_results = paper_chunks_store.similarity_search(query, k=3)
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| query | str | (필수) | 검색 쿼리 |
+| difficulty | str | "easy" | 난이도 (easy/hard) |
 
-    # 3. 결과 결합
-    combined_context = "### 용어 정의:\n"
-    for doc in glossary_results:
-        combined_context += doc.page_content + "\n\n"
+**처리 흐름:**
 
-    combined_context += "### 논문 내용:\n"
-    for doc in paper_results:
-        combined_context += doc.page_content + "\n\n"
-
-    # 4. LLM에 전달
-    if difficulty == "easy":
-        prompt = f"{combined_context}\n\n질문: {query}\n\n초심자도 이해할 수 있도록 쉽게 설명해주세요."
-    else:
-        prompt = f"{combined_context}\n\n질문: {query}\n\n전문가 수준으로 자세히 설명해주세요."
-
-    return llm.invoke(prompt)
-```
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | 용어집 검색 | glossary_store.similarity_search(query, k=2) |
+| 2 | 논문 검색 | paper_chunks_store.similarity_search(query, k=3) |
+| 3 | 결과 결합 | "### 용어 정의" + "### 논문 내용" 섹션 구성 |
+| 4 | 프롬프트 생성 | 난이도에 따라 "쉽게" 또는 "자세히" 요청 추가 |
+| 5 | LLM 호출 | llm.invoke(prompt)로 답변 생성 |
 
 ### 7.4 용어집 자동 생성
 
 **논문에서 자동으로 용어 추출:**
 
-```python
-def auto_generate_glossary_from_papers():
-    """
-    논문에서 중요 용어를 자동 추출하여 용어집에 추가
-    """
-    # 1. 논문에서 주요 용어 추출 (NER 또는 LLM 활용)
-    extraction_prompt = """
-    다음 논문에서 중요한 기술 용어 5개를 추출하고 간단히 정의해주세요:
+**함수: auto_generate_glossary_from_papers**
 
-    논문 내용: {paper_content}
+**목적:** 논문에서 중요 용어를 자동 추출하여 용어집에 추가
 
-    출력 형식:
-    1. 용어: 정의
-    2. 용어: 정의
-    ...
-    """
+**처리 흐름:**
 
-    # 2. LLM으로 용어 추출
-    terms = llm.invoke(extraction_prompt)
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | 용어 추출 프롬프트 구성 | "다음 논문에서 중요한 기술 용어 5개 추출" 요청 |
+| 2 | LLM 호출 | llm.invoke()로 용어와 정의 추출 |
+| 3 | PostgreSQL 저장 | 중복 체크 후 glossary 테이블에 INSERT |
 
-    # 3. PostgreSQL 용어집에 추가
-    # (중복 체크 후 추가)
+**출력 형식:**
+```
+1. 용어: 정의
+2. 용어: 정의
+...
 ```
 
 ---
@@ -492,59 +442,62 @@ def auto_generate_glossary_from_papers():
 
 ### 8.1 기본 유사도 검색
 
-```python
-# Top-K 검색
-results = vectorstore.similarity_search(
-    query="Transformer architecture",
-    k=5  # 상위 5개 문서 조회
-)
-```
+**메서드:** vectorstore.similarity_search()
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| query | str | 검색 쿼리 텍스트 |
+| k | int | 반환할 상위 문서 수 (예: 5) |
+
+**반환값:** List[Document] - 유사도가 높은 상위 k개 문서
 
 ### 8.2 MMR (Maximal Marginal Relevance) 검색
 
 **목적:** 관련성 높으면서도 다양한 문서 검색
 
-```python
-results = vectorstore.max_marginal_relevance_search(
-    query="Transformer architecture",
-    k=5,
-    fetch_k=20,  # 먼저 20개 후보 검색
-    lambda_mult=0.5  # 관련성 vs 다양성 균형
-)
-```
+**메서드:** vectorstore.max_marginal_relevance_search()
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| query | str | 검색 쿼리 |
+| k | 5 | 최종 반환 문서 수 |
+| fetch_k | 20 | 먼저 검색할 후보 문서 수 |
+| lambda_mult | 0.5 | 관련성 vs 다양성 균형 (0~1) |
 
 ### 8.3 메타데이터 필터링
 
-```python
-# 특정 년도 논문만 검색
-results = vectorstore.similarity_search(
-    query="attention mechanism",
-    k=5,
-    filter={"year": {"$gte": 2020}}  # 2020년 이후 논문만
-)
-```
+**메서드:** vectorstore.similarity_search() with filter
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| query | str | 검색 쿼리 |
+| k | int | 반환 문서 수 |
+| filter | dict | 메타데이터 필터 조건 |
+
+**필터 예시:**
+- `{"year": {"$gte": 2020}}`: 2020년 이후 논문만
+- `{"category": "cs.AI"}`: 특정 카테고리만
 
 ### 8.4 Reranking (재순위화)
 
 **Cohere Rerank API 사용:**
 
-```python
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import CohereRerank
+**필요 라이브러리:**
+- `langchain.retrievers.ContextualCompressionRetriever`
+- `langchain.retrievers.document_compressors.CohereRerank`
 
-# Reranker 설정
-compressor = CohereRerank(model="rerank-english-v2.0")
+**설정 컴포넌트:**
 
-retriever = ContextualCompressionRetriever(
-    base_compressor=compressor,
-    base_retriever=vectorstore.as_retriever(search_kwargs={"k": 10})
-)
+| 컴포넌트 | 설정 | 설명 |
+|---------|------|------|
+| compressor | CohereRerank(model="rerank-english-v2.0") | Cohere Rerank 모델 |
+| retriever | ContextualCompressionRetriever | 압축 및 재순위화 리트리버 |
 
-# 재순위화된 결과
-compressed_docs = retriever.get_relevant_documents(
-    "Explain transformer architecture"
-)
-```
+**파라미터:**
+- base_compressor: compressor 인스턴스
+- base_retriever: vectorstore.as_retriever(search_kwargs={"k": 10})
+
+**사용:** retriever.get_relevant_documents(query)로 재순위화된 문서 조회
 
 ---
 
@@ -552,46 +505,33 @@ compressed_docs = retriever.get_relevant_documents(
 
 ### 9.1 RAG 프롬프트 템플릿
 
-```python
-RAG_PROMPT_TEMPLATE = """
-당신은 논문 리뷰 전문가입니다.
+**템플릿: RAG_PROMPT_TEMPLATE**
 
-아래 논문 내용을 참고하여 사용자의 질문에 답변해주세요.
+| 구성 요소 | 내용 |
+|----------|------|
+| 역할 | 논문 리뷰 전문가 |
+| 참고 자료 | {context} - RAG 검색 결과 |
+| 질문 | {question} - 사용자 질문 |
+| 난이도 | {difficulty} - easy/hard 모드 |
 
-[참고 논문]
-{context}
-
-[사용자 질문]
-{question}
-
-[답변 규칙]
-- 참고 논문의 내용을 기반으로 답변하세요
-- 출처를 명시하세요 (논문 제목, 저자)
-- 논문에 없는 내용은 추측하지 마세요
-- 난이도: {difficulty} 모드
-
-답변:
-"""
-```
+**답변 규칙:**
+1. 참고 논문의 내용을 기반으로 답변
+2. 출처 명시 (논문 제목, 저자)
+3. 논문에 없는 내용은 추측 금지
+4. 난이도에 맞춰 설명 조절
 
 ### 9.2 용어집 포함 프롬프트
 
-```python
-RAG_WITH_GLOSSARY_PROMPT = """
-당신은 논문 리뷰 전문가입니다.
+**템플릿: RAG_WITH_GLOSSARY_PROMPT**
 
-[용어 정의]
-{glossary_context}
+| 구성 요소 | 내용 |
+|----------|------|
+| 역할 | 논문 리뷰 전문가 |
+| 용어 정의 | {glossary_context} - 용어집 검색 결과 |
+| 참고 논문 | {paper_context} - 논문 검색 결과 |
+| 질문 | {question} - 사용자 질문 |
 
-[참고 논문]
-{paper_context}
-
-[사용자 질문]
-{question}
-
-답변:
-"""
-```
+**특징:** 용어 정의와 논문 내용을 모두 포함하여 초심자도 이해 가능
 
 ---
 
@@ -599,78 +539,59 @@ RAG_WITH_GLOSSARY_PROMPT = """
 
 ### 10.1 Langchain RAG Chain
 
-```python
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+**필요 라이브러리:**
+- `langchain.chains.RetrievalQA`
+- `langchain.prompts.PromptTemplate`
 
-# 프롬프트 템플릿
-prompt = PromptTemplate(
-    template=RAG_PROMPT_TEMPLATE,
-    input_variables=["context", "question", "difficulty"]
-)
+**구성 요소:**
 
-# RAG 체인 구성
-rag_chain = RetrievalQA.from_chain_type(
-    llm=llm,
-    chain_type="stuff",  # 모든 문서를 하나의 프롬프트로
-    retriever=vectorstore.as_retriever(search_kwargs={"k": 5}),
-    chain_type_kwargs={"prompt": prompt}
-)
+| 컴포넌트 | 설정 | 설명 |
+|---------|------|------|
+| PromptTemplate | template, input_variables | RAG_PROMPT_TEMPLATE 사용 |
+| RetrievalQA | from_chain_type() | RAG 체인 생성 |
 
-# 실행
-response = rag_chain.run(
-    query="Transformer 논문 설명해줘",
-    difficulty="easy"
-)
-```
+**RetrievalQA 파라미터:**
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| llm | llm 인스턴스 | LLM 모델 |
+| chain_type | "stuff" | 모든 문서를 하나의 프롬프트로 결합 |
+| retriever | vectorstore.as_retriever(search_kwargs={"k": 5}) | 검색기 설정 |
+| chain_type_kwargs | {"prompt": prompt} | 프롬프트 템플릿 전달 |
+
+**실행:** rag_chain.run(query, difficulty)
 
 ### 10.2 LangGraph를 활용한 복잡한 RAG
 
-```python
-from langgraph.graph import StateGraph
+**필요 라이브러리:** `langgraph.graph.StateGraph`
 
-class RAGState(TypedDict):
-    question: str
-    difficulty: str
-    glossary_context: str
-    paper_context: str
-    final_answer: str
+**RAGState 정의:**
 
-def glossary_search_node(state: RAGState):
-    """용어집 검색"""
-    glossary_docs = glossary_store.similarity_search(state["question"], k=2)
-    state["glossary_context"] = "\n".join([doc.page_content for doc in glossary_docs])
-    return state
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| question | str | 사용자 질문 |
+| difficulty | str | 난이도 (easy/hard) |
+| glossary_context | str | 용어집 검색 결과 |
+| paper_context | str | 논문 검색 결과 |
+| final_answer | str | 최종 답변 |
 
-def paper_search_node(state: RAGState):
-    """논문 검색"""
-    paper_docs = paper_chunks_store.similarity_search(state["question"], k=3)
-    state["paper_context"] = "\n".join([doc.page_content for doc in paper_docs])
-    return state
+**노드 함수:**
 
-def generate_answer_node(state: RAGState):
-    """최종 답변 생성"""
-    prompt = RAG_WITH_GLOSSARY_PROMPT.format(
-        glossary_context=state["glossary_context"],
-        paper_context=state["paper_context"],
-        question=state["question"]
-    )
-    state["final_answer"] = llm.invoke(prompt)
-    return state
+| 노드 | 동작 | 설명 |
+|------|------|------|
+| glossary_search_node | glossary_store.similarity_search(k=2) | 용어집 검색 및 컨텍스트 저장 |
+| paper_search_node | paper_chunks_store.similarity_search(k=3) | 논문 검색 및 컨텍스트 저장 |
+| generate_answer_node | llm.invoke(prompt) | RAG_WITH_GLOSSARY_PROMPT로 답변 생성 |
 
-# 그래프 구성
-workflow = StateGraph(RAGState)
-workflow.add_node("glossary_search", glossary_search_node)
-workflow.add_node("paper_search", paper_search_node)
-workflow.add_node("generate_answer", generate_answer_node)
+**그래프 구성:**
 
-workflow.set_entry_point("glossary_search")
-workflow.add_edge("glossary_search", "paper_search")
-workflow.add_edge("paper_search", "generate_answer")
-workflow.add_edge("generate_answer", END)
-
-rag_graph = workflow.compile()
-```
+| 단계 | 동작 |
+|------|------|
+| 1 | StateGraph(RAGState) 생성 |
+| 2 | 3개 노드 추가 (glossary_search, paper_search, generate_answer) |
+| 3 | 진입점: glossary_search |
+| 4 | 엣지: glossary_search → paper_search → generate_answer → END |
+| 5 | workflow.compile()로 실행 가능 그래프 생성 |
 
 ---
 
