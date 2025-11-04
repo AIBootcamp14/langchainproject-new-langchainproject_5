@@ -215,6 +215,33 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 exp_manager.log_ui_interaction(f"선택된 도구: {tool_choice} ({tool_label})")
                 exp_manager.update_metadata(tool_used=tool_choice)
 
+            # -------------- Fallback 전환 메시지 표시 -------------- #
+            # response에 tool_timeline이 있고, fallback 이벤트가 있으면 표시
+            if "tool_timeline" in response and response["tool_timeline"]:
+                fallback_events = [
+                    event for event in response["tool_timeline"]
+                    if event.get("event") == "fallback"
+                ]
+
+                if fallback_events:
+                    for fb_event in fallback_events:
+                        from_tool = fb_event.get("from_tool", "unknown")
+                        to_tool = fb_event.get("to_tool", "unknown")
+                        failure_reason = fb_event.get("failure_reason", "알 수 없는 이유")
+
+                        # 도구 이름을 한글 라벨로 변환
+                        from_label = tool_labels.get(from_tool, f"🔧 {from_tool}")
+                        to_label = tool_labels.get(to_tool, f"🔧 {to_tool}")
+
+                        # 경고 메시지 표시
+                        st.warning(f"""
+                        🔄 **도구 자동 전환**
+
+                        - **실패한 도구**: {from_label}
+                        - **실패 사유**: {failure_reason}
+                        - **전환된 도구**: {to_label}
+                        """)
+
             message_placeholder.markdown(answer)
 
             # -------------- 답변 복사 및 저장 버튼 -------------- #
