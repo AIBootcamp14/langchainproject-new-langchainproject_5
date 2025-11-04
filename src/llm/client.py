@@ -3,7 +3,7 @@
 LLM 클라이언트 모듈
 
 LangChain 기반 다중 LLM 클라이언트 구현:
-- OpenAI API (GPT-3.5, GPT-4)
+- OpenAI API (GPT-5)
 - Solar API (Upstage)
 - 에러 핸들링 및 재시도 로직
 - 토큰 사용량 추적
@@ -36,7 +36,7 @@ class LLMClient:
     """다중 LLM 클라이언트 클래스"""
 
     # ---------------------- 초기화 함수 ---------------------- #
-    def __init__(self, provider="openai", model="gpt-3.5-turbo", temperature=0.7, logger=None):
+    def __init__(self, provider="openai", model="gpt-5", temperature=0.7, logger=None):
         """
         LLM 클라이언트 초기화
 
@@ -59,7 +59,7 @@ class LLMClient:
             enable_streaming = False if model == "gpt-5" else True
 
             self.llm = ChatOpenAI(
-                model=model,                        # 모델명 (gpt-3.5-turbo, gpt-4)
+                model=model,                        # 모델명 (gpt-5)
                 temperature=temperature,            # 창의성 수준
                 openai_api_key=os.getenv("OPENAI_API_KEY"),  # API 키
                 streaming=enable_streaming          # 스트리밍 응답 활성화 (GPT-5 제외)
