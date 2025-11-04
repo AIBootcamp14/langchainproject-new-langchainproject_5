@@ -71,23 +71,27 @@
 
 #### 1.1 LangChain Tool 정의
 
-```python
-from langchain.tools import tool
+**필요 라이브러리**: `langchain.tools.tool`
 
-@tool(name="text2sql", return_direct=False)
-def text2sql(query: str) -> str:
-    """
-    자연어 질문을 SQL 쿼리로 변환하여 논문 통계 정보를 조회합니다.
+**도구 정의**:
 
-    Args:
-        query (str): 자연어 질문
+| 속성 | 값 | 설명 |
+|-----|---|------|
+| 데코레이터 | @tool | LangChain Tool 정의 |
+| name | "text2sql" | 도구 이름 |
+| return_direct | False | Agent에 결과 반환 (직접 사용자에게 반환 안 함) |
 
-    Returns:
-        str: 쿼리 결과 (Markdown 형식)
-    """
-    # 구현 내용
-    pass
-```
+**함수: `text2sql`**
+
+**파라미터**:
+
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| query | str | 자연어 질문 |
+
+**반환값**: `str` - 쿼리 결과 (Markdown 형식)
+
+**역할**: 자연어 질문을 SQL 쿼리로 변환하여 논문 통계 정보 조회
 
 #### 1.2 Few-shot 프롬프트 설계
 
@@ -100,54 +104,108 @@ def text2sql(query: str) -> str:
 
 #### 1.3 보안 및 안전성
 
-```python
-# 화이트리스트 방식
-ALLOWED_TABLES = {"papers"}
-ALLOWED_COLUMNS = {
-    "paper_id", "title", "authors", "publish_date",
-    "source", "url", "category", "citation_count",
-    "abstract", "created_at", "updated_at"
-}
+**화이트리스트 방식**:
 
-# 금지 패턴
-FORBIDDEN_PATTERNS = [
-    r"\bDROP\b", r"\bINSERT\b", r"\bUPDATE\b", r"\bDELETE\b",
-    r"\bCREATE\b", r"\bALTER\b", r"\bGRANT\b", r"\bREVOKE\b",
-    r"--", r";.*SELECT", r"UNION"
-]
+**허용 테이블**:
 
-# SELECT/WITH 쿼리만 허용
-if not re.match(r"^\s*(SELECT|WITH)", sql, re.IGNORECASE):
-    raise ValueError("SELECT 또는 WITH 쿼리만 허용됩니다")
-```
+| 테이블 | 설명 |
+|--------|------|
+| papers | 논문 메타데이터 테이블 |
+
+**허용 컬럼** (11개):
+
+| 컬럼 | 타입 | 설명 |
+|-----|------|------|
+| paper_id | SERIAL | 논문 ID |
+| title | VARCHAR | 논문 제목 |
+| authors | TEXT | 저자 |
+| publish_date | DATE | 발행일 |
+| source | VARCHAR | 출처 (arXiv, IEEE 등) |
+| url | TEXT | 논문 URL |
+| category | VARCHAR | 카테고리 |
+| citation_count | INT | 인용 수 |
+| abstract | TEXT | 초록 |
+| created_at | TIMESTAMP | 생성 시간 |
+| updated_at | TIMESTAMP | 수정 시간 |
+
+---
+
+**금지 패턴** (정규식):
+
+| 패턴 | 설명 |
+|-----|------|
+| `\bDROP\b` | DROP 명령 금지 |
+| `\bINSERT\b` | INSERT 명령 금지 |
+| `\bUPDATE\b` | UPDATE 명령 금지 |
+| `\bDELETE\b` | DELETE 명령 금지 |
+| `\bCREATE\b` | CREATE 명령 금지 |
+| `\bALTER\b` | ALTER 명령 금지 |
+| `\bGRANT\b` | GRANT 명령 금지 |
+| `\bREVOKE\b` | REVOKE 명령 금지 |
+| `--` | SQL 주석 금지 |
+| `;.*SELECT` | 다중 쿼리 금지 |
+| `UNION` | UNION 명령 금지 |
+
+---
+
+**쿼리 타입 검증**:
+
+| 검증 항목 | 조건 | 에러 메시지 |
+|----------|------|------------|
+| SELECT/WITH 시작 | `^\s*(SELECT\|WITH)` 정규식 매치 | "SELECT 또는 WITH 쿼리만 허용됩니다" |
 
 #### 1.4 SQL 실행 및 결과 반환
 
-```python
-def _run_query(conn, sql):
-    """SQL 실행 및 결과 반환"""
-    cursor = conn.cursor()
-    cursor.execute(sql)
-    rows = cursor.fetchall()
-    columns = [desc[0] for desc in cursor.description]
-    cursor.close()
-    return rows, columns
+**함수 1: `_run_query`**
 
-def _to_markdown_table(rows, columns):
-    """결과를 Markdown 표로 변환"""
-    if not rows:
-        return "결과가 없습니다."
+**역할**: SQL 쿼리 실행 및 결과 반환
 
-    # 헤더
-    table = "| " + " | ".join(columns) + " |\n"
-    table += "| " + " | ".join(["---"] * len(columns)) + " |\n"
+**파라미터**:
 
-    # 데이터
-    for row in rows:
-        table += "| " + " | ".join(str(val) for val in row) + " |\n"
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| conn | psycopg2.connection | PostgreSQL 연결 객체 |
+| sql | str | 실행할 SQL 쿼리 |
 
-    return table
-```
+**반환값**: `tuple(rows, columns)`
+- `rows`: List - 쿼리 결과 행들
+- `columns`: List[str] - 컬럼 이름 리스트
+
+**처리 흐름**:
+
+| 단계 | 작업 |
+|-----|------|
+| 1 | cursor 생성 |
+| 2 | cursor.execute(sql) 실행 |
+| 3 | fetchall()로 결과 조회 |
+| 4 | cursor.description에서 컬럼명 추출 |
+| 5 | cursor 종료 |
+| 6 | (rows, columns) 반환 |
+
+---
+
+**함수 2: `_to_markdown_table`**
+
+**역할**: 쿼리 결과를 Markdown 표 형식으로 변환
+
+**파라미터**:
+
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| rows | List | 쿼리 결과 행들 |
+| columns | List[str] | 컬럼 이름 리스트 |
+
+**반환값**: `str` - Markdown 표 형식 문자열
+
+**처리 흐름**:
+
+| 단계 | 작업 | 예시 |
+|-----|------|------|
+| 1 | 빈 결과 확인 | rows가 비어있으면 "결과가 없습니다." 반환 |
+| 2 | 헤더 생성 | `\| column1 \| column2 \|` |
+| 3 | 구분선 생성 | `\| --- \| --- \|` |
+| 4 | 데이터 행 생성 | 각 row를 순회하며 `\| val1 \| val2 \|` 형식 |
+| 5 | 결과 반환 | 완성된 Markdown 표 |
 
 ---
 
@@ -155,34 +213,39 @@ def _to_markdown_table(rows, columns):
 
 **파일 경로**: `src/tools/text2sql.py`
 
-```python
-def _log_query(query, sql, success, error_msg=None):
-    """쿼리 실행 기록 저장"""
-    conn = _get_conn()
-    cursor = conn.cursor()
+**함수: `_log_query`**
 
-    # query_logs 테이블 생성 (없을 경우)
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS query_logs (
-            log_id SERIAL PRIMARY KEY,
-            user_query TEXT NOT NULL,
-            generated_sql TEXT,
-            success BOOLEAN DEFAULT TRUE,
-            error_message TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
+**역할**: 쿼리 실행 기록을 query_logs 테이블에 저장
 
-    # 로그 삽입
-    cursor.execute("""
-        INSERT INTO query_logs (user_query, generated_sql, success, error_message)
-        VALUES (%s, %s, %s, %s)
-    """, (query, sql, success, error_msg))
+**파라미터**:
 
-    conn.commit()
-    cursor.close()
-    conn.close()
-```
+| 파라미터 | 타입 | 설명 | 기본값 |
+|---------|------|------|--------|
+| query | str | 사용자의 자연어 질문 | - |
+| sql | str | 생성된 SQL 쿼리 | - |
+| success | bool | 실행 성공 여부 | - |
+| error_msg | str | 에러 메시지 | None |
+
+**처리 흐름**:
+
+| 단계 | 작업 | 설명 |
+|-----|------|------|
+| 1 | DB 연결 | _get_conn() |
+| 2 | 테이블 생성 | CREATE TABLE IF NOT EXISTS query_logs |
+| 3 | 로그 삽입 | INSERT INTO query_logs (user_query, generated_sql, success, error_message) |
+| 4 | 커밋 | conn.commit() |
+| 5 | 연결 종료 | cursor.close(), conn.close() |
+
+**query_logs 테이블 스키마**:
+
+| 컬럼 | 타입 | 제약조건 | 설명 |
+|-----|------|---------|------|
+| log_id | SERIAL | PRIMARY KEY | 로그 ID (자동 증가) |
+| user_query | TEXT | NOT NULL | 사용자 질문 |
+| generated_sql | TEXT | - | 생성된 SQL 쿼리 |
+| success | BOOLEAN | DEFAULT TRUE | 실행 성공 여부 |
+| error_message | TEXT | - | 에러 메시지 |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 생성 시간 |
 
 ---
 
@@ -192,66 +255,66 @@ def _log_query(query, sql, success, error_msg=None):
 
 **파일**: `src/agent/nodes.py`
 
-```python
-from src.tools.text2sql import text2sql
+**필요 라이브러리**: `src.tools.text2sql.text2sql`
 
-def text2sql_node(state: AgentState, exp_manager=None):
-    """
-    Text-to-SQL 노드: 자연어 질문을 SQL로 변환하여 논문 통계 조회
+**함수: `text2sql_node`**
 
-    Args:
-        state (AgentState): Agent 상태
-        exp_manager: ExperimentManager 인스턴스
+**역할**: Text-to-SQL 노드 - 자연어 질문을 SQL로 변환하여 논문 통계 조회
 
-    Returns:
-        AgentState: 업데이트된 상태
-    """
-    question = state["question"]
+**파라미터**:
 
-    if exp_manager:
-        exp_manager.logger.write(f"Text-to-SQL 노드 실행: {question}")
+| 파라미터 | 타입 | 설명 | 기본값 |
+|---------|------|------|--------|
+| state | AgentState | Agent 상태 (question, final_answer 포함) | - |
+| exp_manager | ExperimentManager | 실험 관리 인스턴스 | None |
 
-    # Text-to-SQL 도구 호출
-    result = text2sql.run(question)
+**반환값**: `AgentState` - 업데이트된 상태 (final_answer에 결과 저장)
 
-    if exp_manager:
-        exp_manager.logger.write(f"SQL 실행 완료: {len(result)} 글자")
+**처리 흐름**:
 
-    state["final_answer"] = result
-    return state
-```
+| 단계 | 작업 | 설명 |
+|-----|------|------|
+| 1 | 질문 추출 | state["question"] 가져오기 |
+| 2 | 시작 로그 | "Text-to-SQL 노드 실행: {question}" |
+| 3 | 도구 호출 | text2sql.run(question) |
+| 4 | 완료 로그 | "SQL 실행 완료: {len} 글자" |
+| 5 | 상태 업데이트 | state["final_answer"] = result |
+| 6 | 상태 반환 | return state |
 
 #### 3.2 Agent Graph 등록
 
 **파일**: `src/agent/graph.py`
 
+**필요 라이브러리**: `src.agent.nodes.text2sql_node`, `functools.partial`, `langgraph`
+
+**함수: `create_agent_graph`** (수정)
+
+**Graph 등록 단계**:
+
+| 단계 | 작업 | 코드/설명 |
+|-----|------|----------|
+| 1 | StateGraph 생성 | `workflow = StateGraph(AgentState)` |
+| 2 | exp_manager 바인딩 | `text2sql_with_exp = partial(text2sql_node, exp_manager=exp_manager)` |
+| 3 | 노드 추가 | `workflow.add_node("text2sql", text2sql_with_exp)` |
+| 4 | 조건부 엣지 설정 | router → text2sql 매핑 추가 |
+| 5 | 종료 엣지 설정 | `workflow.add_edge("text2sql", END)` |
+| 6 | Graph 컴파일 | `workflow.compile()` |
+
+**조건부 엣지 매핑 추가**:
+
 ```python
-from src.agent.nodes import text2sql_node
-
-def create_agent_graph(exp_manager=None):
-    workflow = StateGraph(AgentState)
-
-    # exp_manager 바인딩
-    text2sql_with_exp = partial(text2sql_node, exp_manager=exp_manager)
-
-    # 노드 추가
-    workflow.add_node("text2sql", text2sql_with_exp)
-
-    # 조건부 엣지 설정
-    workflow.add_conditional_edges(
-        "router",
-        route_to_tool,
-        {
-            ...,
-            "text2sql": "text2sql"
-        }
-    )
-
-    # 종료 엣지 설정
-    workflow.add_edge("text2sql", END)
-
-    return workflow.compile()
+workflow.add_conditional_edges(
+    "router",
+    route_to_tool,
+    {
+        # 기존 매핑...
+        "text2sql": "text2sql"  # 추가
+    }
+)
 ```
+
+**Graph 구조**:
+- `router` → (조건: text2sql 선택) → `text2sql` → `END`
 
 #### 3.3 라우팅 프롬프트 업데이트
 
@@ -398,14 +461,15 @@ prompts/
 
 ### 2. 사용 예시
 
-**기본 사용:**
-```python
-from src.tools.text2sql import text2sql
+**기본 사용 패턴:**
 
-# 테스트 실행
-result = text2sql.run("2024년에 발표된 논문 개수는?")
-print(result)
-```
+**사용법**:
+
+| 단계 | 작업 | 코드 |
+|-----|------|------|
+| 1 | 모듈 임포트 | `from src.tools.text2sql import text2sql` |
+| 2 | 도구 실행 | `result = text2sql.run("2024년에 발표된 논문 개수는?")` |
+| 3 | 결과 확인 | `print(result)` (Markdown 형식 출력) |
 
 **출력 예시:**
 ```markdown
@@ -429,15 +493,21 @@ SELECT COUNT(*) AS paper_count FROM papers WHERE EXTRACT(YEAR FROM publish_date)
 
 ### 1. Few-shot 프롬프트 예시
 
-```python
-_FEW_SHOTS = [
-    ("2024년에 발표된 논문 개수는?", "SELECT COUNT(*) FROM papers WHERE EXTRACT(YEAR FROM publish_date)=2024;"),
-    ("카테고리별 논문 수 보여줘", "SELECT category, COUNT(*) FROM papers GROUP BY category ORDER BY count DESC;"),
-    ("가장 많이 인용된 논문 Top 5는?", "SELECT title, citation_count FROM papers ORDER BY citation_count DESC LIMIT 5;"),
-    ("arXiv에서 가져온 논문 개수는?", "SELECT COUNT(*) FROM papers WHERE source='arXiv';"),
-    ("최근 1년간 발표된 AI 관련 논문은?", "SELECT COUNT(*) FROM papers WHERE category ILIKE '%AI%' AND publish_date >= NOW() - INTERVAL '1 year';"),
-]
-```
+**구조**: 튜플 리스트 `_FEW_SHOTS`
+
+**형식**: 각 항목은 `(질문, SQL 쿼리)` 튜플
+
+**5개 예시**:
+
+| # | 질문 | SQL 쿼리 |
+|---|------|---------|
+| 1 | "2024년에 발표된 논문 개수는?" | `SELECT COUNT(*) FROM papers WHERE EXTRACT(YEAR FROM publish_date)=2024;` |
+| 2 | "카테고리별 논문 수 보여줘" | `SELECT category, COUNT(*) FROM papers GROUP BY category ORDER BY count DESC;` |
+| 3 | "가장 많이 인용된 논문 Top 5는?" | `SELECT title, citation_count FROM papers ORDER BY citation_count DESC LIMIT 5;` |
+| 4 | "arXiv에서 가져온 논문 개수는?" | `SELECT COUNT(*) FROM papers WHERE source='arXiv';` |
+| 5 | "최근 1년간 발표된 AI 관련 논문은?" | `SELECT COUNT(*) FROM papers WHERE category ILIKE '%AI%' AND publish_date >= NOW() - INTERVAL '1 year';` |
+
+**사용 목적**: LLM에게 자연어 → SQL 변환 패턴을 학습시키기 위한 Few-shot 예시
 
 ### 2. 환경 변수 설정
 
