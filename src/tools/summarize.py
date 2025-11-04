@@ -252,10 +252,20 @@ def summarize_node(state: AgentState, exp_manager=None):
 
 *생성 시간: {exp_manager.metadata.get('start_time', '')}*
 """
-            exp_manager.save_output('summary.md', summary_md)
+            # summary 폴더에 논문 제목을 파일명으로 저장
+            summary_dir = exp_manager.outputs_dir / "summary"
+            summary_dir.mkdir(exist_ok=True)
+
+            # 논문 제목을 파일명으로 사용 (특수문자 제거)
+            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).strip()
+            safe_title = safe_title.replace(' ', '_')[:100]  # 최대 100자
+
+            summary_file = summary_dir / f"{safe_title}.md"
+            with open(summary_file, 'w', encoding='utf-8') as f:
+                f.write(summary_md)
 
             if tool_logger:
-                tool_logger.write("summary.md 저장 완료")
+                tool_logger.write(f"논문 요약 저장 완료: {summary_file.name}")
 
         state["tool_result"] = summary          # 도구 실행 결과
         state["final_answer"] = final_answer    # 최종 답변
