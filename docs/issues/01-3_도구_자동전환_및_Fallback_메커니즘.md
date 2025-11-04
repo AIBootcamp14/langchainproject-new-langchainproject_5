@@ -92,74 +92,74 @@ general 답변 (최종 Fallback)
 ### Phase 1: 설정 파일 및 데이터 구조 설계 (1일)
 
 - [x] `configs/model_config.yaml`에 Fallback 설정 추가
-  - [ ] `fallback_chain` 섹션 생성
-  - [ ] `enabled` 플래그 추가 (true/false)
-  - [ ] `max_retries` 옵션 추가 (기본값: 3)
-  - [ ] `validation_enabled` 플래그 추가 (Router 선택 검증 여부)
-  - [ ] `validation_retries` 옵션 추가 (검증 재시도 횟수)
+  - [x] `fallback_chain` 섹션 생성
+  - [x] `enabled` 플래그 추가 (true/false)
+  - [x] `max_retries` 옵션 추가 (기본값: 3)
+  - [x] `validation_enabled` 플래그 추가 (Router 선택 검증 여부)
+  - [x] `validation_retries` 옵션 추가 (검증 재시도 횟수)
 
 - [x] 질문 유형별 도구 우선순위 정의
-  - [ ] `term_definition` 유형: `[glossary, general]`
-  - [ ] `paper_search` 유형: `[search_paper, web_search, general]`
-  - [ ] `latest_research` 유형: `[web_search, search_paper, general]`
-  - [ ] `paper_summary` 유형: `[summarize, search_paper, general]`
-  - [ ] `statistics` 유형: `[text2sql, general]`
-  - [ ] `general_question` 유형: `[general]`
-  - [ ] `file_save` 유형: `[save_file]`
+  - [x] `term_definition` 유형: `[glossary, general]`
+  - [x] `paper_search` 유형: `[search_paper, web_search, general]`
+  - [x] `latest_research` 유형: `[web_search, search_paper, general]`
+  - [x] `paper_summary` 유형: `[summarize, search_paper, general]`
+  - [x] `statistics` 유형: `[text2sql, general]`
+  - [x] `general_question` 유형: `[general]`
+  - [x] `file_save` 유형: `[save_file]`
 
 - [x] AgentState 상태 필드 확장 (`src/agent/state.py`)
-  - [ ] `retry_count` 필드 추가 (현재 재시도 횟수)
-  - [ ] `failed_tools` 필드 추가 (실패한 도구 리스트)
-  - [ ] `question_type` 필드 추가 (질문 유형)
-  - [ ] `fallback_chain` 필드 추가 (도구 우선순위 리스트)
-  - [ ] `validation_failed` 필드 추가 (Router 검증 실패 여부)
+  - [x] `retry_count` 필드 추가 (현재 재시도 횟수)
+  - [x] `failed_tools` 필드 추가 (실패한 도구 리스트)
+  - [x] `question_type` 필드 추가 (질문 유형)
+  - [x] `fallback_chain` 필드 추가 (도구 우선순위 리스트)
+  - [x] `validation_failed` 필드 추가 (Router 검증 실패 여부)
 
 ### Phase 2: 도구 실행 실패 감지 로직 구현 (2일)
 
 - [x] 실패 패턴 정의 모듈 생성 (`src/agent/failure_detector.py`)
-  - [ ] `FailureDetector` 클래스 구현
-  - [ ] `is_failed(result: str) -> bool` 메서드 구현
-  - [ ] 실패 패턴 리스트 정의:
-    - [ ] "관련 용어를 찾을 수 없습니다"
-    - [ ] "관련 논문을 찾을 수 없습니다"
-    - [ ] "검색 결과가 없습니다"
-    - [ ] "파일 경로를 지정해주세요"
-    - [ ] "SQL 쿼리 생성에 실패했습니다"
-    - [ ] "오류가 발생했습니다"
-    - [ ] "실패했습니다"
-  - [ ] 정규식 패턴 매칭 지원
-  - [ ] 커스텀 패턴 추가 인터페이스
+  - [x] `FailureDetector` 클래스 구현
+  - [x] `is_failed(result: str) -> bool` 메서드 구현
+  - [x] 실패 패턴 리스트 정의:
+    - [x] "관련 용어를 찾을 수 없습니다"
+    - [x] "관련 논문을 찾을 수 없습니다"
+    - [x] "검색 결과가 없습니다"
+    - [x] "파일 경로를 지정해주세요"
+    - [x] "SQL 쿼리 생성에 실패했습니다"
+    - [x] "오류가 발생했습니다"
+    - [x] "실패했습니다"
+  - [x] 정규식 패턴 매칭 지원
+  - [x] 커스텀 패턴 추가 인터페이스
 
 - [x] 각 도구 노드에 실패 감지 로직 추가
-  - [ ] `src/tools/glossary.py`: 검색 결과 없음 감지
-  - [ ] `src/tools/search_paper.py`: 논문 없음 감지
-  - [ ] `src/tools/web_search.py`: 검색 실패 감지
-  - [ ] `src/tools/summarize.py`: 요약 대상 없음 감지
-  - [ ] `src/tools/text2sql.py`: SQL 생성 실패 감지
-  - [ ] `src/tools/save_file.py`: 파일 경로 오류 감지
+  - [x] `src/tools/glossary.py`: 검색 결과 없음 감지
+  - [x] `src/tools/search_paper.py`: 논문 없음 감지
+  - [x] `src/tools/web_search.py`: 검색 실패 감지
+  - [x] `src/tools/summarize.py`: 요약 대상 없음 감지
+  - [x] `src/tools/text2sql.py`: SQL 생성 실패 감지
+  - [x] `src/tools/save_file.py`: 파일 경로 오류 감지
 
 - [x] 도구 실행 결과 상태 태그 추가
-  - [ ] `state["tool_status"]` 필드 추가
-  - [ ] 상태 값: `"success"`, `"failed"`, `"partial"`, `"error"`
-  - [ ] 각 도구 노드에서 상태 설정
+  - [x] `state["tool_status"]` 필드 추가
+  - [x] 상태 값: `"success"`, `"failed"`, `"partial"`, `"error"`
+  - [x] 각 도구 노드에서 상태 설정
 
 ### Phase 3: Fallback Router 노드 구현 (2일)
 
 - [x] `FallbackRouter` 노드 구현 (`src/agent/nodes.py`)
-  - [ ] `fallback_router_node(state: AgentState) -> AgentState` 함수 생성
-  - [ ] 현재 실패한 도구를 `state["failed_tools"]`에 추가
-  - [ ] `state["retry_count"]` 증가
-  - [ ] `max_retries` 초과 확인
-    - [ ] 초과 시: `state["tool_choice"] = "general"` (최종 Fallback)
-    - [ ] 미초과: 다음 우선순위 도구 선택
-  - [ ] `state["fallback_chain"]`에서 다음 도구 추출
-  - [ ] 모든 도구 시도 완료 시 `general` 선택
-  - [ ] 로깅: "Fallback: {failed_tool} → {next_tool} (retry {retry_count}/{max_retries})"
+  - [x] `fallback_router_node(state: AgentState) -> AgentState` 함수 생성
+  - [x] 현재 실패한 도구를 `state["failed_tools"]`에 추가
+  - [x] `state["retry_count"]` 증가
+  - [x] `max_retries` 초과 확인
+    - [x] 초과 시: `state["tool_choice"] = "general"` (최종 Fallback)
+    - [x] 미초과: 다음 우선순위 도구 선택
+  - [x] `state["fallback_chain"]`에서 다음 도구 추출
+  - [x] 모든 도구 시도 완료 시 `general` 선택
+  - [x] 로깅: "Fallback: {failed_tool} → {next_tool} (retry {retry_count}/{max_retries})"
 
 - [x] 질문 유형 분류 로직 구현 (`src/agent/question_classifier.py`)
-  - [ ] `QuestionClassifier` 클래스 생성
-  - [ ] `classify_question(question: str) -> str` 메서드 구현
-  - [ ] LLM 기반 질문 유형 분류:
+  - [x] `QuestionClassifier` 클래스 생성
+  - [x] `classify_question(question: str) -> str` 메서드 구현
+  - [x] LLM 기반 질문 유형 분류:
     ```python
     classify_prompt = f"""
     다음 질문을 7가지 유형 중 하나로 분류하세요:
@@ -175,22 +175,22 @@ general 답변 (최종 Fallback)
     유형:
     """
     ```
-  - [ ] 분류 결과 캐싱 (동일 질문 재분류 방지)
-  - [ ] 분류 실패 시 기본값: `"general_question"`
+  - [x] 분류 결과 캐싱 (동일 질문 재분류 방지)
+  - [x] 분류 실패 시 기본값: `"general_question"`
 
 - [x] 도구 우선순위 로더 구현 (`src/agent/priority_loader.py`)
-  - [ ] `PriorityLoader` 클래스 생성
-  - [ ] `load_priority(question_type: str) -> List[str]` 메서드
-  - [ ] `configs/model_config.yaml` 파일에서 우선순위 로드
-  - [ ] 유효성 검증 (도구 이름 유효성)
-  - [ ] 예외 처리 (설정 파일 없음, 유형 없음)
+  - [x] `PriorityLoader` 클래스 생성
+  - [x] `load_priority(question_type: str) -> List[str]` 메서드
+  - [x] `configs/model_config.yaml` 파일에서 우선순위 로드
+  - [x] 유효성 검증 (도구 이름 유효성)
+  - [x] 예외 처리 (설정 파일 없음, 유형 없음)
 
 ### Phase 4: Router 검증 노드 구현 (2일)
 
 - [x] `RouterValidator` 노드 구현 (`src/agent/nodes.py`)
-  - [ ] `validate_tool_choice(state: AgentState) -> AgentState` 함수 생성
-  - [ ] `validation_enabled` 설정 확인
-  - [ ] LLM에게 도구 선택 검증 요청:
+  - [x] `validate_tool_choice(state: AgentState) -> AgentState` 함수 생성
+  - [x] `validation_enabled` 설정 확인
+  - [x] LLM에게 도구 선택 검증 요청:
     ```python
     validation_prompt = f"""
     질문: {question}
@@ -205,18 +205,18 @@ general 답변 (최종 Fallback)
     답변 (yes/no):
     """
     ```
-  - [ ] 검증 결과 파싱 ("yes" / "no")
-  - [ ] "no"인 경우:
-    - [ ] `state["validation_failed"] = True` 설정
-    - [ ] `state["retry_count"]` 증가
-    - [ ] `validation_retries` 초과 확인
-    - [ ] 초과 시 강제로 `state["tool_choice"] = "general"` 설정
-    - [ ] 미초과 시 재라우팅
-  - [ ] 로깅: "Router 검증 실패: {tool_choice} → 재라우팅"
+  - [x] 검증 결과 파싱 ("yes" / "no")
+  - [x] "no"인 경우:
+    - [x] `state["validation_failed"] = True` 설정
+    - [x] `state["retry_count"]` 증가
+    - [x] `validation_retries` 초과 확인
+    - [x] 초과 시 강제로 `state["tool_choice"] = "general"` 설정
+    - [x] 미초과 시 재라우팅
+  - [x] 로깅: "Router 검증 실패: {tool_choice} → 재라우팅"
 
 - [x] 도구 설명 제공 함수 구현
-  - [ ] `get_tool_description(tool_name: str) -> str` 함수
-  - [ ] 각 도구별 1-2줄 설명 반환:
+  - [x] `get_tool_description(tool_name: str) -> str` 함수
+  - [x] 각 도구별 1-2줄 설명 반환:
     ```python
     TOOL_DESCRIPTIONS = {
         "general": "일반 질문에 LLM 지식으로 답변",
@@ -232,7 +232,7 @@ general 답변 (최종 Fallback)
 ### Phase 5: LangGraph 그래프 재구성 (2일)
 
 - [x] `src/agent/graph.py` 수정
-  - [ ] `should_fallback(state: AgentState) -> str` 함수 구현
+  - [x] `should_fallback(state: AgentState) -> str` 함수 구현
     ```python
     def should_fallback(state: AgentState) -> str:
         """도구 실행 후 Fallback 여부 결정"""
@@ -252,7 +252,7 @@ general 답변 (최종 Fallback)
         return "retry"
     ```
 
-  - [ ] `should_validate(state: AgentState) -> str` 함수 구현
+  - [x] `should_validate(state: AgentState) -> str` 함수 구현
     ```python
     def should_validate(state: AgentState) -> str:
         """Router 검증 여부 결정"""
@@ -272,14 +272,14 @@ general 답변 (최종 Fallback)
         return "proceed"
     ```
 
-  - [ ] 노드 추가
+  - [x] 노드 추가
     ```python
     workflow.add_node("fallback_router", fallback_router_node)
     workflow.add_node("validator", validate_tool_choice)
     workflow.add_node("final_fallback", final_fallback_node)  # general 강제 실행
     ```
 
-  - [ ] 조건부 엣지 재구성
+  - [x] 조건부 엣지 재구성
     ```python
     # Router → Validator
     workflow.add_conditional_edges(
@@ -310,17 +310,17 @@ general 답변 (최종 Fallback)
     ```
 
 - [x] 그래프 시각화 스크립트 작성
-  - [ ] `scripts/visualize_agent_graph.py` 생성
-  - [ ] LangGraph 그래프를 Mermaid 다이어그램으로 변환
-  - [ ] PNG/SVG 이미지 저장
+  - [x] `scripts/visualize_agent_graph.py` 생성
+  - [x] LangGraph 그래프를 Mermaid 다이어그램으로 변환
+  - [x] PNG/SVG 이미지 저장
 
 ### Phase 6: 설정 로더 및 초기화 (1일)
 
 - [x] `src/agent/config_loader.py` 생성
-  - [ ] `load_fallback_config() -> Dict` 함수 구현
-  - [ ] `configs/model_config.yaml` 파일 읽기
-  - [ ] YAML 파싱 및 검증
-  - [ ] 기본값 설정:
+  - [x] `load_fallback_config() -> Dict` 함수 구현
+  - [x] `configs/model_config.yaml` 파일 읽기
+  - [x] YAML 파싱 및 검증
+  - [x] 기본값 설정:
     ```python
     DEFAULT_CONFIG = {
         "fallback_chain": {
@@ -331,26 +331,26 @@ general 답변 (최종 Fallback)
         }
     }
     ```
-  - [ ] 설정 캐싱 (파일 읽기 최소화)
+  - [x] 설정 캐싱 (파일 읽기 최소화)
 
 - [x] `create_agent_graph()` 함수 수정
-  - [ ] Fallback 설정 로드
-  - [ ] `state["max_retries"]` 초기화
-  - [ ] `state["validation_enabled"]` 초기화
-  - [ ] 로깅: "Fallback Chain 활성화: max_retries={max_retries}"
+  - [x] Fallback 설정 로드
+  - [x] `state["max_retries"]` 초기화
+  - [x] `state["validation_enabled"]` 초기화
+  - [x] 로깅: "Fallback Chain 활성화: max_retries={max_retries}"
 
 ### Phase 7: 로깅 및 디버깅 강화 (1일)
 
 - [x] Fallback 이벤트 로깅 추가
-  - [ ] `logger.write("=== Fallback 시작 ===")`
-  - [ ] `logger.write(f"실패 도구: {failed_tool}")`
-  - [ ] `logger.write(f"다음 도구: {next_tool}")`
-  - [ ] `logger.write(f"재시도 횟수: {retry_count}/{max_retries}")`
-  - [ ] `logger.write(f"실패 사유: {failure_reason}")`
+  - [x] `logger.write("=== Fallback 시작 ===")`
+  - [x] `logger.write(f"실패 도구: {failed_tool}")`
+  - [x] `logger.write(f"다음 도구: {next_tool}")`
+  - [x] `logger.write(f"재시도 횟수: {retry_count}/{max_retries}")`
+  - [x] `logger.write(f"실패 사유: {failure_reason}")`
 
 - [x] 도구 실행 타임라인 기록
-  - [ ] `state["tool_timeline"]` 리스트 추가
-  - [ ] 각 도구 실행 시 타임스탬프와 결과 기록:
+  - [x] `state["tool_timeline"]` 리스트 추가
+  - [x] 각 도구 실행 시 타임스탬프와 결과 기록:
     ```python
     state["tool_timeline"].append({
         "timestamp": datetime.now().isoformat(),
@@ -359,61 +359,61 @@ general 답변 (최종 Fallback)
         "retry_count": retry_count
     })
     ```
-  - [ ] 실험 종료 시 `metadata.json`에 타임라인 저장
+  - [x] 실험 종료 시 `metadata.json`에 타임라인 저장
 
 - [x] 디버그 모드 추가
-  - [ ] 환경변수 `DEBUG_FALLBACK=true` 설정 시 상세 로그
-  - [ ] 각 단계별 상태 출력
-  - [ ] LLM 프롬프트 및 응답 전체 기록
+  - [x] 환경변수 `DEBUG_FALLBACK=true` 설정 시 상세 로그
+  - [x] 각 단계별 상태 출력
+  - [x] LLM 프롬프트 및 응답 전체 기록
 
 ### Phase 8: 테스트 케이스 작성 (2일)
 
 - [x] 단위 테스트 (`tests/test_fallback_mechanism.py`)
-  - [ ] `test_failure_detection`: 실패 패턴 감지 테스트
-  - [ ] `test_question_classification`: 질문 유형 분류 테스트
-  - [ ] `test_priority_loading`: 우선순위 로드 테스트
-  - [ ] `test_fallback_router`: Fallback Router 로직 테스트
-  - [ ] `test_router_validation`: Router 검증 테스트
-  - [ ] `test_max_retries`: 최대 재시도 횟수 테스트
-  - [ ] `test_final_fallback`: 최종 Fallback (general) 테스트
+  - [x] `test_failure_detection`: 실패 패턴 감지 테스트
+  - [x] `test_question_classification`: 질문 유형 분류 테스트
+  - [x] `test_priority_loading`: 우선순위 로드 테스트
+  - [x] `test_fallback_router`: Fallback Router 로직 테스트
+  - [x] `test_router_validation`: Router 검증 테스트
+  - [x] `test_max_retries`: 최대 재시도 횟수 테스트
+  - [x] `test_final_fallback`: 최종 Fallback (general) 테스트
 
 - [x] 통합 테스트 (`tests/test_agent_integration.py`)
-  - [ ] 시나리오 1: glossary 실패 → general Fallback
-  - [ ] 시나리오 2: search_paper 실패 → web_search → general
-  - [ ] 시나리오 3: Router 잘못 선택 → 검증 실패 → 재라우팅
-  - [ ] 시나리오 4: 모든 도구 실패 → 최종 general Fallback
-  - [ ] 시나리오 5: 최대 재시도 초과 → general 강제 실행
+  - [x] 시나리오 1: glossary 실패 → general Fallback
+  - [x] 시나리오 2: search_paper 실패 → web_search → general
+  - [x] 시나리오 3: Router 잘못 선택 → 검증 실패 → 재라우팅
+  - [x] 시나리오 4: 모든 도구 실패 → 최종 general Fallback
+  - [x] 시나리오 5: 최대 재시도 초과 → general 강제 실행
 
 - [x] 성능 테스트
-  - [ ] Fallback Chain 실행 시간 측정
-  - [ ] LLM 호출 횟수 카운트 (비용 분석)
-  - [ ] 메모리 사용량 확인
+  - [x] Fallback Chain 실행 시간 측정
+  - [x] LLM 호출 횟수 카운트 (비용 분석)
+  - [x] 메모리 사용량 확인
 
 ### Phase 9: 문서화 및 배포 (1일)
 
 - [x] 사용 가이드 작성 (`docs/usage/fallback_chain_guide.md`)
-  - [ ] Fallback Chain 개요
-  - [ ] 설정 방법 (`configs/model_config.yaml`)
-  - [ ] 질문 유형별 우선순위 커스터마이징
-  - [ ] 디버깅 방법
-  - [ ] FAQ
+  - [x] Fallback Chain 개요
+  - [x] 설정 방법 (`configs/model_config.yaml`)
+  - [x] 질문 유형별 우선순위 커스터마이징
+  - [x] 디버깅 방법
+  - [x] FAQ
 
 - [x] 아키텍처 문서 업데이트
-  - [ ] `docs/modularization/06_AI_Agent_시스템.md` 수정
-  - [ ] Fallback Chain 플로우 다이어그램 추가
-  - [ ] 상태 전이 다이어그램 추가
+  - [x] `docs/modularization/06_AI_Agent_시스템.md` 수정
+  - [x] Fallback Chain 플로우 다이어그램 추가
+  - [x] 상태 전이 다이어그램 추가
 
 - [x] QnA 문서 업데이트
-  - [ ] `docs/QnA/agent_system_qna.md`에 Fallback 관련 Q&A 추가
-  - [ ] Q: "도구 선택이 잘못되면 어떻게 되나요?"
-  - [ ] Q: "Fallback Chain은 어떻게 동작하나요?"
-  - [ ] Q: "최대 재시도 횟수를 변경하려면?"
+  - [x] `docs/QnA/agent_system_qna.md`에 Fallback 관련 Q&A 추가
+  - [x] Q: "도구 선택이 잘못되면 어떻게 되나요?"
+  - [x] Q: "Fallback Chain은 어떻게 동작하나요?"
+  - [x] Q: "최대 재시도 횟수를 변경하려면?"
 
 - [x] 코드 리뷰 및 정리
-  - [ ] PEP 8 스타일 가이드 준수
-  - [ ] 타입 힌팅 추가
-  - [ ] Docstring 작성
-  - [ ] 주석 명확화
+  - [x] PEP 8 스타일 가이드 준수
+  - [x] 타입 힌팅 추가
+  - [x] Docstring 작성
+  - [x] 주석 명확화
 
 ---
 

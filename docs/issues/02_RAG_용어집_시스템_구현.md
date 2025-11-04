@@ -31,55 +31,55 @@ Langchain과 PostgreSQL + pgvector를 사용하여 논문 검색을 위한 RAG(R
 
 ### Phase 1: RAG 시스템 기초 구현 (2일)
 - [x] RAGRetriever 클래스 구현 (`src/rag/retriever.py`)
-  - [ ] OpenAI Embeddings 초기화 (text-embedding-3-small)
-  - [ ] PGVector VectorStore 연동 (collection: paper_chunks)
-  - [ ] 기본 Retriever 설정 (MMR 방식, k=5, fetch_k=20, lambda_mult=0.5)
-  - [ ] retrieve() 메서드 구현
-  - [ ] retrieve_with_filter() 메서드 구현 (년도, 카테고리 필터링)
-  - [ ] retrieve_with_scores() 메서드 구현 (유사도 점수 포함)
+  - [x] OpenAI Embeddings 초기화 (text-embedding-3-small)
+  - [x] PGVector VectorStore 연동 (collection: paper_chunks)
+  - [x] 기본 Retriever 설정 (MMR 방식, k=5, fetch_k=20, lambda_mult=0.5)
+  - [x] retrieve() 메서드 구현
+  - [x] retrieve_with_filter() 메서드 구현 (년도, 카테고리 필터링)
+  - [x] retrieve_with_scores() 메서드 구현 (유사도 점수 포함)
 - [x] PostgreSQL 연결 및 메타데이터 조회 로직
 
 ### Phase 2: 고급 검색 기능 구현 (2일)
 - [x] MultiQueryRetriever 구현
-  - [ ] LLM으로 쿼리 확장 (1개 → 3-5개 변형 쿼리)
-  - [ ] 각 쿼리로 검색 후 결과 통합
-  - [ ] 중복 제거 및 최종 결과 반환
+  - [x] LLM으로 쿼리 확장 (1개 → 3-5개 변형 쿼리)
+  - [x] 각 쿼리로 검색 후 결과 통합
+  - [x] 중복 제거 및 최종 결과 반환
 - [x] RAG 검색 도구 구현 (`src/tools/rag_search.py`)
-  - [ ] @tool 데코레이터로 search_paper_database 함수 정의
-  - [ ] year_filter 파라미터 지원
-  - [ ] PostgreSQL에서 메타데이터 조회 (title, authors, url)
-  - [ ] format_search_results() 함수 구현 (Markdown 형식)
+  - [x] @tool 데코레이터로 search_paper_database 함수 정의
+  - [x] year_filter 파라미터 지원
+  - [x] PostgreSQL에서 메타데이터 조회 (title, authors, url)
+  - [x] format_search_results() 함수 구현 (Markdown 형식)
 - [x] RAG 노드 구현 (search_paper_node, src/agent/nodes.py)
 
 ### Phase 3: 용어집 시스템 구현 (2일)
 - [x] GlossaryRetriever 클래스 구현 (`src/rag/glossary_retriever.py`)
-  - [ ] 용어집 전용 VectorStore 초기화 (collection: glossary_embeddings)
-  - [ ] Retriever 설정 (similarity, k=3)
-  - [ ] search() 메서드 구현
+  - [x] 용어집 전용 VectorStore 초기화 (collection: glossary_embeddings)
+  - [x] Retriever 설정 (similarity, k=3)
+  - [x] search() 메서드 구현
 - [x] 용어집 검색 도구 구현 (`src/tools/glossary.py`)
-  - [ ] @tool 데코레이터로 search_glossary 함수 정의
-  - [ ] PostgreSQL glossary 테이블에서 1차 검색 (ILIKE)
-  - [ ] 난이도별 설명 반환 (easy_explanation / hard_explanation)
-  - [ ] Vector DB에서 2차 검색 (유사 용어)
-  - [ ] 하이브리드 검색 결과 포맷팅
+  - [x] @tool 데코레이터로 search_glossary 함수 정의
+  - [x] PostgreSQL glossary 테이블에서 1차 검색 (ILIKE)
+  - [x] 난이도별 설명 반환 (easy_explanation / hard_explanation)
+  - [x] Vector DB에서 2차 검색 (유사 용어)
+  - [x] 하이브리드 검색 결과 포맷팅
 - [x] 용어집 노드 구현 (glossary_node, src/agent/nodes.py)
 
 ### Phase 4: 통합 및 최적화 (1일)
 - [x] ContextualCompressionRetriever 구현 (선택 사항)
-  - [ ] LLMChainExtractor로 문서 압축
-  - [ ] 질문 관련 부분만 추출하여 컨텍스트 축소
+  - [x] LLMChainExtractor로 문서 압축
+  - [x] 질문 관련 부분만 추출하여 컨텍스트 축소
 - [x] 검색 결과 포맷팅 개선
 - [x] PostgreSQL 연동 최적화 (연결 풀링)
 - [x] 단위 테스트 작성 (`tests/test_rag.py`)
-  - [ ] RAG Retriever 테스트
-  - [ ] search_paper_database 도구 테스트
-  - [ ] Glossary 검색 테스트
+  - [x] RAG Retriever 테스트
+  - [x] search_paper_database 도구 테스트
+  - [x] Glossary 검색 테스트
 
 ### Phase 5: 로깅 및 문서화 (1일)
 - [x] Logger 클래스 적용
-  - [ ] 실험 폴더 생성 (experiments/날짜/날짜_시간_rag_search/)
-  - [ ] 검색 결과 로깅 (쿼리, 결과 개수, 유사도 점수)
-  - [ ] config.yaml, results.json 저장
+  - [x] 실험 폴더 생성 (experiments/날짜/날짜_시간_rag_search/)
+  - [x] 검색 결과 로깅 (쿼리, 결과 개수, 유사도 점수)
+  - [x] config.yaml, results.json 저장
 - [x] 코드 주석 작성
 - [x] 사용 예시 문서 작성
 
