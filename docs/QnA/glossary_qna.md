@@ -167,16 +167,41 @@ paper_count
 
 ### Q2-3. 용어는 몇 개까지 추출되나요?
 
-**A:** **최대 5개**까지 추출됩니다.
+**A:** **사용자가 설정한 범위만큼** 추출됩니다.
 
-**이유:**
-- LLM에게 "최대 5개 용어만 추출하세요"라고 지시
-- 답변에 용어가 5개 미만이면 그만큼만 추출
-- 너무 많은 용어를 추출하면 불필요한 저장 증가
+**기본값:**
+- 최소 1개 ~ 최대 5개 (기본 설정)
+- Streamlit UI 사이드바에서 사용자가 직접 조정 가능
+
+**설정 방법:**
+1. **사이드바 → "📖 용어 추출 설정" 섹션**
+2. **슬라이더**: 드래그앤드롭으로 1~100 범위 선택
+3. **텍스트 입력**: 최소/최대 개수 수동 입력
+4. **양방향 동기화**: 슬라이더 ↔ 텍스트 입력 자동 업데이트
+
+**중요 조건:**
+1. **IT 용어만 저장**: AI/ML/NLP/CV/RL 등 IT 관련 용어만 추출
+2. **품질 우선**: 정확성/유사도 높은 순으로 우선순위 정렬
+3. **무작위 단어 금지**: 최소 개수 미달 시 실제 추출된 개수만 저장
+   - 예: 설정 5-15개, 실제 IT 용어 3개 → 3개만 저장
 
 **예시:**
-- 답변: "GAN은 Generator와 Discriminator로 구성됩니다." → 2개 추출 (GAN, Generator, Discriminator는 3개)
-- 답변: "Transformer는 Self-Attention, Multi-Head Attention, Position-wise FFN, Layer Normalization, Residual Connection 등으로 구성됩니다." → 5개만 추출
+
+**시나리오 1: 기본 설정 (1-5개)**
+- 답변: "GAN은 Generator와 Discriminator로 구성됩니다."
+- 추출: 3개 (GAN, Generator, Discriminator)
+- 결과: 1 ≤ 3 ≤ 5 → **3개 저장**
+
+**시나리오 2: 많은 용어 설정 (10-30개)**
+- 답변: "Transformer는 Self-Attention, Multi-Head Attention, FFN, Layer Norm, Residual Connection, Positional Encoding, Encoder, Decoder 등으로 구성됩니다."
+- 추출: 20개 IT 용어
+- 결과: 10 ≤ 20 ≤ 30 → **20개 저장**
+
+**시나리오 3: 용어 부족 (5-15개 설정, 3개만 추출)**
+- 답변: "BERT는 양방향 학습을 수행합니다."
+- 추출: 3개 (BERT, 양방향 학습, Transformer)
+- IT 필터링: 2개 (BERT, Transformer만 IT 용어)
+- 결과: 2 < 5(min) → **2개만 저장** (무작위 단어 추가 안 함)
 
 ---
 
