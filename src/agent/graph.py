@@ -87,23 +87,24 @@ def should_fallback(state: AgentState) -> str:
     return "retry"
 
 
-# ==================== 검증 판단 함수 ==================== #
-# ---------------------- Router 검증 여부 결정 ---------------------- #
-def should_validate(state: AgentState) -> str:
+# ==================== 검증 및 라우팅 함수 ==================== #
+# ---------------------- Router 검증 후 도구 선택 ---------------------- #
+def should_validate_and_route(state: AgentState) -> str:
     """
-    Router 검증 여부 결정
+    Router 검증 여부 결정 후 도구 라우팅
 
     Args:
         state (AgentState): Agent 상태
 
     Returns:
-        str: "skip_validation", "re_route", "proceed" 중 하나
+        str: "router" (재라우팅) 또는 도구 이름
     """
     # -------------- 검증 활성화 여부 확인 -------------- #
     validation_enabled = state.get("validation_enabled", False)
 
+    # -------------- 검증 비활성화 시 바로 도구 실행 -------------- #
     if not validation_enabled:
-        return "skip_validation"
+        return state["tool_choice"]
 
     # -------------- 검증 결과 확인 -------------- #
     validation_failed = state.get("validation_failed", False)
@@ -112,9 +113,10 @@ def should_validate(state: AgentState) -> str:
 
     # -------------- 검증 실패 시 재라우팅 -------------- #
     if validation_failed and validation_retries < max_validation:
-        return "re_route"
+        return "router"
 
-    return "proceed"
+    # -------------- 검증 통과 시 도구 실행 -------------- #
+    return state["tool_choice"]
 
 
 # ==================== Agent 그래프 생성 함수 ==================== #
@@ -200,14 +202,19 @@ def create_agent_graph(exp_manager=None):
     if fallback_enabled:
         # ========== Fallback Chain 활성화 모드 ========== #
 
-        # Router → Validator (검증 활성화 시)
+        # Router → 검증 후 도구 선택
         workflow.add_conditional_edges(
             "router",
-            should_validate,
+            should_validate_and_route,
             {
-                "skip_validation": route_to_tool,  # 검증 건너뛰고 바로 도구 실행
-                "re_route": "router",               # 검증 실패 → 재라우팅
-                "proceed": route_to_tool            # 검증 통과 → 도구 실행
+                "router": "router",                 # 검증 실패 → 재라우팅
+                "general": "general",               # 도구 선택
+                "glossary": "glossary",
+                "search_paper": "search_paper",
+                "web_search": "web_search",
+                "summarize": "summarize",
+                "text2sql": "text2sql",
+                "save_file": "save_file"
             }
         )
 
