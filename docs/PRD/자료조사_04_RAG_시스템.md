@@ -58,7 +58,7 @@ graph TB
 
     subgraph Generate["🔺 단계 3: 답변 생성"]
         direction LR
-        J[컨텍스트 구성<br/>문서 + 질문] --> K[LLM 답변 생성<br/>GPT-4]
+        J[컨텍스트 구성<br/>문서 + 질문] --> K[LLM 답변 생성<br/>GPT-5]
         K --> L[✅ 사용자 응답<br/>난이도 적용]
     end
 
