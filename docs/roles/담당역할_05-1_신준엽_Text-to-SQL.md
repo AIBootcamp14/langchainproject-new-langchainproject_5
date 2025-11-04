@@ -63,6 +63,60 @@
 
 ---
 
+## Text-to-SQL 처리 흐름
+
+```mermaid
+graph TB
+    subgraph Input["🔸 입력 & SQL 생성"]
+        direction LR
+        A[자연어<br/>질문] --> B[DB 스키마<br/>정보 수집]
+        B --> C[Few-shot<br/>프롬프트]
+        C --> D[LLM SQL<br/>생성]
+    end
+
+    subgraph Security["🔹 보안 검증"]
+        direction LR
+        E[SQL 추출<br/>코드펜스 제거] --> F[금지 패턴<br/>검사]
+        F --> G[화이트리스트<br/>검증]
+        G --> H[LIMIT<br/>자동 추가]
+    end
+
+    subgraph Execute["🔺 실행 & 반환"]
+        direction LR
+        I[SQL<br/>실행] --> J[Markdown<br/>표 생성]
+        J --> K[결과 반환]
+        K --> L[query_logs<br/>로깅]
+    end
+
+    Input --> Security
+    Security --> Execute
+
+    %% Subgraph 스타일 (Material Design)
+    style Input fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Security fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Execute fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (입력 & SQL 생성 - 파랑 계열)
+    style A fill:#90caf9,stroke:#1976d2,color:#000
+    style B fill:#81d4fa,stroke:#0288d1,color:#000
+    style C fill:#64b5f6,stroke:#1976d2,color:#000
+    style D fill:#42a5f5,stroke:#1565c0,color:#000
+
+    %% 노드 스타일 (보안 검증 - 보라 계열)
+    style E fill:#ce93d8,stroke:#7b1fa2,color:#000
+    style F fill:#ba68c8,stroke:#7b1fa2,color:#fff
+    style G fill:#ab47bc,stroke:#4a148c,color:#fff
+    style H fill:#9c27b0,stroke:#4a148c,color:#fff
+
+    %% 노드 스타일 (실행 & 반환 - 녹색 계열)
+    style I fill:#a5d6a7,stroke:#388e3c,color:#000
+    style J fill:#81c784,stroke:#2e7d32,color:#000
+    style K fill:#66bb6a,stroke:#2e7d32,color:#000
+    style L fill:#4caf50,stroke:#1b5e20,color:#fff
+```
+
+---
+
 ## 세부 업무 및 구현 내용
 
 ### 1. Text-to-SQL 도구 구현
