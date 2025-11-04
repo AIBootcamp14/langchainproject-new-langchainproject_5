@@ -42,58 +42,88 @@ ui/
 
 ### 전체 구조
 
-```
-┌─────────────────────────────────────────────────┐
-│              Streamlit 애플리케이션              │
-│                   (app.py)                      │
-└─────────────────────────────────────────────────┘
-           │                        │
-           ▼                        ▼
-┌──────────────────┐      ┌───────────────────┐
-│   Sidebar        │      │  Chat Interface   │
-│  (sidebar.py)    │      │(chat_interface.py)│
-│                  │      │                   │
-│ - 난이도 선택     │      │ - 메시지 표시      │
-│ - 새 채팅 버튼   │      │ - 입력 처리        │
-│ - 채팅 목록      │      │ - 복사/저장 버튼   │
-│ - 저장/삭제      │      │ - Agent 호출       │
-└──────────────────┘      └───────────────────┘
-           │                        │
-           └────────┬───────────────┘
-                    ▼
-          ┌──────────────────┐
-          │  Chat Manager    │
-          │(chat_manager.py) │
-          │                  │
-          │ - 세션 관리      │
-          │ - CRUD 작업      │
-          │ - 메시지 추가    │
-          │ - 내보내기       │
-          └──────────────────┘
-                    │
-                    ▼
-          ┌──────────────────┐
-          │ st.session_state │
-          │  (세션 저장소)    │
-          │                  │
-          │ - chats: {}      │
-          │ - current_chat_id│
-          │ - last_difficulty│
-          └──────────────────┘
+```mermaid
+graph TB
+    subgraph App["🔸 Streamlit 애플리케이션"]
+        direction LR
+        Main[app.py<br/>메인 진입점] --> Sidebar[sidebar.py<br/>사이드바]
+        Main --> ChatUI[chat_interface.py<br/>채팅 인터페이스]
+    end
+
+    subgraph Components["🔹 UI 컴포넌트"]
+        direction LR
+        Sidebar2["Sidebar<br/>• 난이도 선택<br/>• 새 채팅 버튼<br/>• 채팅 목록<br/>• 저장/삭제"] --> ChatUI2["Chat Interface<br/>• 메시지 표시<br/>• 입력 처리<br/>• 복사/저장 버튼<br/>• Agent 호출"]
+        ChatUI2 --> Manager["Chat Manager<br/>• 세션 관리<br/>• CRUD 작업<br/>• 메시지 추가<br/>• 내보내기"]
+    end
+
+    subgraph Storage["🔺 세션 저장소"]
+        direction LR
+        State["st.session_state<br/>• chats: {}<br/>• current_chat_id<br/>• last_difficulty"]
+    end
+
+    Sidebar --> Sidebar2
+    ChatUI --> ChatUI2
+    Manager --> State
+
+    %% Subgraph 스타일
+    style App fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Components fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Storage fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (애플리케이션 - 파랑 계열)
+    style Main fill:#90caf9,stroke:#1976d2,color:#000
+    style Sidebar fill:#81d4fa,stroke:#0288d1,color:#000
+    style ChatUI fill:#64b5f6,stroke:#1976d2,color:#000
+
+    %% 노드 스타일 (컴포넌트 - 보라 계열)
+    style Sidebar2 fill:#ce93d8,stroke:#7b1fa2,color:#000
+    style ChatUI2 fill:#ba68c8,stroke:#7b1fa2,color:#fff
+    style Manager fill:#ab47bc,stroke:#4a148c,color:#fff
+
+    %% 노드 스타일 (저장소 - 녹색 계열)
+    style State fill:#a5d6a7,stroke:#388e3c,color:#000
 ```
 
 ### AI Agent 통합
 
-```
-사용자 입력 → chat_interface.py → agent_executor.invoke()
-                                           ↓
-                                    LangGraph Agent
-                                           ↓
-                                    7가지 도구 실행
-                                           ↓
-                                    답변 생성
-                                           ↓
-                                    UI에 표시
+```mermaid
+graph TB
+    subgraph UI["🔸 사용자 인터페이스"]
+        direction LR
+        Input[사용자 입력] --> ChatIF[chat_interface.py]
+    end
+
+    subgraph Agent["🔹 AI Agent 실행"]
+        direction LR
+        Invoke[agent_executor.invoke] --> LG[LangGraph Agent]
+        LG --> Tools[7가지 도구 실행]
+    end
+
+    subgraph Output["🔺 응답 생성"]
+        direction LR
+        Generate[답변 생성] --> Display[UI에 표시]
+    end
+
+    ChatIF --> Invoke
+    Tools --> Generate
+
+    %% Subgraph 스타일
+    style UI fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Agent fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (UI - 파랑 계열)
+    style Input fill:#90caf9,stroke:#1976d2,color:#000
+    style ChatIF fill:#81d4fa,stroke:#0288d1,color:#000
+
+    %% 노드 스타일 (Agent - 보라 계열)
+    style Invoke fill:#ce93d8,stroke:#7b1fa2,color:#000
+    style LG fill:#ba68c8,stroke:#7b1fa2,color:#fff
+    style Tools fill:#ab47bc,stroke:#4a148c,color:#fff
+
+    %% 노드 스타일 (Output - 녹색 계열)
+    style Generate fill:#a5d6a7,stroke:#388e3c,color:#000
+    style Display fill:#81c784,stroke:#2e7d32,color:#000
 ```
 
 ---
