@@ -216,21 +216,21 @@ cat data/raw/arxiv_papers_metadata.json | jq length  # 논문 개수 확인
 ### 유용한 링크
 
 **필수 참고 PRD 문서:**
-- [ ] `docs/PRD/01_프로젝트_개요.md` - 프로젝트 전체 개요
-- [ ] `docs/PRD/02_프로젝트_구조.md` - 폴더 구조 (data/, scripts/)
-- [ ] `docs/PRD/05_로깅_시스템.md` ⭐ - Logger 사용법
-- [ ] `docs/PRD/06_실험_추적_관리.md` ⭐ - 실험 폴더 구조
-- [ ] `docs/PRD/10_기술_요구사항.md` - arXiv API, PyPDFLoader, OpenAI Embeddings
-- [ ] `docs/PRD/11_데이터베이스_설계.md` - papers 테이블 스키마
-- [ ] `docs/PRD/13_RAG_시스템_설계.md` - Document 처리 및 Text Splitting
+- [x] `docs/PRD/01_프로젝트_개요.md` - 프로젝트 전체 개요
+- [x] `docs/PRD/02_프로젝트_구조.md` - 폴더 구조 (data/, scripts/)
+- [x] `docs/PRD/05_로깅_시스템.md` ⭐ - Logger 사용법
+- [x] `docs/PRD/06_실험_추적_관리.md` ⭐ - 실험 폴더 구조
+- [x] `docs/PRD/10_기술_요구사항.md` - arXiv API, PyPDFLoader, OpenAI Embeddings
+- [x] `docs/PRD/11_데이터베이스_설계.md` - papers 테이블 스키마
+- [x] `docs/PRD/13_RAG_시스템_설계.md` - Document 처리 및 Text Splitting
 
 **참고 PRD 문서:**
-- [ ] `docs/PRD/03_브랜치_전략.md` - Feature 브랜치
-- [ ] `docs/PRD/04_일정_관리.md` - 개발 일정
+- [x] `docs/PRD/03_브랜치_전략.md` - Feature 브랜치
+- [x] `docs/PRD/04_일정_관리.md` - 개발 일정
 
 **외부 링크:**
-- [ ] [arXiv API](https://info.arxiv.org/help/api/index.html)
-- [ ] [Langchain Document Loaders](https://python.langchain.com/docs/integrations/document_loaders/)
-- [ ] [Langchain Text Splitters](https://python.langchain.com/docs/modules/data_connection/document_transformers/)
-- [ ] [pgvector 문서](https://github.com/pgvector/pgvector)
+- [x] [arXiv API](https://info.arxiv.org/help/api/index.html)
+- [x] [Langchain Document Loaders](https://python.langchain.com/docs/integrations/document_loaders/)
+- [x] [Langchain Text Splitters](https://python.langchain.com/docs/modules/data_connection/document_transformers/)
+- [x] [pgvector 문서](https://github.com/pgvector/pgvector)
 

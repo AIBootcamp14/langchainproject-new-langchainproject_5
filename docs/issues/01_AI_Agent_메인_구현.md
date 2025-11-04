@@ -35,37 +35,37 @@ LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 �
 **우선순위**: P0 (최우선)
 
 #### 1-1. LLM 클라이언트 구현
-- [ ] LLMClient 클래스 구현 (`src/llm/client.py`)
-  - [ ] ChatOpenAI 지원 (gpt-5, gpt-5)
-  - [ ] Solar(Upstage) 지원 (solar-pro2, solar-pro2)
-  - [ ] 에러 핸들링 및 재시도 (tenacity)
-  - [ ] 토큰 사용량 추적 (get_openai_callback)
-  - [ ] 스트리밍 응답 처리 (astream)
-- [ ] get_llm_for_task() 함수 구현 (작업 유형별 LLM 선택)
+- [x] LLMClient 클래스 구현 (`src/llm/client.py`)
+  - [x] ChatOpenAI 지원 (gpt-5, gpt-5)
+  - [x] Solar(Upstage) 지원 (solar-pro2, solar-pro2)
+  - [x] 에러 핸들링 및 재시도 (tenacity)
+  - [x] 토큰 사용량 추적 (get_openai_callback)
+  - [x] 스트리밍 응답 처리 (astream)
+- [x] get_llm_for_task() 함수 구현 (작업 유형별 LLM 선택)
 
 #### 1-2. Agent 그래프 기본 구조
-- [ ] AgentState 정의 (`src/agent/state.py`)
-  - [ ] question, difficulty, tool_choice, tool_result, final_answer, messages
-- [ ] create_agent_graph() 함수 구현 (`src/agent/graph.py`)
-  - [ ] StateGraph 생성
-  - [ ] 노드 추가 (router + 6개 빈 노드)
-  - [ ] 조건부 엣지 설정
-  - [ ] 그래프 컴파일
-- [ ] 라우터 노드 구현 (`src/agent/nodes.py`)
-  - [ ] 질문 분석 및 도구 선택 로직
-  - [ ] LLM으로 라우팅 결정
-- [ ] 6개 빈 노드 함수 정의 (placeholder)
-  - [ ] general_answer_node
-  - [ ] search_paper_node
-  - [ ] web_search_node
-  - [ ] glossary_node
-  - [ ] summarize_node
-  - [ ] save_file_node
+- [x] AgentState 정의 (`src/agent/state.py`)
+  - [x] question, difficulty, tool_choice, tool_result, final_answer, messages
+- [x] create_agent_graph() 함수 구현 (`src/agent/graph.py`)
+  - [x] StateGraph 생성
+  - [x] 노드 추가 (router + 6개 빈 노드)
+  - [x] 조건부 엣지 설정
+  - [x] 그래프 컴파일
+- [x] 라우터 노드 구현 (`src/agent/nodes.py`)
+  - [x] 질문 분석 및 도구 선택 로직
+  - [x] LLM으로 라우팅 결정
+- [x] 6개 빈 노드 함수 정의 (placeholder)
+  - [x] general_answer_node
+  - [x] search_paper_node
+  - [x] web_search_node
+  - [x] glossary_node
+  - [x] summarize_node
+  - [x] save_file_node
 
 #### 1-3. 테스트
-- [ ] LLM 클라이언트 단독 테스트
-- [ ] Agent 그래프 컴파일 테스트
-- [ ] 라우터 노드 테스트
+- [x] LLM 클라이언트 단독 테스트
+- [x] Agent 그래프 컴파일 테스트
+- [x] 라우터 노드 테스트
 
 ---
 
@@ -75,44 +75,44 @@ LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 �
 **의존성**: `feature/agent-system`
 
 #### 2-1. 간단한 도구 (DB/API 불필요)
-- [ ] 도구 1: 일반 답변 (general_answer_node)
-  - [ ] 난이도별 SystemMessage 설정
-  - [ ] LLM 직접 호출
-  - [ ] ExperimentManager 통합
-- [ ] 도구 2: 파일 저장 (save_file_node)
-  - [ ] ExperimentManager.save_output() 사용
-  - [ ] 파일명 자동 생성 (timestamp)
-  - [ ] outputs/ 폴더에 저장
+- [x] 도구 1: 일반 답변 (general_answer_node)
+  - [x] 난이도별 SystemMessage 설정
+  - [x] LLM 직접 호출
+  - [x] ExperimentManager 통합
+- [x] 도구 2: 파일 저장 (save_file_node)
+  - [x] ExperimentManager.save_output() 사용
+  - [x] 파일명 자동 생성 (timestamp)
+  - [x] outputs/ 폴더에 저장
 
 #### 2-2. DB/API 통합 도구 (팀원 협업)
-- [ ] 도구 3: RAG 검색 (search_paper_node) ⭐ 신준엽 협업
-  - [ ] pgvector 유사도 검색 (Top-5)
-  - [ ] PostgreSQL papers 테이블 조회
-  - [ ] 난이도별 프롬프트 구성
-  - [ ] ExperimentManager 통합
-- [ ] 도구 4: 용어집 (glossary_node) ⭐ 신준엽 협업
-  - [ ] PostgreSQL glossary 테이블 검색
-  - [ ] 난이도별 설명 제공
-  - [ ] 용어 추출 로직
-  - [ ] ExperimentManager 통합
-- [ ] 도구 5: 웹 검색 (web_search_node) ⭐ 임예슬 협업
-  - [ ] Tavily Search API 호출
-  - [ ] 검색 결과 LLM 정리
-  - [ ] 난이도별 프롬프트 적용
-  - [ ] ExperimentManager 통합
+- [x] 도구 3: RAG 검색 (search_paper_node) ⭐ 신준엽 협업
+  - [x] pgvector 유사도 검색 (Top-5)
+  - [x] PostgreSQL papers 테이블 조회
+  - [x] 난이도별 프롬프트 구성
+  - [x] ExperimentManager 통합
+- [x] 도구 4: 용어집 (glossary_node) ⭐ 신준엽 협업
+  - [x] PostgreSQL glossary 테이블 검색
+  - [x] 난이도별 설명 제공
+  - [x] 용어 추출 로직
+  - [x] ExperimentManager 통합
+- [x] 도구 5: 웹 검색 (web_search_node) ⭐ 임예슬 협업
+  - [x] Tavily Search API 호출
+  - [x] 검색 결과 LLM 정리
+  - [x] 난이도별 프롬프트 적용
+  - [x] ExperimentManager 통합
 
 #### 2-3. 복잡한 도구
-- [ ] 도구 6: 논문 요약 (summarize_node)
-  - [ ] PostgreSQL papers 테이블 검색
-  - [ ] pgvector 논문 전체 청크 조회
-  - [ ] load_summarize_chain (stuff, map_reduce, refine)
-  - [ ] 난이도별 프롬프트 설계
-  - [ ] ExperimentManager 통합
+- [x] 도구 6: 논문 요약 (summarize_node)
+  - [x] PostgreSQL papers 테이블 검색
+  - [x] pgvector 논문 전체 청크 조회
+  - [x] load_summarize_chain (stuff, map_reduce, refine)
+  - [x] 난이도별 프롬프트 설계
+  - [x] ExperimentManager 통합
 
 #### 2-4. 테스트
-- [ ] 각 도구별 단독 테스트
-- [ ] Agent 그래프에서 도구 호출 테스트
-- [ ] ExperimentManager 로깅 확인
+- [x] 각 도구별 단독 테스트
+- [x] Agent 그래프에서 도구 호출 테스트
+- [x] ExperimentManager 로깅 확인
 
 ---
 
@@ -122,28 +122,28 @@ LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 �
 **의존성**: `feature/agent-system`, `feature/agent-tools`
 
 #### 3-1. 대화 메모리 시스템
-- [ ] ChatMemoryManager 클래스 구현 (`src/memory/chat_history.py`)
-  - [ ] ConversationBufferMemory 초기화
-  - [ ] add_user_message() 구현
-  - [ ] add_ai_message() 구현
-  - [ ] get_history() 구현
-  - [ ] clear() 구현
-- [ ] 세션 기반 메모리 (선택)
-  - [ ] PostgresChatMessageHistory 구현
-  - [ ] get_session_history() 함수
+- [x] ChatMemoryManager 클래스 구현 (`src/memory/chat_history.py`)
+  - [x] ConversationBufferMemory 초기화
+  - [x] add_user_message() 구현
+  - [x] add_ai_message() 구현
+  - [x] get_history() 구현
+  - [x] clear() 구현
+- [x] 세션 기반 메모리 (선택)
+  - [x] PostgresChatMessageHistory 구현
+  - [x] get_session_history() 함수
 
 #### 3-2. main.py 작성
-- [ ] Agent 실행 루프 구현
-- [ ] ExperimentManager 전역 통합
-- [ ] 테스트 질문 리스트로 Agent 실행
-- [ ] 결과 출력 및 로깅
+- [x] Agent 실행 루프 구현
+- [x] ExperimentManager 전역 통합
+- [x] 테스트 질문 리스트로 Agent 실행
+- [x] 결과 출력 및 로깅
 
 #### 3-3. 전체 통합 테스트
-- [ ] 10개 시나리오 테스트 (PRD 09 평가 기준)
-- [ ] 디버깅 및 오류 수정
-- [ ] 성능 최적화
-- [ ] 로그 파일 확인
-- [ ] 문서화 작성
+- [x] 10개 시나리오 테스트 (PRD 09 평가 기준)
+- [x] 디버깅 및 오류 수정
+- [x] 성능 최적화
+- [x] 로그 파일 확인
+- [x] 문서화 작성
 
 ---
 
