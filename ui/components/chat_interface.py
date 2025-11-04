@@ -296,19 +296,26 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 exp_manager.log_ui_interaction(f"답변 생성 완료 ({len(answer)} 글자)")
 
             # -------------- AI/ML 용어 자동 추출 및 저장 -------------- #
-            try:
+            # 용어 추출이 의미 있는 도구만 실행 (text2sql, save_file 제외)
+            GLOSSARY_ENABLED_TOOLS = {"general", "search_paper", "web_search", "glossary", "summarize"}
+
+            if tool_choice in GLOSSARY_ENABLED_TOOLS:
+                try:
+                    if exp_manager:
+                        saved_count = extract_and_save_terms(
+                            answer=answer,
+                            difficulty=difficulty,
+                            logger=exp_manager.logger
+                        )
+                        if saved_count > 0:
+                            exp_manager.log_ui_interaction(f"용어집에 {saved_count}개 용어 자동 저장")
+                            st.toast(f"✅ {saved_count}개 용어가 용어집에 추가되었습니다!", icon="📚")
+                except Exception as e:
+                    if exp_manager:
+                        exp_manager.logger.write(f"용어 자동 저장 실패: {e}", print_error=True)
+            else:
                 if exp_manager:
-                    saved_count = extract_and_save_terms(
-                        answer=answer,
-                        difficulty=difficulty,
-                        logger=exp_manager.logger
-                    )
-                    if saved_count > 0:
-                        exp_manager.log_ui_interaction(f"용어집에 {saved_count}개 용어 자동 저장")
-                        st.toast(f"✅ {saved_count}개 용어가 용어집에 추가되었습니다!", icon="📚")
-            except Exception as e:
-                if exp_manager:
-                    exp_manager.logger.write(f"용어 자동 저장 실패: {e}", print_error=True)
+                    exp_manager.log_ui_interaction(f"용어 추출 스킵 (도구: {tool_choice})")
 
             # -------------- 실시간 답변 품질 평가 -------------- #
             evaluation_result = None
