@@ -60,6 +60,10 @@ def general_answer_node(state: AgentState, exp_manager=None):
     # -------------- 로깅 -------------- #
     if exp_manager:
         exp_manager.logger.write(f"LLM 응답 생성 완료: {len(response.content)} 글자")
+        exp_manager.logger.write("=" * 80)
+        exp_manager.logger.write("[LLM 답변 전체 내용]")
+        exp_manager.logger.write(response.content)
+        exp_manager.logger.write("=" * 80)
 
     # -------------- 최종 답변 저장 -------------- #
     state["final_answer"] = response.content    # 응답 내용 저장
