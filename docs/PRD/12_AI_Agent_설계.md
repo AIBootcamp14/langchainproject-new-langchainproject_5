@@ -135,7 +135,7 @@ sequenceDiagram
     participant RAG as RAG 도구
     participant VDB as Vector DB
     participant PG as PostgreSQL
-    participant LLM as OpenAI GPT-4
+    participant LLM as OpenAI GPT-5
 
     U->>UI: 질문 입력 + 난이도 선택
     UI->>A: 질문 전달
