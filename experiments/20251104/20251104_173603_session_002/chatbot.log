@@ -1,0 +1,60 @@
+2025-11-04 17:36:03 | 세션 시작: session_002
+2025-11-04 17:36:03 | 폴더 경로: experiments/20251104/20251104_173603_session_002
+2025-11-04 17:36:03 | Agent 그래프 생성 시작
+2025-11-04 17:36:03 | Agent 그래프 컴파일 완료
+2025-11-04 17:36:03 | Streamlit UI 시작
+2025-11-04 17:36:03 | 실험 폴더: experiments/20251104/20251104_173603_session_002
+2025-11-04 17:36:14 | 메타데이터 업데이트: ['user_query']
+2025-11-04 17:36:14 | 라우터 노드 실행: cnn이 뭐야?
+2025-11-04 17:36:14 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-04 17:36:14 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-04 17:36:15 | 라우팅 결정 (원본): glossary...
+2025-11-04 17:36:15 | 라우팅 결정 (파싱): glossary
+2025-11-04 17:36:16 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-04 17:36:16 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-04 17:36:19 | 메타데이터 업데이트: ['tool_used']
+2025-11-04 17:36:19 | 결과물 저장: response.txt
+2025-11-04 17:36:19 | 용어 추출 시작
+2025-11-04 17:36:19 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-04 17:36:19 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-04 17:36:26 | LLM 응답: ```json
+{
+  "terms": [
+    {
+      "term": "CNN",
+      "definition": "Convolutional Neural Network의 약자로, 이미지 처리에 특화된 딥러닝 모델",
+      "easy_explanation": "사진을 분석하는 데 특화된 인공지능 모델이에요. 사람처럼 픽셀 패턴을 학습해 고양이...
+2025-11-04 17:36:26 | 추출된 용어 수: 5
+2025-11-04 17:36:26 | glossary 테이블에 5개 용어 저장 시작
+2025-11-04 17:36:26 | 용어 저장 성공: CNN
+2025-11-04 17:36:26 | 용어 저장 성공: 픽셀(Pixel)
+2025-11-04 17:36:26 | 용어 저장 성공: 합성곱(Convolution)
+2025-11-04 17:36:26 | 용어 저장 성공: 공간 불변성(Spatial Invariance)
+2025-11-04 17:36:26 | 용어 저장 성공: 특징 맵(Feature Map)
+2025-11-04 17:36:26 | 용어 저장 완료: 5/5개
+2025-11-04 17:37:04 | 메타데이터 업데이트: ['user_query']
+2025-11-04 17:37:04 | 라우터 노드 실행: GAN(Generative Adversarial Network)의 기본 개념 설명해줘
+2025-11-04 17:37:04 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-04 17:37:04 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-04 17:37:05 | 라우팅 결정 (원본): general...
+2025-11-04 17:37:05 | 라우팅 결정 (파싱): general
+2025-11-04 17:37:05 | 일반 답변 노드 실행: GAN(Generative Adversarial Network)의 기본 개념 설명해줘
+2025-11-04 17:37:05 | 난이도: easy
+2025-11-04 17:37:05 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-04 17:37:05 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-04 17:37:05 | LLM 호출 시작
+2025-11-04 17:37:09 | LLM 응답 생성 완료: 752 글자
+2025-11-04 17:37:09 | 메타데이터 업데이트: ['tool_used']
+2025-11-04 17:37:09 | 결과물 저장: response.txt
+2025-11-04 17:37:09 | 용어 추출 시작
+2025-11-04 17:37:09 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-04 17:37:09 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-04 17:37:17 | LLM 응답: ```json
+{
+  "terms": [
+    {
+      "term": "GAN",
+      "definition": "생성적 적대 네트워크(Generative Adversarial Network)로, 생성자(Generator)와 판별자(Discriminator)의 경쟁을 통해 데이터를 생성하는 딥러닝 모델",
+      "easy_explanati...
+2025-11-04 17:37:17 | 용어 추출 실패: Invalid \escape: line 7 column 91 (char 404)
+2025-11-04 17:37:33 | 답변 평가 실패: 'question'
