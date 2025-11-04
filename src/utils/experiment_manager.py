@@ -64,9 +64,6 @@ class ExperimentManager:
                        self.ui_dir, self.outputs_dir, self.evaluation_dir]:
             folder.mkdir(exist_ok=True)
 
-        # 전체 설정 파일 복사 (config.yaml)
-        self._save_config_snapshot()
-
         # 메타데이터 초기화
         self.metadata = {
             'session_id': f"{session_id:03d}",               # Session ID
@@ -85,6 +82,9 @@ class ExperimentManager:
         self.logger = Logger(str(self.experiment_dir / "chatbot.log"))
         self.logger.write(f"세션 시작: session_{session_id:03d}")
         self.logger.write(f"폴더 경로: {self.experiment_dir}")
+
+        # 전체 설정 파일 복사 (config.yaml) - Logger 초기화 후 호출
+        self._save_config_snapshot()
 
         # DB 관련 변수 초기화
         self.db_queries = []                                 # SQL 쿼리 리스트
