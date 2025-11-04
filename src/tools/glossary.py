@@ -493,6 +493,10 @@ def glossary_node(state, exp_manager=None):
 
         if tool_logger:
             tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
+            tool_logger.write("=" * 80)
+            tool_logger.write("[LLM 답변 전체 내용]")
+            tool_logger.write(response.content)
+            tool_logger.write("=" * 80)
             tool_logger.close()
 
         # -------------- 최종 답변 저장 -------------- #
