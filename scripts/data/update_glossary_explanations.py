@@ -47,12 +47,12 @@ TERM_EXPLANATIONS = {
 
     "LLM (Large Language Model)": {
         "easy": "방대한 양의 텍스트 데이터로 학습한 거대한 AI 언어 모델입니다. GPT, BERT 같은 모델이 대표적이며, 문장 생성, 번역, 요약, 질문 답변 등 다양한 언어 작업을 수행할 수 있습니다. 마치 수백만 권의 책을 읽은 AI 비서와 같습니다.",
-        "hard": "수십억~수조 개의 파라미터를 가진 대규모 신경망 언어 모델로, Transformer 아키텍처를 기반으로 방대한 말뭉치(Corpus)에서 자기지도 학습(Self-Supervised Learning)을 수행합니다. GPT-3(175B), PaLM(540B), GPT-4(추정 1.7T) 등이 있으며, In-Context Learning, Few-Shot Learning, Chain-of-Thought Reasoning 등의 Emergent Abilities를 보입니다. Pre-training 단계에서 언어의 통계적 패턴을 학습하고, Fine-tuning 또는 RLHF(Reinforcement Learning from Human Feedback)를 통해 특정 태스크에 최적화됩니다."
+        "hard": "수십억~수조 개의 파라미터를 가진 대규모 신경망 언어 모델로, Transformer 아키텍처를 기반으로 방대한 말뭉치(Corpus)에서 자기지도 학습(Self-Supervised Learning)을 수행합니다. GPT-3(175B), PaLM(540B), GPT-5(추정 2.0T+) 등이 있으며, In-Context Learning, Few-Shot Learning, Chain-of-Thought Reasoning 등의 Emergent Abilities를 보입니다. Pre-training 단계에서 언어의 통계적 패턴을 학습하고, Fine-tuning 또는 RLHF(Reinforcement Learning from Human Feedback)를 통해 특정 태스크에 최적화됩니다."
     },
 
     "LLM(Large Language Model)": {  # 중복 용어
         "easy": "방대한 양의 텍스트 데이터로 학습한 거대한 AI 언어 모델입니다. GPT, BERT 같은 모델이 대표적이며, 문장 생성, 번역, 요약, 질문 답변 등 다양한 언어 작업을 수행할 수 있습니다. 마치 수백만 권의 책을 읽은 AI 비서와 같습니다.",
-        "hard": "수십억~수조 개의 파라미터를 가진 대규모 신경망 언어 모델로, Transformer 아키텍처를 기반으로 방대한 말뭉치(Corpus)에서 자기지도 학습(Self-Supervised Learning)을 수행합니다. GPT-3(175B), PaLM(540B), GPT-4(추정 1.7T) 등이 있으며, In-Context Learning, Few-Shot Learning, Chain-of-Thought Reasoning 등의 Emergent Abilities를 보입니다. Pre-training 단계에서 언어의 통계적 패턴을 학습하고, Fine-tuning 또는 RLHF(Reinforcement Learning from Human Feedback)를 통해 특정 태스크에 최적화됩니다."
+        "hard": "수십억~수조 개의 파라미터를 가진 대규모 신경망 언어 모델로, Transformer 아키텍처를 기반으로 방대한 말뭉치(Corpus)에서 자기지도 학습(Self-Supervised Learning)을 수행합니다. GPT-3(175B), PaLM(540B), GPT-5(추정 2.0T+) 등이 있으며, In-Context Learning, Few-Shot Learning, Chain-of-Thought Reasoning 등의 Emergent Abilities를 보입니다. Pre-training 단계에서 언어의 통계적 패턴을 학습하고, Fine-tuning 또는 RLHF(Reinforcement Learning from Human Feedback)를 통해 특정 태스크에 최적화됩니다."
     },
 
     "Mixture of Experts (MoE)": {
