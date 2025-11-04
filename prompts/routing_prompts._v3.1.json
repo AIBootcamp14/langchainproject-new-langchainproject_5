@@ -1,0 +1,602 @@
+{
+  "version": "3.1",
+  "last_updated": "2025-11-04",
+  "description": "도구 라우팅 전용 프롬프트 - 복수 도구 지원, DB 우선 검색, 4단계 난이도",
+  "difficulty_levels": {
+    "elementary": {
+      "age_range": "8-13세",
+      "description": "초등학생도 이해할 수 있는 매우 쉬운 설명",
+      "characteristics": [
+        "일상 언어 사용",
+        "이모지 적극 활용",
+        "구체적인 비유와 예시",
+        "단순한 문장 구조",
+        "친근한 말투"
+      ],
+      "example_keywords": [
+        "~가 뭐야?",
+        "쉽게 알려줘",
+        "초등학생도 알 수 있게"
+      ]
+    },
+    "beginner": {
+      "age_range": "14-22세",
+      "description": "AI/ML 입문자를 위한 기초 설명",
+      "characteristics": [
+        "기본 용어 풀이",
+        "간단한 개념 설명",
+        "핵심만 간추림",
+        "쉬운 비유 포함"
+      ],
+      "example_keywords": [
+        "간단히 설명",
+        "기본 개념",
+        "핵심만"
+      ]
+    },
+    "intermediate": {
+      "age_range": "23-30세",
+      "description": "AI/ML 학습자를 위한 중급 설명",
+      "characteristics": [
+        "기술 용어 사용",
+        "상세한 개념 설명",
+        "수식 포함 가능",
+        "논문 인용",
+        "코드 예시"
+      ],
+      "example_keywords": [
+        "구조를 설명",
+        "어떻게 작동",
+        "기술적으로"
+      ]
+    },
+    "advanced": {
+      "age_range": "30세 이상",
+      "description": "연구자/전문가를 위한 깊이 있는 설명",
+      "characteristics": [
+        "전문 용어 자유롭게 사용",
+        "수식과 알고리즘 상세 분석",
+        "논문 비교 분석",
+        "한계점과 개선 방향 제시"
+      ],
+      "example_keywords": [
+        "시간 복잡도",
+        "알고리즘 분석",
+        "이론적 차이"
+      ]
+    }
+  },
+  "routing_system": {
+    "system_role": "당신은 사용자 질문을 분석하여 가장 적절한 도구(들)를 선택하는 전문가입니다.",
+    "routing_philosophy": {
+      "description": "데이터베이스 우선 검색 철학",
+      "principles": [
+        "1. DB 내부 정보를 최우선으로 활용 (논문, 용어집)",
+        "2. 복수 용어는 순차적 도구 적용으로 통합 답변",
+        "3. 3회 필터링 시도 후 general로 폴백",
+        "4. 웹 검색은 DB에 없는 최신 정보만"
+      ]
+    },
+    "multi_tool_support": {
+      "enabled": true,
+      "description": "복수 도구 순차 실행 지원",
+      "execution_mode": "sequential",
+      "example": {
+        "question": "BERT와 GPT의 차이는?",
+        "tools": [
+          {
+            "tool": "glossary",
+            "query": "BERT",
+            "reason": "첫 번째 용어 정의 조회"
+          },
+          {
+            "tool": "glossary",
+            "query": "GPT",
+            "reason": "두 번째 용어 정의 조회"
+          },
+          {
+            "tool": "general",
+            "query": "BERT와 GPT의 차이점을 비교하여 설명",
+            "reason": "두 정의를 바탕으로 비교 분석"
+          }
+        ]
+      }
+    },
+    "filtering_strategy": {
+      "max_attempts": 3,
+      "fallback_tool": "general",
+      "description": "3회 DB 검색 시도 후 general로 폴백",
+      "steps": [
+        {
+          "attempt": 1,
+          "action": "exact_match",
+          "description": "정확한 용어/논문 제목으로 검색"
+        },
+        {
+          "attempt": 2,
+          "action": "fuzzy_match",
+          "description": "유사한 용어/논문으로 검색 (ILIKE, 벡터 유사도)"
+        },
+        {
+          "attempt": 3,
+          "action": "related_search",
+          "description": "연관 용어/카테고리로 확장 검색"
+        },
+        {
+          "attempt": 4,
+          "action": "fallback_to_general",
+          "description": "DB에 없는 경우 LLM 자체 지식으로 답변"
+        }
+      ]
+    },
+    "supported_difficulties": [
+      "elementary",
+      "beginner",
+      "intermediate",
+      "advanced"
+    ]
+  },
+  "tools": [
+    {
+      "id": 1,
+      "name": "save_file",
+      "priority": 1,
+      "description": "파일 저장 (최우선)",
+      "use_when": "대화 내용이나 결과를 파일로 저장",
+      "keywords": [
+        "저장",
+        "다운로드",
+        "파일",
+        "내보내기",
+        "export"
+      ],
+      "examples": [
+        "파일로 저장해줘",
+        "대화 내용 다운로드",
+        "결과 저장"
+      ],
+      "avoid": "",
+      "db_access": false
+    },
+    {
+      "id": 2,
+      "name": "search_paper",
+      "priority": 2,
+      "description": "논문 데이터베이스 검색 (DB 우선)",
+      "use_when": "특정 논문 내용, 연구 방법, 알고리즘 검색",
+      "keywords": [
+        "논문",
+        "연구",
+        "방법",
+        "알고리즘",
+        "찾아줘",
+        "검색",
+        "paper"
+      ],
+      "examples": [
+        "RAG 논문 찾아줘",
+        "Transformer 연구 방법",
+        "BERT 논문 검색"
+      ],
+      "avoid": "최신 정보는 web_search 사용",
+      "db_access": true,
+      "db_table": "papers + paper_chunks (pgvector)",
+      "filtering_attempts": 3
+    },
+    {
+      "id": 3,
+      "name": "summarize",
+      "priority": 3,
+      "description": "논문 요약 (DB 논문 기반)",
+      "use_when": "논문 전체 또는 특정 섹션 요약",
+      "keywords": [
+        "요약",
+        "핵심",
+        "간단히",
+        "정리",
+        "요약해줘",
+        "summarize"
+      ],
+      "examples": [
+        "이 논문 요약해줘",
+        "Attention Is All You Need 핵심 내용",
+        "Transformer 논문 정리"
+      ],
+      "avoid": "",
+      "db_access": true,
+      "db_table": "papers + paper_chunks (pgvector)",
+      "filtering_attempts": 3
+    },
+    {
+      "id": 4,
+      "name": "glossary",
+      "priority": 4,
+      "description": "용어집 (단일 용어 정의, DB 우선)",
+      "use_when": "하나의 전문 용어 정의와 설명",
+      "keywords": [
+        "뭐야",
+        "무엇",
+        "정의",
+        "설명해줘",
+        "의미",
+        "용어"
+      ],
+      "examples": [
+        "BERT가 뭐야?",
+        "Attention 설명해줘",
+        "RAG의 정의는?",
+        "BLEU Score가 뭐야?"
+      ],
+      "avoid": [
+        "비교 질문(A와 B의 차이)은 복수 도구 사용",
+        "두 개 이상 용어는 각각 glossary 후 general로 통합"
+      ],
+      "db_access": true,
+      "db_table": "glossary + glossary_embeddings (pgvector)",
+      "multi_term_handling": {
+        "enabled": true,
+        "strategy": "sequential_glossary_then_general",
+        "description": "각 용어를 glossary로 조회 후 general로 비교"
+      },
+      "filtering_attempts": 3
+    },
+    {
+      "id": 5,
+      "name": "general",
+      "priority": 5,
+      "description": "일반 답변 (비교, 분석, DB 없는 경우)",
+      "use_when": [
+        "비교 질문 (복수 용어의 차이점)",
+        "개념 설명 (어떻게 작동?)",
+        "복잡한 분석 (시간 복잡도는?)",
+        "인사, 감사",
+        "DB 검색 3회 실패 후 폴백",
+        "위의 특수 도구에 해당하지 않는 모든 경우"
+      ],
+      "keywords": [
+        "차이",
+        "비교",
+        "vs",
+        "구별",
+        "설명",
+        "어떻게",
+        "왜",
+        "이유"
+      ],
+      "examples": [
+        "BERT와 GPT의 차이는?",
+        "Transformer가 RNN보다 나은 이유는?",
+        "Self-Attention의 시간 복잡도는?",
+        "안녕하세요"
+      ],
+      "avoid": "",
+      "db_access": false,
+      "fallback": true
+    },
+    {
+      "id": 6,
+      "name": "web_search",
+      "priority": 6,
+      "description": "웹 검색 (DB에 없는 최신 정보만)",
+      "use_when": "DB에 없는 최신 정보, 뉴스, 트렌드",
+      "keywords": [
+        "최신",
+        "2024년",
+        "2025년",
+        "뉴스",
+        "트렌드",
+        "최근"
+      ],
+      "examples": [
+        "최신 AI 뉴스",
+        "2024년 논문 트렌드",
+        "최근 Transformer 발전"
+      ],
+      "avoid": "DB에 있는 논문/용어는 우선 DB 검색",
+      "db_access": false,
+      "fallback_condition": "DB 검색 결과 없음 + 최신 정보 필요"
+    }
+  ],
+  "routing_decision_tree": {
+    "description": "우선순위 기반 의사결정 트리",
+    "level_1_keyword_detection": {
+      "title": "특수 키워드 감지 (최우선)",
+      "rules": [
+        {
+          "keywords": [
+            "저장",
+            "다운로드",
+            "파일"
+          ],
+          "tool": "save_file",
+          "priority": 1
+        },
+        {
+          "keywords": [
+            "논문",
+            "찾아줘",
+            "검색",
+            "paper"
+          ],
+          "tool": "search_paper",
+          "priority": 2,
+          "note": "DB 우선, 3회 시도 후 web_search"
+        },
+        {
+          "keywords": [
+            "요약",
+            "정리",
+            "핵심"
+          ],
+          "condition": "논문명 포함",
+          "tool": "summarize",
+          "priority": 3,
+          "note": "DB 우선, 3회 시도 후 general"
+        }
+      ]
+    },
+    "level_2_term_analysis": {
+      "title": "용어 개수 분석",
+      "rules": [
+        {
+          "pattern": "단일 용어 + [뭐야/무엇/정의]",
+          "tool": "glossary",
+          "priority": 4,
+          "examples": [
+            "BERT가 뭐야?",
+            "Attention이 뭐야?"
+          ],
+          "note": "DB 우선, 3회 시도 후 general"
+        },
+        {
+          "pattern": "두 개 이상 용어 + [차이/비교]",
+          "tools": [
+            {
+              "step": 1,
+              "tool": "glossary",
+              "action": "각 용어 개별 조회"
+            },
+            {
+              "step": 2,
+              "tool": "general",
+              "action": "조회 결과 바탕으로 비교 분석"
+            }
+          ],
+          "priority": 4,
+          "examples": [
+            "BERT와 GPT의 차이는?"
+          ],
+          "note": "순차적 도구 적용"
+        }
+      ]
+    },
+    "level_3_complexity_analysis": {
+      "title": "질문 복잡도 분석",
+      "rules": [
+        {
+          "pattern": "복잡한 분석 질문",
+          "tool": "general",
+          "priority": 5,
+          "examples": [
+            "시간 복잡도는?",
+            "왜 더 나은가?"
+          ]
+        }
+      ]
+    },
+    "level_4_temporal_check": {
+      "title": "시간성 확인 (최신 정보)",
+      "rules": [
+        {
+          "keywords": [
+            "최신",
+            "2024년",
+            "2025년",
+            "뉴스",
+            "트렌드"
+          ],
+          "tool": "web_search",
+          "priority": 6,
+          "note": "DB 검색 먼저 시도 후 없으면 web_search"
+        }
+      ]
+    },
+    "level_5_fallback": {
+      "title": "폴백",
+      "rule": "위 모든 규칙에 해당하지 않으면 → general",
+      "priority": 999
+    }
+  },
+  "routing_algorithm": {
+    "description": "라우팅 알고리즘 (의사코드)",
+    "pseudocode": [
+      "1. 키워드 매칭 (Level 1):",
+      "   IF '저장' IN question THEN RETURN ['save_file']",
+      "   IF '논문' AND ('찾아줘' OR '검색') IN question THEN",
+      "      RETURN ['search_paper'] WITH filtering_attempts=3",
+      "",
+      "2. 용어 개수 분석 (Level 2):",
+      "   terms = extract_terms(question)",
+      "   IF len(terms) == 1 AND ('뭐야' OR '정의') IN question THEN",
+      "      RETURN ['glossary'] WITH filtering_attempts=3",
+      "   IF len(terms) >= 2 AND ('차이' OR '비교') IN question THEN",
+      "      RETURN [",
+      "         {'tool': 'glossary', 'query': term1, 'attempts': 3},",
+      "         {'tool': 'glossary', 'query': term2, 'attempts': 3},",
+      "         {'tool': 'general', 'context': [term1_result, term2_result]}",
+      "      ]",
+      "",
+      "3. 시간성 확인 (Level 4):",
+      "   IF ('최신' OR '2024' OR '2025') IN question THEN",
+      "      TRY ['search_paper'] WITH filtering_attempts=3",
+      "      IF no_result THEN RETURN ['web_search']",
+      "",
+      "4. 폴백 (Level 5):",
+      "   RETURN ['general']"
+    ]
+  },
+  "output_format": {
+    "description": "라우팅 결과 반환 형식",
+    "format": "JSON",
+    "single_tool_example": {
+      "tools": [
+        {
+          "name": "glossary",
+          "query": "BERT가 뭐야?",
+          "priority": 4,
+          "filtering_attempts": 3,
+          "fallback": "general"
+        }
+      ]
+    },
+    "multi_tool_example": {
+      "tools": [
+        {
+          "name": "glossary",
+          "query": "BERT",
+          "priority": 4,
+          "filtering_attempts": 3,
+          "step": 1
+        },
+        {
+          "name": "glossary",
+          "query": "GPT",
+          "priority": 4,
+          "filtering_attempts": 3,
+          "step": 2
+        },
+        {
+          "name": "general",
+          "query": "BERT와 GPT의 차이점을 비교",
+          "priority": 5,
+          "context": [
+            "BERT 정의",
+            "GPT 정의"
+          ],
+          "step": 3
+        }
+      ]
+    }
+  },
+  "few_shot_examples": [
+    {
+      "question": "BERT가 뭐야?",
+      "tools": [
+        {
+          "name": "glossary",
+          "filtering_attempts": 3
+        }
+      ],
+      "reason": "단일 용어 정의 질문, DB 우선"
+    },
+    {
+      "question": "BERT와 GPT의 차이는?",
+      "tools": [
+        {
+          "name": "glossary",
+          "query": "BERT",
+          "step": 1
+        },
+        {
+          "name": "glossary",
+          "query": "GPT",
+          "step": 2
+        },
+        {
+          "name": "general",
+          "context": "비교",
+          "step": 3
+        }
+      ],
+      "reason": "복수 용어 비교, 순차적 도구 적용"
+    },
+    {
+      "question": "RAG 논문 찾아줘",
+      "tools": [
+        {
+          "name": "search_paper",
+          "filtering_attempts": 3
+        }
+      ],
+      "reason": "논문 검색, DB 우선"
+    },
+    {
+      "question": "최신 AI 뉴스",
+      "tools": [
+        {
+          "name": "search_paper",
+          "filtering_attempts": 3,
+          "step": 1
+        },
+        {
+          "name": "web_search",
+          "condition": "DB 결과 없음",
+          "step": 2
+        }
+      ],
+      "reason": "최신 키워드지만 DB 먼저 확인"
+    },
+    {
+      "question": "Transformer 논문 요약해줘",
+      "tools": [
+        {
+          "name": "summarize",
+          "filtering_attempts": 3
+        }
+      ],
+      "reason": "논문 요약, DB 우선"
+    },
+    {
+      "question": "대화 내용 저장해줘",
+      "tools": [
+        {
+          "name": "save_file"
+        }
+      ],
+      "reason": "저장 키워드, 최우선"
+    },
+    {
+      "question": "Self-Attention의 시간 복잡도는?",
+      "tools": [
+        {
+          "name": "glossary",
+          "query": "Self-Attention",
+          "filtering_attempts": 3,
+          "step": 1
+        },
+        {
+          "name": "general",
+          "context": "복잡도 분석",
+          "step": 2
+        }
+      ],
+      "reason": "용어 정의 후 복잡한 분석"
+    }
+  ],
+  "common_mistakes": {
+    "description": "흔한 라우팅 실수 및 해결책",
+    "mistakes": [
+      {
+        "mistake": "BERT와 GPT가 뭐야? → glossary 단일 호출",
+        "correct": "glossary(BERT) + glossary(GPT) + general(비교)",
+        "reason": "복수 용어는 순차적 도구 적용"
+      },
+      {
+        "mistake": "최신 BERT 논문 → web_search 바로 호출",
+        "correct": "search_paper(3회 시도) → web_search(실패 시)",
+        "reason": "DB 우선 검색 철학"
+      },
+      {
+        "mistake": "Transformer 논문 요약 → search_paper",
+        "correct": "summarize(3회 시도) → general(실패 시)",
+        "reason": "요약 키워드 우선"
+      },
+      {
+        "mistake": "DB에 없는 용어 → 바로 general",
+        "correct": "glossary(3회 시도) → general",
+        "reason": "필터링 전략 준수"
+      }
+    ]
+  },
+  "prompt_template": "[사용자 질문]\n{question}\n\n[난이도]\n{difficulty}\n\n[라우팅 결과]\nJSON 형식으로 반환하세요:\n{\n  \"tools\": [\n    {\n      \"name\": \"도구명\",\n      \"query\": \"검색 쿼리\",\n      \"filtering_attempts\": 3,\n      \"step\": 1\n    }\n  ],\n  \"reason\": \"선택 이유\"\n}"
+}
