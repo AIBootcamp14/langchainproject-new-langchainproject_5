@@ -43,27 +43,32 @@ ui/
 ### 전체 구조
 
 ```mermaid
-graph TB
+graph LR
     subgraph App["🔸 Streamlit 애플리케이션"]
-        direction LR
-        Main[app.py<br/>메인 진입점] --> Sidebar[sidebar.py<br/>사이드바]
-        Main --> ChatUI[chat_interface.py<br/>채팅 인터페이스]
+        direction TB
+        Main[app.py<br/>메인 진입점]
+        Sidebar[sidebar.py<br/>사이드바]
+        ChatUI[chat_interface.py<br/>채팅 인터페이스]
+        Main --> Sidebar
+        Main --> ChatUI
     end
 
     subgraph Components["🔹 UI 컴포넌트"]
-        direction LR
-        Sidebar2["Sidebar<br/>• 난이도 선택<br/>• 새 채팅 버튼<br/>• 채팅 목록<br/>• 저장/삭제"] --> ChatUI2["Chat Interface<br/>• 메시지 표시<br/>• 입력 처리<br/>• 복사/저장 버튼<br/>• Agent 호출"]
-        ChatUI2 --> Manager["Chat Manager<br/>• 세션 관리<br/>• CRUD 작업<br/>• 메시지 추가<br/>• 내보내기"]
+        direction TB
+        Sidebar2["Sidebar<br/>• 난이도 선택<br/>• 새 채팅 버튼<br/>• 채팅 목록<br/>• 저장/삭제"]
+        ChatUI2["Chat Interface<br/>• 메시지 표시<br/>• 입력 처리<br/>• 복사/저장 버튼<br/>• Agent 호출"]
+        Manager["Chat Manager<br/>• 세션 관리<br/>• CRUD 작업<br/>• 메시지 추가<br/>• 내보내기"]
+        Sidebar2 --> ChatUI2
+        ChatUI2 --> Manager
     end
 
     subgraph Storage["🔺 세션 저장소"]
-        direction LR
+        direction TB
         State["st.session_state<br/>• chats: {}<br/>• current_chat_id<br/>• last_difficulty"]
     end
 
-    Sidebar --> Sidebar2
-    ChatUI --> ChatUI2
-    Manager --> State
+    App --> Components
+    Components --> Storage
 
     %% Subgraph 스타일
     style App fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
