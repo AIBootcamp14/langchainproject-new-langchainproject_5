@@ -1,0 +1,50 @@
+[
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "BERT 모델의 구조와 주요 개선점을 다룬 논문이 있을까?",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4445,
+    "timestamp": "2025-11-04T21:51:36.857562"
+  },
+  {
+    "tool": "glossary",
+    "collection": "glossary_embeddings",
+    "query_text": "GAN(Generative Adversarial Network)의 기본 개념 설명해줘",
+    "search_mode": "hybrid",
+    "top_k": 3,
+    "with_scores": true,
+    "result_length": 17,
+    "timestamp": "2025-11-04T21:55:36.431785"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "LLM의 효율적인 Fine-tuning 기법 논문 찾아줘",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4324,
+    "timestamp": "2025-11-04T21:56:46.312361"
+  },
+  {
+    "tool": "summarize",
+    "collection": "paper_chunks",
+    "query_text": "Meta-prompting Optimized Retrieval-augmented Generation",
+    "top_k": 50,
+    "result_count": 50,
+    "timestamp": "2025-11-04T21:58:45.450404"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "Few-shot learning을 개선한 연구는 어떤게 있어?",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4551,
+    "timestamp": "2025-11-04T22:03:24.263989"
+  }
+]

@@ -1,0 +1,413 @@
+db_config:
+  connection_pool:
+    connection_timeout: 30
+    idle_timeout: 600
+    max_connections: 10
+    min_connections: 1
+  performance:
+    effective_cache_size: 1GB
+    maintenance_work_mem: 128MB
+    shared_buffers: 256MB
+    work_mem: 16MB
+  pgvector:
+    collections:
+    - description: 논문 본문을 청크 단위로 분할한 임베딩
+      dimension: 1536
+      name: paper_chunks
+    - description: 논문 초록 전체 임베딩
+      dimension: 1536
+      name: paper_abstracts
+    - description: AI/ML 전문 용어 임베딩
+      dimension: 1536
+      name: glossary_embeddings
+  postgresql:
+    database: ${POSTGRES_DB}
+    host: ${POSTGRES_HOST}
+    password: ${POSTGRES_PASSWORD}
+    port: ${POSTGRES_PORT}
+    user: ${POSTGRES_USER}
+model_config:
+  cost_limits:
+    alert_threshold: 0.8
+    auto_stop: true
+    daily_budget_krw: 13000
+    daily_budget_usd: 10.0
+  embeddings:
+    batch_size: 100
+    dimension: 1536
+    max_retries: 3
+    model: text-embedding-3-small
+    provider: openai
+    request_timeout: 30
+  fallback_chain:
+    enabled: true
+    max_retries: 3
+    priorities:
+      file_save:
+      - save_file
+      general_question:
+      - general
+      latest_research:
+      - web_search
+      - search_paper
+      - general
+      paper_search:
+      - search_paper
+      - web_search
+      - general
+      paper_summary:
+      - summarize
+      - search_paper
+      - general
+      statistics:
+      - text2sql
+      - general
+      term_definition:
+      - glossary
+      - general
+    validation_enabled: true
+    validation_retries: 2
+  hybrid_strategy:
+    enabled: true
+    rules:
+    - condition:
+        difficulty: easy
+        language: ko
+      model:
+        name: solar-pro2
+        provider: solar
+    - condition:
+        difficulty: hard
+      model:
+        name: gpt-5
+        provider: openai
+    - condition:
+        default: true
+      model:
+        name: solar-pro2
+        provider: solar
+  llm:
+    development:
+      max_retries: 2
+      max_tokens: 2000
+      model: solar-pro2
+      provider: solar
+      request_timeout: 30
+      streaming: true
+      temperature: 0.7
+    production:
+      max_retries: 3
+      max_tokens: 3000
+      model: gpt-5
+      provider: openai
+      request_timeout: 60
+      streaming: true
+      temperature: 0.7
+  rag:
+    chunk_overlap: 200
+    chunk_size: 1000
+    mmr_lambda: 0.5
+    multiquery_llm:
+      model: solar-pro2
+      provider: solar
+      temperature: 0.0
+    score_threshold: 0.7
+    search_type: mmr
+    top_k: 5
+  solar:
+    development:
+      max_tokens: 2000
+      model: solar-pro2
+      request_timeout: 30
+      streaming: true
+      temperature: 0.7
+    production:
+      max_tokens: 3000
+      model: solar-pro2
+      request_timeout: 60
+      streaming: true
+      temperature: 0.7
+  temperature_settings:
+    answer_generation: 0.7
+    classification: 0.0
+    creative_writing: 0.9
+    routing: 0.0
+    summarization: 0.3
+  text2sql:
+    max_retries: 2
+    model: solar-pro2
+    provider: solar
+    temperature: 0.0
+prompt_config:
+  answer_with_source:
+    description: 출처를 명시하여 답변하는 프롬프트
+    template: '[참고 논문]
+
+      {context}
+
+
+      [질문]
+
+      {question}
+
+
+      [답변 규칙]
+
+      1. 반드시 출처를 명시: [논문 제목, 저자, 연도]
+
+      2. 각 문장마다 출처 표시
+
+      3. 예시: "Transformer는 attention 메커니즘을 사용합니다 [Attention Is All You Need, Vaswani
+      et al., 2017]"
+
+
+      답변:
+
+      '
+  easy_mode:
+    system_prompt: '당신은 논문을 쉽게 설명하는 전문가입니다.
+
+
+      [역할]
+
+      - 초보자도 이해할 수 있도록 쉬운 용어 사용
+
+      - 비유와 예시를 많이 활용
+
+      - 전문 용어는 풀어서 설명
+
+      - 한글로 친절하게 답변
+
+
+      [답변 규칙]
+
+      1. 초등학생도 이해할 수 있는 수준으로 설명
+
+      2. "즉", "예를 들어" 등의 연결어 사용
+
+      3. 한 문장을 짧게 (20자 이내)
+
+      4. 불필요한 전문 용어 배제
+
+      '
+    user_template: '[참고 논문]
+
+      {context}
+
+
+      [질문]
+
+      {question}
+
+
+      위 논문을 참고하여 초보자가 이해하기 쉽게 답변해주세요.
+
+      '
+  few_shot_examples:
+    routing:
+    - description: 용어 정의 질문
+      question: BERT가 뭐야?
+      tool: glossary
+    - description: 논문 검색 질문
+      question: RAG 논문 찾아줘
+      tool: search_paper
+    - description: 웹 검색 질문
+      question: 최신 AI 뉴스
+      tool: web_search
+    - description: 논문 요약 질문
+      question: 이 논문 요약해줘
+      tool: summarize
+    - description: 파일 저장 질문
+      question: 파일로 저장해줘
+      tool: save_file
+    - description: 일반 인사
+      question: 안녕하세요
+      tool: general
+  format:
+    citation_style: apa
+    context_truncation: tail
+    max_context_length: 4000
+  glossary_rag_prompt:
+    description: 용어집과 논문을 통합하여 검색하는 프롬프트
+    template: '당신은 논문 리뷰 전문가입니다.
+
+
+      [용어 설명]
+
+      {glossary_context}
+
+
+      [참고 논문]
+
+      {paper_context}
+
+
+      [질문]
+
+      {question}
+
+
+      [답변 규칙]
+
+      1. 먼저 용어 설명을 참고하여 용어 정의
+
+      2. 그 다음 논문 내용을 기반으로 답변
+
+      3. 난이도에 맞는 설명 제공: {difficulty}
+
+
+      답변:
+
+      '
+  hard_mode:
+    system_prompt: '당신은 논문 리뷰 전문가입니다.
+
+
+      [역할]
+
+      - 학술적이고 정확한 용어 사용
+
+      - 논문의 세부 내용과 수식 포함
+
+      - 비판적 분석 제공
+
+      - 연구 방법론과 한계점 언급
+
+
+      [답변 규칙]
+
+      1. 전문 용어를 그대로 사용 (영문 병기)
+
+      2. 논문의 핵심 알고리즘과 수식 설명
+
+      3. 실험 결과와 평가 지표 포함
+
+      4. 관련 연구와 비교 분석
+
+      '
+    user_template: '[참고 논문]
+
+      {context}
+
+
+      [질문]
+
+      {question}
+
+
+      위 논문을 참고하여 전문가 수준으로 상세히 답변해주세요.
+
+      '
+  rag_prompt:
+    description: 기본 RAG 검색 프롬프트
+    template: '당신은 논문 리뷰 전문가입니다.
+
+
+      [참고 논문]
+
+      {context}
+
+
+      [질문]
+
+      {question}
+
+
+      [답변 규칙]
+
+      - 참고 논문의 내용을 기반으로 답변
+
+      - 출처를 명시 (논문 제목, 저자, 연도)
+
+      - 논문에 없는 내용은 추측하지 말 것
+
+      - 난이도: {difficulty}
+
+
+      답변:
+
+      '
+  router_prompt:
+    description: 질문을 분석하여 적절한 도구를 선택하는 라우터 프롬프트
+    template: '사용자 질문을 분석하여 가장 적절한 도구를 선택하세요.
+
+
+      [질문]
+
+      {question}
+
+
+      [도구 목록]
+
+      1. search_paper: 논문 DB 검색 (예: "RAG에 대해 알려줘", "transformer 논문 찾아줘")
+
+      2. web_search: 웹 검색 (예: "최신 AI 뉴스", "2024년 논문 트렌드")
+
+      3. glossary: 용어 정의 (예: "BERT가 뭐야?", "attention 설명해줘")
+
+      4. summarize: 논문 요약 (예: "이 논문 요약해줘", "핵심 내용만 알려줘")
+
+      5. save_file: 파일 저장 (예: "파일로 저장해줘", "다운로드")
+
+      6. general: 일반 답변 (예: "안녕", "고마워")
+
+
+      [선택 규칙]
+
+      - 도구 이름만 반환 (예: search_paper)
+
+      - 반드시 위 6개 중 하나만 선택
+
+
+      선택한 도구:
+
+      '
+  summarize_easy:
+    description: Easy 모드 논문 요약 프롬프트
+    template: '[논문]
+
+      {paper_content}
+
+
+      [요약 규칙]
+
+      1. 초보자도 이해할 수 있는 쉬운 말로 요약
+
+      2. 3-5문장으로 핵심만 요약
+
+      3. "이 논문은 ~를 연구했습니다" 형식
+
+      4. 비유와 예시 활용
+
+
+      요약:
+
+      '
+  summarize_hard:
+    description: Hard 모드 논문 요약 프롬프트
+    template: '[논문]
+
+      {paper_content}
+
+
+      [요약 규칙]
+
+      1. 연구 배경, 방법론, 결과, 한계점 포함
+
+      2. 핵심 알고리즘과 수식 언급
+
+      3. 전문 용어 그대로 사용
+
+      4. 5-10문장으로 상세히 요약
+
+
+      요약:
+
+      '
+  variables:
+    context: 검색된 논문 내용
+    difficulty: 난이도 (easy, hard)
+    glossary_context: 용어집 내용
+    paper_content: 논문 전체 내용
+    paper_context: 논문 본문
+    question: 사용자 질문
