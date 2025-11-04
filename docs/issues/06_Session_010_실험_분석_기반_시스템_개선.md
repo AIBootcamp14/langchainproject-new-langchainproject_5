@@ -112,16 +112,16 @@
 ### Phase 5: UI 개선 (Medium Priority)
 
 #### 5-1. 숫자 입력 동기화 완전 개선
-- [ ] `ui/components/sidebar.py:182-237` 용어 추출 설정 수정
-  - [ ] 슬라이더 변경 시 session_state 즉시 업데이트
-  - [ ] number_input도 session_state 직접 참조하도록 수정
-  - [x] 기존 동기화 로직 유지 (완전 개선은 향후 작업)
+- [x] `ui/components/sidebar.py:182-237` 용어 추출 설정 수정
+  - [x] 슬라이더 변경 시 session_state 즉시 업데이트 (on_change 콜백)
+  - [x] number_input도 session_state 직접 참조하도록 수정
+  - [x] 양방향 완전 동기화 구현
 
 #### 5-2. 복사 버튼 대안 제공
-- [ ] `ui/components/chat_interface.py:257-303` 복사 버튼 수정
-  - [ ] HTTPS 환경 확인 로직 추가
-  - [ ] fallback: 코드 블록 제공 + 안내 메시지
-  - [x] 기존 로직 유지 (개선은 향후 작업)
+- [x] `ui/components/chat_interface.py:267-318` 복사 버튼 수정
+  - [x] HTTPS 환경 확인 로직 추가 (환경 변수 체크)
+  - [x] HTTP 환경 시 fallback: expander + st.code() 블록 제공
+  - [x] 수동 복사 안내 메시지 추가
 
 ---
 
@@ -370,8 +370,8 @@ def router_node(state: AgentState, exp_manager=None):
 - [x] 다중 요청 처리 기본 구현 완료 (Phase 4)
 - [ ] 모든 테스트 통과
 - [ ] 코드 리뷰 완료
-- [ ] Git 커밋 완료 (파일별 커밋, AI 출처 제외)
-- [ ] modularization 문서 업데이트
+- [x] Git 커밋 완료 (파일별 커밋, AI 출처 제외)
+- [x] modularization 문서 업데이트
 
 ---
 
