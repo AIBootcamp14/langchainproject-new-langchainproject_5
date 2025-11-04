@@ -223,6 +223,32 @@ def summarize_node(state: AgentState, exp_manager=None):
                            **요약**:
                            {summary}"""
 
+        # ============================================================ #
+        #                  6단계: summary.md 저장                      #
+        # ============================================================ #
+        if exp_manager:
+            # Markdown 형식으로 summary.md 저장
+            summary_md = f"""# 논문 요약
+
+## 기본 정보
+
+- **제목**: {title}
+- **저자**: {authors}
+- **발행일**: {publish_date}
+
+## 요약
+
+{summary}
+
+---
+
+*생성 시간: {exp_manager.metadata.get('start_time', '')}*
+"""
+            exp_manager.save_output('summary.md', summary_md)
+
+            if tool_logger:
+                tool_logger.write("summary.md 저장 완료")
+
         state["tool_result"] = summary          # 도구 실행 결과
         state["final_answer"] = final_answer    # 최종 답변
 
