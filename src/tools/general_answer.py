@@ -61,6 +61,18 @@ def general_answer_node(state: AgentState, exp_manager=None):
         HumanMessage(content=question)          # 사용자 질문
     ]
 
+    # -------------- 최종 프롬프트 저장 -------------- #
+    if exp_manager:
+        final_prompt = f"""[SYSTEM PROMPT]
+{system_content}
+
+[USER PROMPT]
+{question}"""
+        exp_manager.save_final_prompt(final_prompt, {
+            "tool": "general_answer",
+            "difficulty": difficulty
+        })
+
     # -------------- 로깅 -------------- #
     if exp_manager:
         exp_manager.logger.write("LLM 호출 시작")

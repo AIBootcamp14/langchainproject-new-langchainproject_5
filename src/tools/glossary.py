@@ -512,6 +512,18 @@ def glossary_node(state, exp_manager=None):
             HumanMessage(content=user_content)     # 검색 결과 + 질문
         ]
 
+        # 최종 프롬프트 저장
+        if exp_manager:
+            final_prompt = f"""[SYSTEM PROMPT]
+{system_prompt}
+
+[USER PROMPT]
+{user_content}"""
+            exp_manager.save_final_prompt(final_prompt, {
+                "tool": "glossary",
+                "difficulty": difficulty
+            })
+
         if tool_logger:
             tool_logger.write("LLM 답변 생성 시작")
 
