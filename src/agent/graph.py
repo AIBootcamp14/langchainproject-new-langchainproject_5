@@ -39,6 +39,7 @@ from src.agent.config_loader import (
 )
 from src.agent.question_classifier import classify_question
 from src.agent.failure_detector import is_tool_failed
+from src.agent.tool_wrapper import wrap_tool_node
 
 
 # ==================== 라우팅 함수 ==================== #
@@ -150,13 +151,26 @@ def create_agent_graph(exp_manager=None):
     # -------------- exp_manager를 바인딩한 노드 함수 생성 -------------- #
     # partial을 사용하여 각 노드에 exp_manager를 미리 바인딩
     router_with_exp = partial(router_node, exp_manager=exp_manager)
-    general_with_exp = partial(general_answer_node, exp_manager=exp_manager)
-    save_file_with_exp = partial(save_file_node, exp_manager=exp_manager)
-    search_paper_with_exp = partial(search_paper_node, exp_manager=exp_manager)
-    web_search_with_exp = partial(web_search_node, exp_manager=exp_manager)
-    glossary_with_exp = partial(glossary_node, exp_manager=exp_manager)
-    summarize_with_exp = partial(summarize_node, exp_manager=exp_manager)
-    text2sql_with_exp = partial(text2sql_node, exp_manager=exp_manager)
+
+    # Fallback 활성화 시 도구 래퍼 적용
+    if fallback_enabled:
+        # 래퍼 적용 (tool_status 자동 설정)
+        general_with_exp = partial(wrap_tool_node(general_answer_node, "general"), exp_manager=exp_manager)
+        save_file_with_exp = partial(wrap_tool_node(save_file_node, "save_file"), exp_manager=exp_manager)
+        search_paper_with_exp = partial(wrap_tool_node(search_paper_node, "search_paper"), exp_manager=exp_manager)
+        web_search_with_exp = partial(wrap_tool_node(web_search_node, "web_search"), exp_manager=exp_manager)
+        glossary_with_exp = partial(wrap_tool_node(glossary_node, "glossary"), exp_manager=exp_manager)
+        summarize_with_exp = partial(wrap_tool_node(summarize_node, "summarize"), exp_manager=exp_manager)
+        text2sql_with_exp = partial(wrap_tool_node(text2sql_node, "text2sql"), exp_manager=exp_manager)
+    else:
+        # 래퍼 없이 기존 방식
+        general_with_exp = partial(general_answer_node, exp_manager=exp_manager)
+        save_file_with_exp = partial(save_file_node, exp_manager=exp_manager)
+        search_paper_with_exp = partial(search_paper_node, exp_manager=exp_manager)
+        web_search_with_exp = partial(web_search_node, exp_manager=exp_manager)
+        glossary_with_exp = partial(glossary_node, exp_manager=exp_manager)
+        summarize_with_exp = partial(summarize_node, exp_manager=exp_manager)
+        text2sql_with_exp = partial(text2sql_node, exp_manager=exp_manager)
 
     # Fallback 관련 노드
     fallback_router_with_exp = partial(fallback_router_node, exp_manager=exp_manager)
