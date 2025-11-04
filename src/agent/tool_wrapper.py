@@ -58,6 +58,7 @@ def wrap_tool_node(tool_node_func: Callable, tool_name: str) -> Callable:
             if is_failed:
                 # 실패
                 state["tool_status"] = "failed"
+                state["failure_reason"] = failure_reason
 
                 if exp_manager:
                     exp_manager.logger.write(f"도구 실행 실패 감지: {tool_name}")
@@ -66,6 +67,7 @@ def wrap_tool_node(tool_node_func: Callable, tool_name: str) -> Callable:
             else:
                 # 성공
                 state["tool_status"] = "success"
+                state["failure_reason"] = ""  # 성공 시 초기화
 
                 if exp_manager:
                     exp_manager.logger.write(f"도구 실행 성공: {tool_name}")
@@ -73,6 +75,7 @@ def wrap_tool_node(tool_node_func: Callable, tool_name: str) -> Callable:
         except Exception as e:
             # -------------- 예외 발생 시 -------------- #
             state["tool_status"] = "error"
+            state["failure_reason"] = f"예외 발생: {str(e)}"
             state["final_answer"] = f"도구 실행 중 오류 발생: {str(e)}"
 
             if exp_manager:
@@ -81,13 +84,19 @@ def wrap_tool_node(tool_node_func: Callable, tool_name: str) -> Callable:
 
         # -------------- 타임라인 기록 (실행 후) -------------- #
         timeline = state.get("tool_timeline", [])
-        timeline.append({
+        timeline_entry = {
             "timestamp": datetime.now().isoformat(),
             "event": "tool_end",
             "tool": tool_name,
             "status": state.get("tool_status", "unknown"),
             "retry_count": state.get("retry_count", 0)
-        })
+        }
+
+        # 실패한 경우 사유 추가
+        if state.get("tool_status") in ["failed", "error"]:
+            timeline_entry["failure_reason"] = state.get("failure_reason", "")
+
+        timeline.append(timeline_entry)
         state["tool_timeline"] = timeline
 
         return state
