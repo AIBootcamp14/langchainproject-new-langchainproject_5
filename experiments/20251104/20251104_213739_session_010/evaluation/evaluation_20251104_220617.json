@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 2,
+  "relevance_score": 8,
+  "difficulty_score": 10,
+  "citation_score": 0,
+  "total_score": 20,
+  "comment": "정확도: 실제 파일 저장 여부나 경로의 근거가 없어 단정적 성공 문구는 부정확할 수 있음. 관련성: 사용자의 요청(파일 저장)에 직접 응답하고 경로도 제시해 관련성은 높음이나 필요한 확인/세부정보(파일 내용, 위치) 없이 완료를 단정해 완전성은 떨어짐. 난이도: 짧고 쉬운 표현으로 Easy 모드에 적합. 출처: 참고 문서가 없어 인용 없음.",
+  "question": "파일 저장해줘",
+  "answer": "파일이 성공적으로 저장되었습니다.\n파일 경로: experiments/20251104/20251104_213739_session_010/outputs/response_20251104_220557.txt",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "easy",
+  "timestamp": "2025-11-04T22:06:17.145317"
+}

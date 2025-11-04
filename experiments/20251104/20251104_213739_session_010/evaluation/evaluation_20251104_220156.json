@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 6,
+  "relevance_score": 7,
+  "difficulty_score": 10,
+  "citation_score": 6,
+  "total_score": 29,
+  "comment": "Whisper와 Conformer 소개는 대체로 정확하지만, Translatotron 2는 음성인식(ASR)이라기보다 음성-음성 번역(ST) 모델로 예시가 부적절합니다. 또한 ‘ESC (2023)’ 표기는 모호해 정확성에 의문이 있습니다. 질문의 ‘최근’ 맥락(최신 1–2년) 대비 2020–2022 위주로 다소 구식인 점도 아쉽습니다. 설명 난이도는 쉬운 비유와 간단한 용어로 매우 적절했습니다. 인용은 링크와 일부 제목/연도만 제시되어 저자 정보가 누락되었고, 항목 간 표기가 일관되지 않아 점수를 감점했습니다.",
+  "question": "최근 Transformer 기반 음성인식 논문이 있을까?",
+  "answer": "최근 Transformer 기반 음성인식 연구가 활발히 진행되고 있습니다! 초보자도 이해하기 쉽게 3가지 핵심 포인트로 요약해 드릴게요 😊\n\n---\n\n### 1. **\"Whisper\" 모델이 가장 핫해요!**  \n- OpenAI에서 개발한 **Whisper**는 트랜스포머를 기반으로 한 음성 인식 모델이에요.  \n- 마치 \"만능 통역기\"처럼 다양한 언어와 배경 소음에도 강해, 실제 환경에서도 잘 작동해요.  \n- 논문: [OpenAI Whisper (2022)](https://cdn.openai.com/papers/whisper.pdf)\n\n---\n\n### 2. **\"Conformer\"가 음성 인식에 특화되어요**  \n- 트랜스포머에 **CNN(이미지 처리 기술)을 결합**한 하이브리드 모델이에요.  \n- 음성 신호의 시간적 특징을 더 잘 잡아내, 발음 구분이 어려운 단어(예: \"밥\" vs \"팝\")도 정확하게 인식해요.  \n- 논문: [Conformer: Convolution-augmented Transformer (2020)](https://arxiv.org/abs/2005.08100)\n\n---\n\n### 3. **실시간 음성인식도 가능해요!**  \n- **Streaming Transformer** 같은 모델은 음성을 듣는 동시에 문자로 변환해요.  \n- 마치 \"실시간 자막 생성\"처럼 작동해, 화상 회의나 라이브 방송에 유용해요.  \n- 예시: Google의 **Translatotron 2** (2021)\n\n---\n\n🔍 **추가로 참고할 만한 자료**  \n- [ESC (2023)]: 효율적인 트랜스포머 음성인식 모델 ([논문 링크](https://arxiv.org/abs/2303.03325))  \n- Hugging Face에서 **🤗 Transformers 라이브러리**로 쉽게 실험해 볼 수 있어요!\n\n궁금한 점이 있다면 언제든 질문해 주세요! 😊",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "easy",
+  "timestamp": "2025-11-04T22:01:56.584102"
+}
