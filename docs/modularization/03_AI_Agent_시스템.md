@@ -5,6 +5,7 @@
 - **시스템명**: AI Agent 시스템
 - **구현 파일**: `src/agent/` (graph.py, nodes.py, state.py)
 - **우선순위**: ⭐⭐ (중요 - 핵심 로직)
+- **작성자**: 최현화[팀장]
 - **참고 문서**: [PRD/12_AI_Agent_설계.md](../PRD/12_AI_Agent_설계.md)
 
 ---
