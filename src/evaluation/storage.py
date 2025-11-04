@@ -35,49 +35,6 @@ def _get_conn():
     )
 
 
-# ==================== 테이블 생성 함수 ==================== #
-def create_evaluation_table():
-    """
-    evaluation_results 테이블 생성
-
-    테이블 스키마:
-    - eval_id: 평가 ID (Primary Key, Serial)
-    - question: 사용자 질문
-    - answer: AI 답변
-    - accuracy_score: 정확도 점수 (0-10)
-    - relevance_score: 관련성 점수 (0-10)
-    - difficulty_score: 난이도 적합성 점수 (0-10)
-    - citation_score: 출처 명시 점수 (0-10)
-    - total_score: 총점 (0-40)
-    - comment: 평가 코멘트
-    - created_at: 생성 시간
-    """
-    # DB 연결
-    conn = _get_conn()
-    cursor = conn.cursor()
-
-    # 테이블 생성
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS evaluation_results (
-            eval_id SERIAL PRIMARY KEY,
-            question TEXT NOT NULL,
-            answer TEXT NOT NULL,
-            accuracy_score INT CHECK (accuracy_score >= 0 AND accuracy_score <= 10),
-            relevance_score INT CHECK (relevance_score >= 0 AND relevance_score <= 10),
-            difficulty_score INT CHECK (difficulty_score >= 0 AND difficulty_score <= 10),
-            citation_score INT CHECK (citation_score >= 0 AND citation_score <= 10),
-            total_score INT CHECK (total_score >= 0 AND total_score <= 40),
-            comment TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    # 커밋 및 종료
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
 # ==================== 평가 결과 저장 함수 ==================== #
 def save_evaluation_results(evaluation_results: List[Dict]):
     """
@@ -90,9 +47,6 @@ def save_evaluation_results(evaluation_results: List[Dict]):
     # DB 연결
     conn = _get_conn()
     cursor = conn.cursor()
-
-    # 테이블 생성 (없을 경우)
-    create_evaluation_table()
 
     # 평가 결과 삽입
     for result in evaluation_results:
