@@ -888,6 +888,31 @@ exp_manager.save_cost_analysis({
         'total': 2000
     }
 })
+
+# LLM-as-a-Judge 답변 평가 결과 저장
+exp_manager.save_evaluation_result({
+    'question': user_query,
+    'answer': final_answer,
+    'reference_docs': reference_docs,
+    'difficulty': 'easy',
+    'accuracy_score': 9,
+    'relevance_score': 10,
+    'difficulty_score': 8,
+    'citation_score': 7,
+    'total_score': 34,
+    'comment': '답변이 정확하고 관련성이 높음'
+})
+
+# 전체 대화 내역 저장
+exp_manager.save_conversation([
+    {'role': 'user', 'content': '첫 번째 질문'},
+    {'role': 'assistant', 'content': '첫 번째 답변', 'tool_choice': 'search_paper'},
+    {'role': 'user', 'content': '두 번째 질문'},
+    {'role': 'assistant', 'content': '두 번째 답변', 'tool_choice': 'glossary'}
+])
+
+# SQL 쿼리 로그 파일로 플러시
+exp_manager.flush_queries_to_file()
 ```
 
 ---
