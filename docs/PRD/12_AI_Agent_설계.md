@@ -65,18 +65,26 @@ graph LR
 
 ## 3. AgentState 정의
 
-```python
-from typing import TypedDict, Annotated
-import operator
+**필요 라이브러리:**
+- `typing` - TypedDict, Annotated
+- `operator` - add 연산자
 
-class AgentState(TypedDict):
-    question: str                              # 사용자 질문
-    difficulty: str                            # 'easy' 또는 'hard'
-    messages: Annotated[list, operator.add]    # 대화 히스토리
-    tool_choice: str                           # 선택된 도구
-    tool_result: str                           # 도구 실행 결과
-    final_answer: str                          # 최종 답변
-```
+**AgentState 필드 정의:**
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| question | str | 사용자 질문 |
+| difficulty | str | 'easy' 또는 'hard' 난이도 |
+| messages | Annotated[list, operator.add] | 대화 히스토리 (누적 방식) |
+| tool_choice | str | 선택된 도구 이름 |
+| tool_result | str | 도구 실행 결과 |
+| final_answer | str | 최종 답변 |
+
+**Annotated[list, operator.add] 설명:**
+- operator.add를 사용하여 리스트 요소를 누적
+- 각 노드에서 messages를 추가하면 이전 메시지가 유지되면서 새 메시지가 추가됨
+
+**구현 파일:** `src/agent/state.py`
 
 ---
 
@@ -93,17 +101,26 @@ class AgentState(TypedDict):
 | 5 | summarize_paper | summarize.py | ✅ | 논문 요약 |
 | 6 | save_to_file | file_save.py | ✅ | 파일 저장 |
 
-### 4.2 도구 구현 예시
+### 4.2 도구 구현 방식
 
-```python
-from langchain.tools import tool
+**도구 데코레이터:** `@tool` - Langchain 도구 데코레이터
 
-@tool
-def search_paper_database(query: str) -> str:
-    """논문 데이터베이스에서 관련 논문을 검색합니다."""
-    docs = vectorstore.similarity_search(query, k=5)
-    return format_search_results(docs)
-```
+**도구 함수 구조:**
+
+| 요소 | 설명 |
+|------|------|
+| 함수명 | 도구 이름 (예: search_paper_database) |
+| 입력 | 쿼리 문자열 (query: str) |
+| 반환 | 검색 결과 문자열 (str) |
+| 독스트링 | 도구 설명 (LLM이 도구 선택 시 참고) |
+
+**search_paper_database 도구 동작:**
+1. vectorstore에서 similarity_search(query, k=5) 호출
+2. 유사도 높은 상위 5개 문서 추출
+3. format_search_results() 함수로 결과 포맷팅
+4. 포맷된 결과 문자열 반환
+
+**구현 파일:** `src/tools/`
 
 ---
 
@@ -209,77 +226,115 @@ sequenceDiagram
 
 ## 6. LangGraph 구현
 
-```python
-from langgraph.graph import StateGraph, END
+### 6.1 그래프 구성 요소
 
-# 그래프 생성
-workflow = StateGraph(AgentState)
+**필요 라이브러리:**
+- `langgraph.graph` - StateGraph, END
 
-# 노드 추가
-workflow.add_node("router", router_node)
-workflow.add_node("search_paper", search_paper_node)
-workflow.add_node("web_search", web_search_node)
-workflow.add_node("glossary", glossary_node)
-workflow.add_node("summarize", summarize_node)
-workflow.add_node("save_file", save_file_node)
-workflow.add_node("general", general_node)
+**그래프 생성:**
 
-# 시작점 설정
-workflow.set_entry_point("router")
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1. 그래프 생성 | StateGraph(AgentState) | AgentState를 상태로 하는 그래프 생성 |
+| 2. 노드 추가 | add_node(name, function) | 7개 노드 추가 (router + 6개 도구) |
+| 3. 시작점 설정 | set_entry_point("router") | 라우터 노드를 시작점으로 설정 |
+| 4. 조건부 엣지 | add_conditional_edges() | 라우터에서 도구로 분기 |
+| 5. 종료 엣지 | add_edge(node, END) | 각 도구 노드에서 END로 연결 |
+| 6. 컴파일 | compile() | 실행 가능한 agent_executor 생성 |
 
-# 조건부 엣지
-workflow.add_conditional_edges(
-    "router",
-    route_to_tool,
-    {
-        "search_paper": "search_paper",
-        "web_search": "web_search",
-        "glossary": "glossary",
-        "summarize": "summarize",
-        "save_file": "save_file",
-        "general": "general"
-    }
-)
+### 6.2 노드 목록
 
-# 종료 엣지
-for node in ["search_paper", "web_search", "glossary", "summarize", "save_file", "general"]:
-    workflow.add_edge(node, END)
+| 노드명 | 함수 | 설명 |
+|--------|------|------|
+| router | router_node | 질문 분석 및 도구 선택 |
+| search_paper | search_paper_node | 논문 DB 검색 |
+| web_search | web_search_node | 웹 검색 |
+| glossary | glossary_node | 용어집 검색 |
+| summarize | summarize_node | 논문 요약 |
+| save_file | save_file_node | 파일 저장 |
+| general | general_node | 일반 답변 |
 
-# 컴파일
-agent_executor = workflow.compile()
-```
+### 6.3 조건부 엣지 설정
 
----
+**add_conditional_edges() 파라미터:**
 
-## 6. 라우팅 로직
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| source | "router" | 조건부 분기가 시작되는 노드 |
+| condition | route_to_tool | 다음 노드를 결정하는 함수 |
+| mapping | 딕셔너리 | 도구 선택 결과 → 노드 이름 매핑 |
 
-```python
-def route_to_tool(state: AgentState) -> str:
-    """질문을 분석하여 적절한 도구 선택"""
-    question = state["question"]
-    
-    # LLM에게 라우팅 결정 요청
-    routing_prompt = f"""
-    사용자 질문: {question}
-    
-    다음 중 가장 적절한 도구를 선택하세요:
-    - search_paper: 논문 DB 검색
-    - web_search: 웹 검색
-    - glossary: 용어 정의
-    - summarize: 논문 요약
-    - save_file: 파일 저장
-    - general: 일반 답변
-    
-    도구:
-    """
-    
-    tool_choice = llm.invoke(routing_prompt).strip()
-    return tool_choice
-```
+**매핑 딕셔너리:**
+
+| 키 (도구 선택) | 값 (노드명) |
+|---------------|-------------|
+| "search_paper" | "search_paper" |
+| "web_search" | "web_search" |
+| "glossary" | "glossary" |
+| "summarize" | "summarize" |
+| "save_file" | "save_file" |
+| "general" | "general" |
+
+**종료 엣지:**
+- 모든 도구 노드에서 END로 연결
+- for 루프로 6개 노드 일괄 처리
+
+**구현 파일:** `src/agent/graph.py`
 
 ---
 
-## 7. 참고 자료
+## 7. 라우팅 로직
+
+### 7.1 라우팅 함수 구조
+
+**함수명:** `route_to_tool(state: AgentState) -> str`
+
+**입력:**
+- state: AgentState - 현재 Agent 상태
+
+**반환:**
+- str - 선택된 도구 이름
+
+**라우팅 프로세스:**
+
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | state에서 question 추출 | 사용자 질문 가져오기 |
+| 2 | 라우팅 프롬프트 구성 | 질문 + 도구 목록 포함 |
+| 3 | LLM 호출 | llm.invoke(routing_prompt) |
+| 4 | 도구 이름 추출 | 응답에서 공백 제거 (strip()) |
+| 5 | 도구 이름 반환 | 선택된 도구 이름 문자열 반환 |
+
+### 7.2 라우팅 프롬프트 구조
+
+**프롬프트 구성:**
+
+| 섹션 | 내용 |
+|------|------|
+| 질문 | 사용자 질문: {question} |
+| 도구 목록 | 6가지 도구와 설명 나열 |
+| 요청 | 가장 적절한 도구를 선택하세요 |
+
+**도구 선택지:**
+
+| 도구명 | 설명 |
+|--------|------|
+| search_paper | 논문 DB 검색 |
+| web_search | 웹 검색 |
+| glossary | 용어 정의 |
+| summarize | 논문 요약 |
+| save_file | 파일 저장 |
+| general | 일반 답변 |
+
+**LLM 응답 형식:**
+- 도구 이름만 반환 (예: "search_paper")
+- strip()으로 공백 제거하여 정확한 매칭 보장
+
+**구현 파일:** `src/agent/router.py`
+
+---
+
+## 8. 참고 자료
 
 - LangGraph 공식 문서: https://langchain-ai.github.io/langgraph/
 - Langchain Agent: https://python.langchain.com/docs/tutorials/agents/
