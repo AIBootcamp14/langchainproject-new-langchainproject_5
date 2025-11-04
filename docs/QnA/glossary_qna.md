@@ -59,6 +59,57 @@
 
 ---
 
+### Q1-4. 용어 자동 추출도 도구인가요?
+
+**A:** **아니오, 용어 자동 추출은 도구가 아닙니다.**
+
+**도구 vs 유틸리티:**
+
+| 구분 | 도구 (Tools) | 용어 자동 추출 |
+|------|------------|---------------|
+| **위치** | `src/tools/` | `src/utils/glossary_extractor.py` |
+| **역할** | Agent가 선택하여 실행 | 도구 실행 후 자동 실행 |
+| **실행 주체** | Agent (Router 선택) | Streamlit UI |
+| **사용자 인지** | 사용자가 의도적으로 요청 | 백그라운드에서 자동 실행 |
+| **LangGraph 통합** | ✅ Agent 노드로 등록됨 | ❌ 통합 안 됨 |
+
+**7가지 도구:**
+1. `general_answer` - 일반 답변
+2. `search_paper` - RAG 검색
+3. `web_search` - 웹 검색
+4. `glossary` - 용어집 검색 ← **이것이 도구**
+5. `summarize` - 논문 요약
+6. `text2sql` - Text-to-SQL
+7. `save_file` - 파일 저장
+
+**용어 자동 추출은:**
+- **유틸리티 함수**: 도구가 아닌 보조 기능
+- **자동 실행**: 사용자가 요청하지 않아도 백그라운드에서 실행
+- **UI 레벨 처리**: `ui/components/chat_interface.py`에서 호출
+
+**예시:**
+```
+사용자: "GAN 설명해줘"
+    ↓
+Agent: general_answer 도구 선택 (7가지 도구 중 선택)
+    ↓
+general_answer 도구 실행: "GAN은 Generator와 Discriminator..."
+    ↓
+UI: 답변 표시
+    ↓
+UI: 용어 자동 추출 실행 (자동, 백그라운드) ← 도구가 아님
+    ↓
+glossary_extractor.py: "GAN", "Generator", "Discriminator" 추출
+    ↓
+DB 저장
+```
+
+**핵심:**
+- **glossary 도구**: 사용자가 "Attention이 뭐야?"라고 질문 → Agent가 선택
+- **용어 자동 추출**: 어떤 도구든 답변 생성 후 → UI가 자동 실행
+
+---
+
 ## 2. 용어 추출 및 저장
 
 ### Q2-1. 어떤 도구에서 용어가 추출되나요?
@@ -95,15 +146,15 @@ SELECT COUNT(*) AS paper_count FROM papers WHERE EXTRACT(YEAR FROM publish_date)
 paper_count
 ---
 42
-```
+---
 
 → AI/ML 용어가 하나도 없음 (SQL 구문과 숫자만)
 
 **save_file 답변 예시:**
-```
+---
 파일 저장이 완료되었습니다.
 경로: experiments/20251104/20251104_103015_session_001/outputs/response.txt
-```
+---
 
 → 역시 AI/ML 용어 없음
 
