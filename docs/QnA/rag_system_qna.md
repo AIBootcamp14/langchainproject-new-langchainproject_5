@@ -84,8 +84,9 @@ LIMIT 5;
 - 벡터로 변환하면 수학적 거리 계산 가능
 
 **본 프로젝트 설정:**
-- **모델**: OpenAI `text-embedding-3-small`
-- **차원**: 1536차원
+- **모델**: `configs/model_config.yaml`의 `embeddings.model` 설정을 최우선시 (기본값: `text-embedding-3-small`)
+- **차원**: 1536차원 (`embeddings.dimension` 설정)
+- **재시도**: `embeddings.max_retries` 설정값 사용 (기본값: 3번)
 - **비용**: 매우 저렴 ($0.02 / 1M 토큰)
 
 **예시:**
@@ -1035,7 +1036,8 @@ context = "\n\n".join([
 ])
 
 # 3. LLM에 전달
-llm_client = LLMClient(provider="openai", model="gpt-4")
+# configs/model_config.yaml에서 사용자가 정의한 모델을 최우선시
+llm_client = LLMClient(provider="openai", model="gpt-5")  # 기본값: gpt-5
 messages = [
     SystemMessage(content="논문 정보를 기반으로 답변하세요."),
     HumanMessage(content=f"컨텍스트:\n{context}\n\n질문: Transformer 설명해줘")
