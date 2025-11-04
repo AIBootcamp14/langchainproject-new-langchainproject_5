@@ -302,13 +302,21 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             if tool_choice in GLOSSARY_ENABLED_TOOLS:
                 try:
                     if exp_manager:
+                        # session_state에서 용어 추출 설정 읽기
+                        min_terms = st.session_state.get("glossary_min_terms", 1)
+                        max_terms = st.session_state.get("glossary_max_terms", 5)
+
                         saved_count = extract_and_save_terms(
                             answer=answer,
                             difficulty=difficulty,
+                            min_terms=min_terms,
+                            max_terms=max_terms,
                             logger=exp_manager.logger
                         )
                         if saved_count > 0:
-                            exp_manager.log_ui_interaction(f"용어집에 {saved_count}개 용어 자동 저장")
+                            exp_manager.log_ui_interaction(
+                                f"용어집에 {saved_count}개 용어 자동 저장 (설정: {min_terms}-{max_terms}개)"
+                            )
                             st.toast(f"✅ {saved_count}개 용어가 용어집에 추가되었습니다!", icon="📚")
                 except Exception as e:
                     if exp_manager:
