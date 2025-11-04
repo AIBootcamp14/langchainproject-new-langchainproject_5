@@ -135,183 +135,182 @@ graph LR
 
 ### 1. 메인 UI 구조 (ui/app.py)
 
-```python
-# ui/app.py
+**필수 임포트 모듈:**
 
-import streamlit as st
-from src.agent.graph import create_agent_graph
-from src.utils.experiment_manager import ExperimentManager
-from ui.components.sidebar import render_sidebar
-from ui.components.chat_interface import (
-    display_chat_history,
-    render_chat_input
-)
-from ui.components.chat_manager import initialize_chat_sessions
+| 모듈 | 용도 |
+|------|------|
+| `streamlit` | Streamlit 프레임워크 |
+| `create_agent_graph` | Agent 그래프 생성 |
+| `ExperimentManager` | 실험 관리 시스템 |
+| `render_sidebar` | 사이드바 렌더링 |
+| `display_chat_history`, `render_chat_input` | 채팅 인터페이스 |
+| `initialize_chat_sessions` | 채팅 세션 초기화 |
 
-# 페이지 설정
-st.set_page_config(
-    page_title="논문 리뷰 챗봇",
-    page_icon="📚",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+**페이지 설정 (`st.set_page_config`):**
 
-# Agent 및 ExperimentManager 초기화
-@st.cache_resource
-def initialize_agent():
-    exp_manager = ExperimentManager()
-    agent_executor = create_agent_graph(exp_manager=exp_manager)
-    return agent_executor, exp_manager
+| 설정 | 값 | 설명 |
+|------|-----|------|
+| `page_title` | "논문 리뷰 챗봇" | 브라우저 탭 제목 |
+| `page_icon` | "📚" | 파비콘 |
+| `layout` | "wide" | 와이드 레이아웃 |
+| `initial_sidebar_state` | "expanded" | 사이드바 기본 확장 |
 
-agent_executor, exp_manager = initialize_agent()
+**Agent 초기화 (`initialize_agent`):**
 
-# 메인 헤더
-st.title("📚 논문 리뷰 챗봇 (AI Agent + RAG)")
-st.caption("🤖 LangGraph + RAG 기반 논문 검색 및 질문 답변")
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | `@st.cache_resource` 데코레이터 적용 | 리소스 캐싱 |
+| 2 | `ExperimentManager()` 생성 | 실험 관리자 인스턴스 |
+| 3 | `create_agent_graph(exp_manager)` 호출 | Agent 실행기 생성 |
+| 4 | `(agent_executor, exp_manager)` 반환 | 두 인스턴스 반환 |
 
-# 채팅 세션 초기화
-initialize_chat_sessions()
+**메인 실행 흐름:**
 
-# 사이드바 렌더링
-difficulty = render_sidebar(exp_manager=exp_manager)
-
-# 채팅 인터페이스
-display_chat_history()
-render_chat_input(agent_executor, difficulty, exp_manager)
-```
+| 순서 | 작업 | 함수/메서드 |
+|------|------|-------------|
+| 1 | Agent 및 관리자 초기화 | `initialize_agent()` |
+| 2 | 메인 헤더 표시 | `st.title()`, `st.caption()` |
+| 3 | 채팅 세션 초기화 | `initialize_chat_sessions()` |
+| 4 | 사이드바 렌더링 | `render_sidebar(exp_manager)` |
+| 5 | 채팅 히스토리 표시 | `display_chat_history()` |
+| 6 | 채팅 입력 렌더링 | `render_chat_input(agent_executor, difficulty, exp_manager)` |
 
 ### 2. 다중 채팅 세션 관리 (ui/components/chat_manager.py)
 
-```python
-# ui/components/chat_manager.py
+**필수 임포트:**
 
-import streamlit as st
-import uuid
-from datetime import datetime
+| 모듈 | 용도 |
+|------|------|
+| `streamlit` | 세션 상태 관리 |
+| `uuid` | 고유 ID 생성 |
+| `datetime` | 타임스탬프 생성 |
 
-def initialize_chat_sessions():
-    """채팅 세션 상태 초기화"""
-    if "chats" not in st.session_state:
-        st.session_state.chats = {}
-    if "current_chat_id" not in st.session_state:
-        st.session_state.current_chat_id = None
+**함수 1: `initialize_chat_sessions()`**
 
-def create_new_chat(difficulty: str) -> str:
-    """새 채팅 생성"""
-    chat_id = str(uuid.uuid4())[:8]
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | `chats` 키 확인 | `st.session_state`에 없으면 빈 딕셔너리 생성 |
+| 2 | `current_chat_id` 키 확인 | 없으면 `None`으로 초기화 |
 
-    st.session_state.chats[chat_id] = {
-        "messages": [],
-        "difficulty": difficulty,
-        "created_at": timestamp,
-        "title": "새 채팅"
-    }
+**함수 2: `create_new_chat(difficulty: str) -> str`**
 
-    st.session_state.current_chat_id = chat_id
-    return chat_id
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `difficulty` | `str` | 난이도 ("easy" 또는 "hard") |
 
-def switch_chat(chat_id: str):
-    """채팅 전환"""
-    if chat_id in st.session_state.chats:
-        st.session_state.current_chat_id = chat_id
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | UUID 생성 | `uuid.uuid4()[:8]`로 8자 ID 생성 |
+| 2 | 타임스탬프 생성 | `"%Y-%m-%d %H:%M:%S"` 형식 |
+| 3 | 채팅 데이터 생성 | `messages=[]`, `difficulty`, `created_at`, `title="새 채팅"` |
+| 4 | 세션 상태에 저장 | `st.session_state.chats[chat_id]`에 딕셔너리 저장 |
+| 5 | 현재 채팅 ID 설정 | `current_chat_id = chat_id` |
+| 6 | ID 반환 | 생성된 `chat_id` 반환 |
 
-def delete_chat(chat_id: str):
-    """채팅 삭제"""
-    if chat_id in st.session_state.chats:
-        del st.session_state.chats[chat_id]
-```
+**함수 3: `switch_chat(chat_id: str)`**
+
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | ID 존재 확인 | `chat_id in st.session_state.chats` 검사 |
+| 2 | 현재 채팅 전환 | `current_chat_id = chat_id` |
+
+**함수 4: `delete_chat(chat_id: str)`**
+
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | ID 존재 확인 | `chat_id in st.session_state.chats` 검사 |
+| 2 | 채팅 삭제 | `del st.session_state.chats[chat_id]` |
 
 ### 3. LocalStorage 영속성 (ui/components/storage.py)
 
-```python
-# ui/components/storage.py
+**필수 임포트:**
 
-import streamlit as st
-import streamlit.components.v1 as components
-import json
+| 모듈 | 용도 |
+|------|------|
+| `streamlit` | 세션 상태 접근 |
+| `streamlit.components.v1` | HTML/JS 컴포넌트 렌더링 |
+| `json` | JSON 직렬화 |
 
-def save_chats_to_local_storage():
-    """채팅 데이터를 LocalStorage에 저장"""
-    chats_json = json.dumps(st.session_state.chats)
+**함수 1: `save_chats_to_local_storage()`**
 
-    save_script = f"""
-    <script>
-    localStorage.setItem('langchain_chats', {json.dumps(chats_json)});
-    localStorage.setItem('langchain_current_chat_id', '{st.session_state.current_chat_id}');
-    </script>
-    """
-    components.html(save_script, height=0)
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | JSON 직렬화 | `json.dumps(st.session_state.chats)` |
+| 2 | JavaScript 스크립트 생성 | `localStorage.setItem('langchain_chats', ...)` |
+| 3 | 현재 채팅 ID 저장 | `localStorage.setItem('langchain_current_chat_id', ...)` |
+| 4 | HTML 컴포넌트 렌더링 | `components.html(save_script, height=0)` |
 
-def clear_local_storage():
-    """LocalStorage 초기화"""
-    clear_script = """
-    <script>
-    localStorage.removeItem('langchain_chats');
-    localStorage.removeItem('langchain_current_chat_id');
-    </script>
-    """
-    components.html(clear_script, height=0)
-    st.success("브라우저 저장소가 초기화되었습니다.")
-```
+**저장 데이터:**
+
+| 키 | 값 | 설명 |
+|-----|-----|------|
+| `langchain_chats` | JSON 문자열 | 모든 채팅 세션 데이터 |
+| `langchain_current_chat_id` | 문자열 | 현재 활성 채팅 ID |
+
+**함수 2: `clear_local_storage()`**
+
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | JavaScript 스크립트 생성 | `localStorage.removeItem(...)` 호출 |
+| 2 | 채팅 데이터 삭제 | `langchain_chats` 키 제거 |
+| 3 | 현재 ID 삭제 | `langchain_current_chat_id` 키 제거 |
+| 4 | HTML 컴포넌트 렌더링 | `components.html(clear_script, height=0)` |
+| 5 | 성공 메시지 표시 | `st.success("브라우저 저장소가 초기화되었습니다.")` |
 
 ### 4. 다크 모드 토글 (ui/components/sidebar.py)
 
-```python
-# ui/components/sidebar.py 일부
+**구현 위치:**
 
-with st.sidebar:
-    st.markdown("### ⚙️ 설정")
+사이드바 내부 (`with st.sidebar:` 블록)
 
-    # 다크 모드 토글
-    dark_mode = st.toggle("🌙 다크 모드", value=st.session_state.get("dark_mode", False))
+**처리 흐름:**
 
-    # 다크 모드 CSS 적용
-    if dark_mode:
-        st.markdown("""
-        <style>
-        .stApp {
-            background-color: #0E1117;
-            color: #FAFAFA;
-        }
-        .stSidebar {
-            background-color: #262730;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-```
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | 설정 헤더 표시 | `st.markdown("### ⚙️ 설정")` |
+| 2 | 토글 위젯 생성 | `st.toggle("🌙 다크 모드", value=...)` |
+| 3 | 세션 상태에서 값 가져오기 | `st.session_state.get("dark_mode", False)` |
+| 4 | 다크 모드 여부 확인 | `if dark_mode:` |
+| 5 | CSS 스타일 적용 | `st.markdown(..., unsafe_allow_html=True)` |
+
+**다크 모드 CSS 설정:**
+
+| 선택자 | 속성 | 값 | 설명 |
+|--------|------|-----|------|
+| `.stApp` | `background-color` | `#0E1117` | 메인 배경색 (어두운 회색) |
+| `.stApp` | `color` | `#FAFAFA` | 메인 텍스트 색상 (밝은 회색) |
+| `.stSidebar` | `background-color` | `#262730` | 사이드바 배경색 (진한 회색) |
 
 ### 5. 답변 복사 버튼 (ui/components/chat_interface.py)
 
-```python
-# JavaScript 기반 클립보드 복사
+**구현 방식:** JavaScript 기반 클립보드 복사
 
-import json
-safe_answer = json.dumps(answer)
-unique_id = abs(hash(answer))
+**처리 흐름:**
 
-copy_button_html = f"""
-<button id="copy_btn_{unique_id}" onclick="copyToClipboard_{unique_id}()" style="
-    background-color: #FF4B4B;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-">📋 복사</button>
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | 답변 텍스트 JSON 직렬화 | `json.dumps(answer)` (안전한 문자열 변환) |
+| 2 | 고유 ID 생성 | `abs(hash(answer))` (충돌 방지) |
+| 3 | HTML 버튼 생성 | `<button id="copy_btn_{unique_id}">` |
+| 4 | JavaScript 함수 정의 | `copyToClipboard_{unique_id}()` |
+| 5 | Clipboard API 호출 | `navigator.clipboard.writeText(text)` |
+| 6 | 성공 시 버튼 텍스트 변경 | `'✅ 복사됨!'`으로 변경 |
+| 7 | HTML 렌더링 | `st.markdown(..., unsafe_allow_html=True)` |
 
-<script>
-function copyToClipboard_{unique_id}() {{
-    const text = {safe_answer};
-    navigator.clipboard.writeText(text).then(function() {{
-        document.getElementById('copy_btn_{unique_id}').textContent = '✅ 복사됨!';
-    }});
-}}
-</script>
-"""
+**버튼 스타일 속성:**
 
-st.markdown(copy_button_html, unsafe_allow_html=True)
-```
+| 속성 | 값 | 설명 |
+|------|-----|------|
+| `background-color` | `#FF4B4B` | Streamlit 빨간색 |
+| `color` | `white` | 흰색 텍스트 |
+| `border` | `none` | 테두리 없음 |
+| `padding` | `0.5rem 1rem` | 내부 여백 |
+| `border-radius` | `0.25rem` | 둥근 모서리 |
+| `cursor` | `pointer` | 포인터 커서 |
+
+**고유 ID 사용 이유:**
+- 여러 답변 동시 표시 시 JavaScript 함수 충돌 방지
+- 각 버튼마다 독립적인 복사 기능 제공
 
 ---
 
@@ -338,34 +337,34 @@ st.markdown(copy_button_html, unsafe_allow_html=True)
 - 지난 7일: 최근 7일 이내
 - 그 이전: 7일 이전 채팅
 
-**구현 로직:**
-```python
-def group_chats_by_date(chat_list):
-    now = datetime.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    yesterday_start = today_start - timedelta(days=1)
-    week_ago = today_start - timedelta(days=7)
+**함수: `group_chats_by_date(chat_list)`**
 
-    groups = {
-        "오늘": [],
-        "어제": [],
-        "지난 7일": [],
-        "그 이전": []
-    }
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `chat_list` | `list` | 채팅 리스트 |
 
-    for chat in chat_list:
-        created_at = datetime.strptime(chat["created_at"], "%Y-%m-%d %H:%M:%S")
-        if created_at >= today_start:
-            groups["오늘"].append(chat)
-        elif created_at >= yesterday_start:
-            groups["어제"].append(chat)
-        elif created_at >= week_ago:
-            groups["지난 7일"].append(chat)
-        else:
-            groups["그 이전"].append(chat)
+**처리 흐름:**
 
-    return {k: v for k, v in groups.items() if v}
-```
+| 단계 | 작업 | 설명 |
+|------|------|------|
+| 1 | 현재 시간 가져오기 | `datetime.now()` |
+| 2 | 오늘 시작 시간 계산 | `now.replace(hour=0, minute=0, second=0, microsecond=0)` |
+| 3 | 어제 시작 시간 계산 | `today_start - timedelta(days=1)` |
+| 4 | 일주일 전 시간 계산 | `today_start - timedelta(days=7)` |
+| 5 | 그룹 딕셔너리 초기화 | 4개 키: "오늘", "어제", "지난 7일", "그 이전" |
+| 6 | 채팅 리스트 순회 | `for chat in chat_list:` |
+| 7 | 생성 시간 파싱 | `datetime.strptime(chat["created_at"], "%Y-%m-%d %H:%M:%S")` |
+| 8 | 시간대별 분류 | if/elif 조건문으로 그룹에 추가 |
+| 9 | 빈 그룹 제거 후 반환 | `{k: v for k, v in groups.items() if v}` |
+
+**분류 조건:**
+
+| 그룹 | 조건 | 설명 |
+|------|------|------|
+| "오늘" | `created_at >= today_start` | 오늘 00:00 이후 |
+| "어제" | `created_at >= yesterday_start` | 어제 00:00 ~ 오늘 00:00 |
+| "지난 7일" | `created_at >= week_ago` | 일주일 전 ~ 어제 |
+| "그 이전" | `else` | 일주일 이전 |
 
 ### 3. LocalStorage 영속성
 
@@ -387,9 +386,13 @@ def group_chats_by_date(chat_list):
 - 배경색, 텍스트 색상, 사이드바 색상 변경
 
 **토글 상태 저장:**
-```python
-st.session_state.dark_mode = True/False
-```
+
+세션 상태 키: `st.session_state.dark_mode`
+
+| 값 | 의미 |
+|----|------|
+| `True` | 다크 모드 활성화 |
+| `False` | 라이트 모드 (기본값) |
 
 ### 5. StreamlitCallbackHandler 연동
 
@@ -398,17 +401,27 @@ st.session_state.dark_mode = True/False
 - Expander로 접힌 상태 표시
 - 완료된 단계 자동 접기
 
-**사용 예:**
-```python
-process_expander = st.expander("🔍 처리 과정 보기", expanded=False)
-st_callback = StreamlitCallbackHandler(
-    parent_container=process_expander,
-    expand_new_thoughts=False,
-    collapse_completed_thoughts=True
-)
+**사용 패턴:**
 
-response = agent_executor.invoke({...}, config={"callbacks": [st_callback]})
-```
+| 단계 | 작업 | 코드 |
+|------|------|------|
+| 1 | Expander 컨테이너 생성 | `st.expander("🔍 처리 과정 보기", expanded=False)` |
+| 2 | CallbackHandler 초기화 | `StreamlitCallbackHandler(...)` |
+| 3 | Agent 실행 | `agent_executor.invoke({...}, config={"callbacks": [...]})` |
+
+**StreamlitCallbackHandler 파라미터:**
+
+| 파라미터 | 값 | 설명 |
+|----------|-----|------|
+| `parent_container` | `process_expander` | 표시할 Streamlit 컨테이너 |
+| `expand_new_thoughts` | `False` | 새 단계 자동 확장 여부 |
+| `collapse_completed_thoughts` | `True` | 완료된 단계 자동 접기 |
+
+**Agent 호출 시 config 설정:**
+
+| 키 | 값 | 설명 |
+|-----|-----|------|
+| `callbacks` | `[st_callback]` | CallbackHandler 리스트 |
 
 ---
 
@@ -429,22 +442,22 @@ experiments/20251103/20251103_103015_session_001/
 ```
 
 **로깅 함수:**
-```python
-# UI 이벤트 로그
-exp_manager.log_ui_interaction("사용자 질문: {prompt}")
-exp_manager.log_ui_interaction("새 채팅 생성: 난이도=easy")
-exp_manager.log_ui_interaction("다크 모드 활성화")
 
-# 메타데이터 업데이트
-exp_manager.update_metadata(
-    user_query=prompt,
-    tool_used=tool_choice,
-    success=True
-)
+| 함수 | 용도 | 사용 예 |
+|------|------|---------|
+| `log_ui_interaction()` | UI 이벤트 로그 | `"사용자 질문: {prompt}"` |
+| `log_ui_interaction()` | 채팅 생성 로그 | `"새 채팅 생성: 난이도=easy"` |
+| `log_ui_interaction()` | 설정 변경 로그 | `"다크 모드 활성화"` |
+| `update_metadata()` | 메타데이터 업데이트 | `user_query=prompt, tool_used=tool_choice, success=True` |
+| `save_output()` | 답변 저장 | `save_output("response.txt", answer)` |
 
-# 답변 저장
-exp_manager.save_output("response.txt", answer)
-```
+**메타데이터 업데이트 파라미터:**
+
+| 파라미터 | 타입 | 설명 |
+|----------|------|------|
+| `user_query` | `str` | 사용자 질문 |
+| `tool_used` | `str` | 사용된 도구 이름 |
+| `success` | `bool` | 성공 여부 |
 
 ---
 
@@ -452,37 +465,41 @@ exp_manager.save_output("response.txt", answer)
 
 ### 1. 채팅 세션 관리 테스트
 
-```python
-# tests/test_chat_manager.py
+**테스트 파일:** `tests/test_chat_manager.py`
 
-import pytest
-from ui.components.chat_manager import (
-    create_new_chat,
-    switch_chat,
-    delete_chat,
-    get_current_messages
-)
+**임포트 모듈:**
 
-def test_create_new_chat():
-    """새 채팅 생성 테스트"""
-    chat_id = create_new_chat("easy")
-    assert chat_id in st.session_state.chats
-    assert st.session_state.chats[chat_id]["difficulty"] == "easy"
+| 모듈 | 용도 |
+|------|------|
+| `pytest` | 테스트 프레임워크 |
+| `create_new_chat` | 새 채팅 생성 함수 |
+| `switch_chat` | 채팅 전환 함수 |
+| `delete_chat` | 채팅 삭제 함수 |
+| `get_current_messages` | 현재 메시지 조회 함수 |
 
-def test_switch_chat():
-    """채팅 전환 테스트"""
-    chat_id_1 = create_new_chat("easy")
-    chat_id_2 = create_new_chat("hard")
+**테스트 함수 1: `test_create_new_chat()`**
 
-    switch_chat(chat_id_1)
-    assert st.session_state.current_chat_id == chat_id_1
+| 단계 | 작업 | 검증 |
+|------|------|------|
+| 1 | `create_new_chat("easy")` 호출 | `chat_id` 반환 확인 |
+| 2 | 채팅 존재 확인 | `chat_id in st.session_state.chats` |
+| 3 | 난이도 확인 | `difficulty == "easy"` |
 
-def test_delete_chat():
-    """채팅 삭제 테스트"""
-    chat_id = create_new_chat("easy")
-    delete_chat(chat_id)
-    assert chat_id not in st.session_state.chats
-```
+**테스트 함수 2: `test_switch_chat()`**
+
+| 단계 | 작업 | 검증 |
+|------|------|------|
+| 1 | 두 개의 채팅 생성 | `chat_id_1`, `chat_id_2` |
+| 2 | 첫 번째 채팅으로 전환 | `switch_chat(chat_id_1)` |
+| 3 | 현재 채팅 ID 확인 | `current_chat_id == chat_id_1` |
+
+**테스트 함수 3: `test_delete_chat()`**
+
+| 단계 | 작업 | 검증 |
+|------|------|------|
+| 1 | 새 채팅 생성 | `chat_id` 반환 |
+| 2 | 채팅 삭제 | `delete_chat(chat_id)` |
+| 3 | 삭제 확인 | `chat_id not in st.session_state.chats` |
 
 ---
 
