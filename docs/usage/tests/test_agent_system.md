@@ -60,8 +60,8 @@ SOLAR_API_KEY=your_SOLAR_API_KEY
 - **get_llm_for_task() 함수**:
   - 작업 유형별 LLM 선택 검증
   - `routing`: Solar (빠른 응답)
-  - `generation`: GPT-4 (높은 정확도)
-  - `summarization`: GPT-4 (품질 중요)
+  - `generation`: GPT-5 (높은 정확도)
+  - `summarization`: GPT-5 (품질 중요)
 
 #### 예상 결과
 ```
