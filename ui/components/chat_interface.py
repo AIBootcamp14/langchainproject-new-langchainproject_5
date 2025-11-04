@@ -358,7 +358,9 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                     # 평가 결과 DB 저장
                     save_evaluation_results([evaluation_result])
 
+                    # 평가 결과 evaluation 폴더에 저장
                     if exp_manager:
+                        exp_manager.save_evaluation_result(evaluation_result)
                         exp_manager.log_ui_interaction(
                             f"평가 완료 - 총점: {evaluation_result.get('total_score', 0)}/40"
                         )
@@ -422,6 +424,14 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 tool_choice=tool_choice,
                 sources=sources if sources else None
             )
+
+            # -------------- 전체 대화 outputs 폴더에 저장 -------------- #
+            if exp_manager:
+                # 현재 채팅의 전체 메시지 가져오기
+                from ui.components.chat_manager import get_current_messages
+                messages = get_current_messages()
+                if messages:
+                    exp_manager.save_conversation(messages)
 
             return response
 
