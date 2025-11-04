@@ -217,7 +217,13 @@ summarize → save_file → END
 
 **[1단계] Router가 질문 분석**
 
-Router는 **LLM (GPT-4o 또는 Solar Pro)에게 질문을 주고 어떤 도구를 사용할지 물어봅니다**.
+Router는 **LLM (GPT-5 또는 Solar Pro2)에게 질문을 주고 어떤 도구를 사용할지 물어봅니다**.
+
+**사용 모델:**
+- 기본값: `configs/model_config.yaml`의 `llm.production.model` 설정을 최우선시
+- 난이도에 따른 모델 선택:
+  - Easy 모드: Solar Pro2 (`solar-pro2`)
+  - Hard 모드: GPT-5 (`gpt-5`)
 
 ```
 Router 프롬프트:
@@ -303,9 +309,10 @@ LLM 응답: "search_paper"
 ```
 
 **재시도 규칙:**
-- **최대 재시도**: 3번 (설정 파일: `configs/fallback_config.yaml`)
+- **최대 재시도**: `configs/model_config.yaml`의 `fallback_chain.max_retries` 설정값 사용 (기본값: 3번)
+- **Router 검증 재시도**: `configs/model_config.yaml`의 `fallback_chain.validation_retries` 설정값 사용 (기본값: 2번)
 - **실패한 도구 기록**: 같은 도구는 다시 시도 안 함
-- **최종 보장**: 3번 실패 시 무조건 "general" 도구 실행
+- **최종 보장**: `max_retries` 초과 시 무조건 "general" 도구 실행
 
 **예시: 2번 Fallback**
 ```
@@ -369,44 +376,46 @@ def classify_question(question, difficulty, logger):
     """
 ```
 
-**우선순위 체인 (`configs/fallback_config.yaml`):**
+**우선순위 체인 (`configs/model_config.yaml`의 `fallback_chain.priorities`):**
 
 ```yaml
-priority_chains:
-  greeting:
-    - general
+# configs/model_config.yaml
+fallback_chain:
+  priorities:
+    greeting:
+      - general
 
-  glossary:
-    - glossary        # 1순위: 용어집 DB 검색
-    - search_paper    # 2순위: 논문에서 검색
-    - general         # 3순위: LLM 지식
+    glossary:
+      - glossary        # 1순위: 용어집 DB 검색
+      - search_paper    # 2순위: 논문에서 검색
+      - general         # 3순위: LLM 지식
 
-  paper_search:
-    - search_paper    # 1순위: 논문 DB
-    - web_search      # 2순위: 웹 검색
-    - general         # 3순위: LLM 지식
+    paper_search:
+      - search_paper    # 1순위: 논문 DB
+      - web_search      # 2순위: 웹 검색
+      - general         # 3순위: LLM 지식
 
-  paper_summary:
-    - summarize       # 1순위: 요약 도구
-    - search_paper    # 2순위: 논문 검색
-    - general         # 3순위: LLM 지식
+    paper_summary:
+      - summarize       # 1순위: 요약 도구
+      - search_paper    # 2순위: 논문 검색
+      - general         # 3순위: LLM 지식
 
-  statistics:
-    - text2sql        # 1순위: SQL 쿼리
-    - search_paper    # 2순위: 논문 검색
-    - general         # 3순위: LLM 지식
+    statistics:
+      - text2sql        # 1순위: SQL 쿼리
+      - search_paper    # 2순위: 논문 검색
+      - general         # 3순위: LLM 지식
 
-  latest_info:
-    - web_search      # 1순위: 웹 검색
-    - search_paper    # 2순위: 논문 DB
-    - general         # 3순위: LLM 지식
+    latest_info:
+      - web_search      # 1순위: 웹 검색
+      - search_paper    # 2순위: 논문 DB
+      - general         # 3순위: LLM 지식
 
-  save_request:
-    - save_file       # 1순위: 파일 저장
-    - general         # 2순위: LLM 답변
+    save_request:
+      - save_file       # 1순위: 파일 저장
+      - general         # 2순위: LLM 답변
 
-  general:
-    - general         # 일반 질문은 바로 general
+    general:
+      - general         # 일반 질문은 바로 general
 ```
 
 **동작 원리:**
@@ -449,15 +458,20 @@ search_paper 실행 → 성공
 
 ### Q3-3. Fallback은 몇 번까지 실행되나요?
 
-**A:** **최대 3번까지 재시도**합니다 (설정 변경 가능).
+**A:** **사용자가 `configs/model_config.yaml`에서 설정한 재시도 횟수만큼 실행**됩니다.
 
 **재시도 카운트 규칙:**
 
 ```yaml
-# configs/fallback_config.yaml
-max_retries: 3          # 최대 재시도 횟수
-validation_retries: 2   # Router 검증 재시도 횟수
+# configs/model_config.yaml
+fallback_chain:
+  max_retries: 3          # 도구 실행 실패 시 최대 재시도 횟수 (기본값: 3)
+  validation_retries: 2   # Router 검증 실패 시 최대 재시도 횟수 (기본값: 2)
 ```
+
+**설명:**
+- `max_retries`: 도구 실행이 실패했을 때 다른 도구로 재시도하는 최대 횟수
+- `validation_retries`: Router가 선택한 도구를 검증 LLM이 부적절하다고 판단했을 때 재선택하는 최대 횟수
 
 **예시: 3번 Fallback 후 최종 보장**
 
@@ -582,7 +596,7 @@ return state
 ❌ 오류 발생: PostgreSQL 연결 실패
 ```
 
-**[케이스 2] Fallback Chain 활성화 (`configs/fallback_config.yaml` enabled: true)**
+**[케이스 2] Fallback Chain 활성화 (`configs/model_config.yaml`의 `fallback_chain.enabled: true`)**
 
 에러 발생 시 자동으로 다음 우선순위 도구로 전환합니다.
 
