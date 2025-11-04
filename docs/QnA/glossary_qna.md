@@ -300,16 +300,211 @@ RETURNING term_id;
 
 ### Q3-2. 용어집에 없는 용어를 질문하면?
 
-**A:** **Fallback 전략**이 적용됩니다.
+**A:** **두 가지 시나리오**로 처리됩니다.
 
-**현재 구현:**
-- glossary 도구가 테이블 검색
-- 결과 없으면 "관련 용어를 찾을 수 없습니다." 반환
-- LLM이 이 결과를 바탕으로 답변 생성 (자체 지식 활용)
+---
 
-**향후 개선 가능:**
-- RAG 검색으로 Fallback
-- 웹 검색으로 Fallback
+#### 🎯 시나리오 1: Router가 glossary 도구를 선택한 경우
+
+**실행 흐름:**
+```
+사용자 질문: "ml이 뭐야?"
+    ↓
+Step 1. Router 노드 (src/agent/nodes.py:27-71)
+    - LLM이 질문 분석하여 도구 선택
+    - 선택: "glossary" (용어 정의 질문으로 판단)
+    ↓
+Step 2. Glossary 도구 실행 (src/tools/glossary.py:428-510)
+    - VectorDB (glossary_embeddings) + SQL (glossary 테이블) 하이브리드 검색
+    - search_glossary() 함수 호출 (mode="hybrid", top_k=3)
+    ↓
+Step 3. 검색 결과 처리
+    [Case A] 검색 결과 있음:
+        - 용어 정의, 난이도별 설명, 관련 용어 반환
+        - LLM이 이를 바탕으로 사용자 친화적 답변 생성
+        - END
+
+    [Case B] 검색 결과 없음: ⚠️ 현재 시스템의 Fallback
+        - _format_glossary_md() 함수가 "관련 용어를 찾을 수 없습니다." 반환
+        - 이 메시지를 glossary 도구의 LLM에게 전달
+        - LLM이 자체 지식(GPT-5 또는 Solar 학습 데이터)으로 답변 생성
+        - 예: "ML은 Machine Learning의 약자로..."
+        - END
+```
+
+**코드 위치:**
+```python
+# src/tools/glossary.py:266-278
+def _format_glossary_md(items: List[Dict[str, Any]]) -> str:
+    if not items:
+        return "관련 용어를 찾을 수 없습니다."  # ← Fallback 메시지
+    # ...
+
+# src/tools/glossary.py:475-481
+user_content = f"""[용어집 검색 결과]
+{raw_results}  # ← "관련 용어를 찾을 수 없습니다."가 여기 전달됨
+
+[질문]
+{question}
+
+위 검색 결과를 바탕으로 질문에 답변해주세요."""
+# LLM이 이 메시지를 보고 자체 지식으로 답변 생성
+
+# src/agent/graph.py:112-113
+for node in ["glossary", ...]:
+    workflow.add_edge(node, END)  # ← glossary 실행 후 바로 종료
+```
+
+**중요:**
+- ❌ **다른 도구(search_paper, web_search, general)로 자동 전환되지 않음**
+- ❌ **재라우팅 메커니즘 없음** (LangGraph 구조상 한 번 선택된 도구만 실행)
+- ✅ **glossary 도구 내부에서만 LLM 자체 지식으로 Fallback**
+
+---
+
+#### 🎯 시나리오 2: Router가 general 도구를 선택한 경우
+
+**실행 흐름:**
+```
+사용자 질문: "ml이 뭐야?"
+    ↓
+Step 1. Router 노드
+    - LLM이 질문 분석
+    - 선택: "general" (간단한 질문으로 판단)
+    ↓
+Step 2. General 도구 실행 (src/tools/general_answer.py)
+    - LLM에게 바로 질문 전달
+    - LLM 자체 지식으로 답변 생성
+    - END
+```
+
+---
+
+#### ⚠️ 현재 시스템의 한계
+
+**1. 도구 간 자동 전환 없음**
+```
+문제 시나리오:
+사용자: "최신 Diffusion Model 논문 찾아줘"
+    ↓
+Router: search_paper 선택
+    ↓
+search_paper: DB에 관련 논문 없음 → "관련 논문을 찾을 수 없습니다."
+    ↓
+END (종료) ❌
+    ↓
+❌ web_search로 자동 전환 안 됨
+❌ general로 Fallback 안 됨
+```
+
+**2. 도구 선택 실패 시 재시도 없음**
+```
+문제 시나리오:
+사용자: "Attention 메커니즘 설명해줘"
+    ↓
+Router: 실수로 save_file 선택 (잘못된 판단)
+    ↓
+save_file: 파일 경로 없음 → 오류
+    ↓
+END (종료) ❌
+    ↓
+❌ 도구 재선택 안 됨
+❌ glossary나 general로 자동 전환 안 됨
+```
+
+**3. Fallback Chain 없음**
+```
+이상적인 Fallback Chain:
+glossary 검색 → 실패
+    ↓
+search_paper 검색 → 실패
+    ↓
+web_search 검색 → 실패
+    ↓
+general 답변 (최종 Fallback)
+
+현재 구현:
+선택된 도구 1개만 실행 → END
+```
+
+---
+
+#### 💡 향후 개선 방향
+
+**제안 1: 도구 우선순위 기반 자동전환**
+```yaml
+# configs/model_config.yaml (신규)
+fallback_chain:
+  enabled: true
+  max_retries: 3  # 도구 실행 실패 시 최대 재시도 횟수
+
+  # 질문 유형별 도구 우선순위
+  term_definition:
+    priority: [glossary, general]
+
+  paper_search:
+    priority: [search_paper, web_search, general]
+
+  latest_research:
+    priority: [web_search, search_paper, general]
+```
+
+**제안 2: 조건부 재라우팅 노드 추가**
+```python
+# src/agent/graph.py (개선안)
+def should_fallback(state: AgentState):
+    """도구 실행 결과가 실패인지 확인"""
+    result = state.get("final_answer", "")
+
+    # 실패 패턴 감지
+    fail_patterns = [
+        "관련 용어를 찾을 수 없습니다",
+        "관련 논문을 찾을 수 없습니다",
+        "검색 결과가 없습니다"
+    ]
+
+    if any(pattern in result for pattern in fail_patterns):
+        return "retry"  # 재라우팅
+    return "end"
+
+# Fallback 라우팅 노드 추가
+workflow.add_conditional_edges(
+    "glossary",
+    should_fallback,
+    {
+        "retry": "fallback_router",  # 다음 우선순위 도구 선택
+        "end": END
+    }
+)
+```
+
+**제안 3: Router 선택 검증 노드**
+```python
+def validate_tool_choice(state: AgentState):
+    """Router가 올바른 도구를 선택했는지 검증"""
+    question = state["question"]
+    tool_choice = state["tool_choice"]
+
+    # LLM에게 재확인 (configs에서 설정한 횟수만큼)
+    validation_prompt = f"""
+    질문: {question}
+    선택된 도구: {tool_choice}
+
+    이 도구 선택이 적절한가요? (yes/no)
+    """
+
+    is_valid = llm.invoke(validation_prompt)
+
+    if is_valid == "no":
+        return "re_route"  # 재라우팅
+    return "proceed"  # 선택된 도구 실행
+```
+
+---
+
+#### 📚 관련 이슈
+
+- [01-3_도구_자동전환_및_Fallback_메커니즘.md](../issues/01-3_도구_자동전환_및_Fallback_메커니즘.md) - 도구 간 자동전환 기능 구현 제안
 
 ---
 
