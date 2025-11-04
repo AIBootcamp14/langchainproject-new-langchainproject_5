@@ -62,3 +62,22 @@ CREATE TABLE IF NOT EXISTS query_logs (
 CREATE INDEX IF NOT EXISTS idx_query_logs_created_at ON query_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_query_logs_tool_used ON query_logs(tool_used);
 CREATE INDEX IF NOT EXISTS idx_query_logs_success ON query_logs(success);
+
+
+-- ==================== evaluation_results 테이블 (성능 평가 결과) ==================== --
+CREATE TABLE IF NOT EXISTS evaluation_results (
+    eval_id SERIAL PRIMARY KEY,                         -- 평가 고유 ID
+    question TEXT NOT NULL,                             -- 사용자 질문
+    answer TEXT NOT NULL,                               -- AI 답변
+    accuracy_score INT CHECK (accuracy_score >= 0 AND accuracy_score <= 10),    -- 정확도 점수 (0-10)
+    relevance_score INT CHECK (relevance_score >= 0 AND relevance_score <= 10), -- 관련성 점수 (0-10)
+    difficulty_score INT CHECK (difficulty_score >= 0 AND difficulty_score <= 10), -- 난이도 적합성 점수 (0-10)
+    citation_score INT CHECK (citation_score >= 0 AND citation_score <= 10),    -- 출처 명시 점수 (0-10)
+    total_score INT CHECK (total_score >= 0 AND total_score <= 40),             -- 총점 (0-40)
+    comment TEXT,                                       -- 평가 코멘트
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP      -- 생성 시간
+);
+
+-- ---------------------- evaluation_results 테이블 인덱스 ---------------------- --
+CREATE INDEX IF NOT EXISTS idx_evaluation_results_created_at ON evaluation_results(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_evaluation_results_total_score ON evaluation_results(total_score DESC);
