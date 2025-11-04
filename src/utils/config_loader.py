@@ -232,7 +232,7 @@ def get_llm_for_difficulty(difficulty: str, language: str = "ko") -> Dict[str, s
 
     if not hybrid_strategy.get("enabled", False):
         # 하이브리드 전략 비활성화 시 기본값 반환
-        return {"provider": "openai", "model": "gpt-3.5-turbo"}
+        return {"provider": "openai", "model": "gpt-5"}
 
     # -------------- 난이도별 모델 선택 규칙 -------------- #
     rules = hybrid_strategy.get("rules", [])
@@ -261,10 +261,10 @@ def get_llm_for_difficulty(difficulty: str, language: str = "ko") -> Dict[str, s
         elif condition.get("default"):
             model_info = rule.get("model", {})
             default_provider = model_info.get("provider", "openai")
-            default_model = model_info.get("name", "gpt-3.5-turbo")
+            default_model = model_info.get("name", "gpt-5")
 
     # -------------- 최종 기본값 -------------- #
-    return {"provider": "openai", "model": "gpt-3.5-turbo"}
+    return {"provider": "openai", "model": "gpt-5"}
 
 
 # ==================================================================================== #
