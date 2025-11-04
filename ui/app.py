@@ -69,26 +69,17 @@ if not postgres_config_ok:
 # ==================== Agent 및 ExperimentManager 초기화 ==================== #
 # ---------------------- 세션 상태 초기화 ---------------------- #
 @st.cache_resource
-def initialize_agent():
+def initialize_agent(_today: str):
     """
     Agent 및 ExperimentManager 초기화 (캐싱)
+
+    Args:
+        _today: 날짜 (YYYYMMDD) - 캐시 키로 사용 (날짜 변경 시 새로 초기화)
 
     Returns:
         tuple: (agent_executor, exp_manager)
     """
     try:
-        # -------------- 이전 실험 폴더의 빈 폴더 정리 -------------- #
-        from pathlib import Path
-        experiments_root = Path("experiments")
-        if experiments_root.exists():
-            # 빈 폴더 삭제 (하위 폴더부터 상위 폴더 순으로)
-            for folder in sorted(experiments_root.rglob("*"), key=lambda p: -len(p.parts)):
-                if folder.is_dir() and not any(folder.iterdir()):
-                    try:
-                        folder.rmdir()
-                    except Exception:
-                        pass
-
         # ExperimentManager 생성
         exp_manager = ExperimentManager()
 
@@ -105,8 +96,10 @@ def initialize_agent():
         st.stop()
 
 
-# Agent 및 ExperimentManager 로드
-agent_executor, exp_manager = initialize_agent()
+# Agent 및 ExperimentManager 로드 (날짜를 캐시 키에 포함)
+from datetime import datetime
+today = datetime.now().strftime("%Y%m%d")
+agent_executor, exp_manager = initialize_agent(today)
 
 # Storage 초기화
 initialize_storage()
