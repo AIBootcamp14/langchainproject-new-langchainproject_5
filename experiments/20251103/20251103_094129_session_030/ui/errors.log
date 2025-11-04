@@ -30,3 +30,20 @@ FileNotFoundError: [Errno 2] No such file or directory: 'experiments/20251103/20
 
 ================================================================================
 
+에러 발생 시각: 2025-11-04 13:25:14
+질문: 지도 학습 관련 주요 논문 알려줘
+난이도: easy
+에러 메시지: [Errno 2] No such file or directory: 'experiments/20251103/20251103_094129_session_030/outputs/response.txt'
+
+상세 트레이스:
+Traceback (most recent call last):
+  File "/home/ieyeppo/AI_Lab/langchain-project/ui/components/chat_interface.py", line 294, in handle_agent_response
+    if exp_manager:
+        ^^^^^^^^^^^^
+  File "/home/ieyeppo/AI_Lab/langchain-project/src/utils/experiment_manager.py", line 415, in save_output
+    with open(output_path, 'w', encoding='utf-8') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/20251103/20251103_094129_session_030/outputs/response.txt'
+
+================================================================================
+

@@ -1,0 +1,10 @@
+{
+  "session_id": "001",
+  "start_time": "2025-11-04T14:00:33.239042",
+  "difficulty": null,
+  "tool_used": "general",
+  "user_query": "llm 2025년에 나온 논문중에 가장 좋은 평가를 받은 논문을 검색하고 요약해줘",
+  "success": null,
+  "response_time_ms": null,
+  "end_time": null
+}
