@@ -83,69 +83,42 @@
 ### 사용하는 DB
 **DB 사용 없음** (LLM 자체 지식 활용)
 
-### 예제 코드
+**파일:** `src/agent/nodes.py`
 
-```python
-# src/agent/nodes.py
+**필요 라이브러리:**
+- `typing.TypedDict`
+- `langchain_openai.ChatOpenAI`
+- `langchain.schema.SystemMessage`, `HumanMessage`
 
-from typing import TypedDict
-from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
+**AgentState 구조:**
 
-# ExperimentManager는 main에서 전달받아 사용
-# 이 예제는 단순화를 위해 직접 로그 작성 방식으로 표현
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| question | str | 사용자 질문 |
+| difficulty | str | 난이도 (easy/hard) |
+| tool_choice | str | 선택된 도구 |
+| tool_result | str | 도구 실행 결과 |
+| final_answer | str | 최종 답변 |
+| messages | list | 대화 히스토리 |
 
-class AgentState(TypedDict):
-    question: str
-    difficulty: str
-    tool_choice: str
-    tool_result: str
-    final_answer: str
-    messages: list  # 대화 히스토리
+**함수: general_answer_node**
 
-def general_answer_node(state: AgentState, exp_manager=None):
-    """
-    일반 답변 노드: LLM의 자체 지식으로 직접 답변
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| state | AgentState | (필수) | Agent 상태 |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        state: Agent 상태
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    question = state["question"]
-    difficulty = state.get("difficulty", "easy")
+**처리 흐름:**
 
-    if exp_manager:
-        exp_manager.logger.write(f"일반 답변 노드 실행: {question}")
-        exp_manager.logger.write(f"난이도: {difficulty}")
-
-    # 난이도에 따른 SystemMessage 설정
-    if difficulty == "easy":
-        system_msg = SystemMessage(content="""
-당신은 친절한 AI 어시스턴트입니다.
-초심자도 이해할 수 있도록 쉽고 명확하게 답변해주세요.
-전문 용어는 최소화하고 일상적인 언어를 사용하세요.
-        """)
-    else:  # hard
-        system_msg = SystemMessage(content="""
-당신은 전문적인 AI 어시스턴트입니다.
-기술적인 세부사항을 포함하여 정확하고 전문적으로 답변해주세요.
-        """)
-
-    # LLM 초기화
-    llm = ChatOpenAI(model="gpt-5", temperature=0.7)
-
-    # 메시지 구성 및 LLM 호출
-    messages = [system_msg, HumanMessage(content=question)]
-    response = llm.invoke(messages)
-
-    if exp_manager:
-        exp_manager.logger.write(f"LLM 응답: {response.content}")
-
-    # 최종 답변 저장
-    state["final_answer"] = response.content
-
-    return state
-```
+| 단계 | 동작 |
+|------|------|
+| 1 | state에서 question, difficulty 추출 |
+| 2 | exp_manager 로깅 (선택) |
+| 3 | difficulty에 따라 SystemMessage 설정 (easy: 쉬운 언어 / hard: 전문적 언어) |
+| 4 | ChatOpenAI 초기화 (model="gpt-5", temperature=0.7) |
+| 5 | [SystemMessage, HumanMessage] 구성하여 llm.invoke() 호출 |
+| 6 | response.content를 state["final_answer"]에 저장 |
+| 7 | state 반환 |
 
 ---
 
