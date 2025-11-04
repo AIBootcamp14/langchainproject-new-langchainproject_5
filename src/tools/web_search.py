@@ -144,6 +144,18 @@ def web_search_node(state: AgentState, exp_manager=None):
             HumanMessage(content=user_prompt)      # 사용자 프롬프트
         ]
 
+        # 최종 프롬프트 저장
+        if exp_manager:
+            final_prompt = f"""[SYSTEM PROMPT]
+{system_prompt}
+
+[USER PROMPT]
+{user_prompt}"""
+            exp_manager.save_final_prompt(final_prompt, {
+                "tool": "web_search",
+                "difficulty": difficulty
+            })
+
         response = llm_client.llm.invoke(messages)  # LLM 호출
 
         if tool_logger:

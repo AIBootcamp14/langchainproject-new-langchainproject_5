@@ -201,6 +201,14 @@ def summarize_node(state: AgentState, exp_manager=None):
             tool_logger.write("LLM 요약 생성 중...")
             tool_logger.write(f"결합된 텍스트 길이: {len(combined_text)} 문자")
 
+        # 최종 프롬프트 저장
+        if exp_manager:
+            exp_manager.save_final_prompt(summary_prompt, {
+                "tool": "summarize",
+                "difficulty": difficulty,
+                "paper_title": title
+            })
+
         # LLM으로 요약 생성
         summary = llm_client_summarize.llm.invoke(summary_prompt).content
 
