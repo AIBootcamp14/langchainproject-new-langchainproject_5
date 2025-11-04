@@ -74,8 +74,8 @@ class AnswerEvaluator:
         Args:
             exp_manager: ExperimentManager 인스턴스 (선택 사항)
         """
-        # LLM 초기화 (OpenAI GPT-4)
-        self.llm = ChatOpenAI(model="gpt-4", temperature=0)
+        # LLM 초기화 (OpenAI GPT-5)
+        self.llm = ChatOpenAI(model="gpt-5", temperature=0)
 
         # ExperimentManager 설정
         self.exp_manager = exp_manager
