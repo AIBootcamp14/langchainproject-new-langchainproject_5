@@ -10,67 +10,63 @@
 
 ## 1. LLM 모델 선택
 
-### 1.1 개발 환경
+### 1.1 개발 환경 LLM 설정
 
-```python
-from langchain_openai import ChatOpenAI
-from langchain_upstage import ChatUpstage
+**필요 라이브러리:**
+- `langchain_openai` - OpenAI LLM 연동
+- `langchain_upstage` - Upstage Solar LLM 연동
 
-# 개발용 Option 1: GPT-3.5-turbo (비용 절감)
-llm_openai_dev = ChatOpenAI(
-    model="gpt-3.5-turbo",
-    temperature=0.0,
-    max_tokens=2000,
-    streaming=True
-)
+**Option 1: GPT-3.5-turbo (비용 절감)**
 
-# 개발용 Option 2: Solar-pro (한국어 특화, 비용 효율적)
-llm_solar_dev = ChatUpstage(
-    model="solar-pro",
-    temperature=0.0,
-    max_tokens=2000,
-    streaming=True
-)
-```
+| 항목 | 값 | 설명 |
+|------|-----|------|
+| 모델명 | gpt-3.5-turbo | 빠르고 저렴한 모델 |
+| Temperature | 0.0 | 일관된 답변 생성 |
+| Max Tokens | 2000 | 최대 출력 토큰 수 |
+| Streaming | True | 실시간 응답 출력 |
 
-### 1.2 프로덕션 환경
+**Option 2: Solar-pro (한국어 특화)**
 
-```python
-# 프로덕션 Option 1: GPT-4 (높은 품질)
-llm_openai_prod = ChatOpenAI(
-    model="gpt-4",
-    temperature=0.7,
-    max_tokens=3000,
-    streaming=True
-)
+| 항목 | 값 | 설명 |
+|------|-----|------|
+| 모델명 | solar-pro | 한국어에 최적화된 모델 |
+| Temperature | 0.0 | 일관된 답변 생성 |
+| Max Tokens | 2000 | 최대 출력 토큰 수 |
+| Streaming | True | 실시간 응답 출력 |
 
-# 프로덕션 Option 2: Solar-pro (한국어 답변, 비용 효율)
-llm_solar_prod = ChatUpstage(
-    model="solar-pro",
-    temperature=0.7,
-    max_tokens=3000,
-    streaming=True
-)
-```
+### 1.2 프로덕션 환경 LLM 설정
+
+**Option 1: GPT-4 (높은 품질)**
+
+| 항목 | 값 | 설명 |
+|------|-----|------|
+| 모델명 | gpt-4 | 높은 성능과 정확도 |
+| Temperature | 0.7 | 자연스러운 답변 |
+| Max Tokens | 3000 | 긴 답변 지원 |
+| Streaming | True | 실시간 응답 출력 |
+
+**Option 2: Solar-pro (비용 효율)**
+
+| 항목 | 값 | 설명 |
+|------|-----|------|
+| 모델명 | solar-pro | 한국어 답변, 비용 효율 |
+| Temperature | 0.7 | 자연스러운 답변 |
+| Max Tokens | 3000 | 긴 답변 지원 |
+| Streaming | True | 실시간 응답 출력 |
 
 ### 1.3 하이브리드 전략 (권장)
 
-```python
-# 난이도별 모델 선택
-def get_llm(difficulty="easy", language="ko"):
-    """
-    난이도와 언어에 따라 적절한 LLM 선택
+**난이도별 모델 선택 규칙:**
 
-    - Easy 모드 + 한국어: Solar (한국어 특화, 저비용)
-    - Hard 모드 + 영어: GPT-4 (기술적 정확도)
-    """
-    if difficulty == "easy" and language == "ko":
-        return ChatUpstage(model="solar-pro", temperature=0.7)
-    elif difficulty == "hard":
-        return ChatOpenAI(model="gpt-4", temperature=0.7)
-    else:
-        return ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
-```
+| 조건 | 선택 모델 | 이유 |
+|------|----------|------|
+| Easy 모드 + 한국어 | Solar-pro | 한국어 특화, 저비용 |
+| Hard 모드 | GPT-4 | 기술적 정확도 |
+| 기타 | GPT-3.5-turbo | 범용적 사용 |
+
+**구현 방식:**
+- `get_llm(difficulty, language)` 함수로 난이도와 언어에 따라 적절한 LLM 선택
+- 구현 파일: `src/llm/client.py`
 
 ---
 
@@ -78,30 +74,27 @@ def get_llm(difficulty="easy", language="ko"):
 
 ### 2.1 환경 변수 설정
 
-```bash
-# .env 파일
-OPENAI_API_KEY=sk-...
-SOLAR_API_KEY=up-...
-TAVILY_API_KEY=tvly-...
-DATABASE_URL=postgresql://user:password@localhost:5432/papers
-```
+`.env` 파일에 다음 API 키를 설정해야 합니다:
 
-### 2.2 코드에서 로드
+| 환경 변수 | 설명 | 형식 |
+|----------|------|------|
+| OPENAI_API_KEY | OpenAI API 키 | sk-... |
+| SOLAR_API_KEY | Upstage Solar API 키 | up-... |
+| TAVILY_API_KEY | Tavily 검색 API 키 | tvly-... |
+| DATABASE_URL | PostgreSQL 연결 문자열 | postgresql://... |
 
-```python
-import os
-from dotenv import load_dotenv
+### 2.2 환경 변수 로드 방식
 
-load_dotenv()
+**사용 라이브러리:** `python-dotenv`
 
-openai_api_key = os.getenv("OPENAI_API_KEY")
-solar_api_key = os.getenv("SOLAR_API_KEY")
+**로드 순서:**
+1. `.env` 파일에서 환경 변수 읽기
+2. `os.getenv()`로 각 API 키 가져오기
+3. 필수 키 누락 시 ValueError 발생
 
-if not openai_api_key:
-    raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다")
-if not solar_api_key:
-    raise ValueError("SOLAR_API_KEY가 설정되지 않았습니다")
-```
+**검증 필수 키:**
+- OPENAI_API_KEY
+- SOLAR_API_KEY
 
 ---
 
@@ -190,103 +183,89 @@ graph TB
 - 재시도 로직 단계에서 에러 발생 시 재시도 횟수를 확인하여 3회 미만이면 Exponential Backoff(2^n초)로 대기 후 재시도하고, 3회 이상이면 최종 실패로 에러 로그를 기록
 - 대체 전략 단계에서 최종 실패 시 대체 API 사용 여부를 확인하여 가능하면 다른 모델로 재시도하고, 불가능하면 사용자에게 에러 메시지를 전달
 
-### 3.3 재시도 로직 구현
+### 3.3 재시도 로직 구현 방식
 
-```python
-from tenacity import retry, stop_after_attempt, wait_exponential
+**사용 라이브러리:** `tenacity`
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10)
-)
-def llm_invoke_with_retry(prompt):
-    """LLM 호출 시 자동 재시도"""
-    try:
-        response = llm.invoke(prompt)
-        return response
-    except Exception as e:
-        logger.write(f"LLM 호출 실패: {e}")
-        raise
-```
+**재시도 설정:**
 
-### 3.2 타임아웃 설정
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| stop | stop_after_attempt(3) | 최대 3회 재시도 |
+| wait | wait_exponential | 지수 백오프 대기 |
+| multiplier | 1 | 대기 시간 배수 |
+| min | 2초 | 최소 대기 시간 |
+| max | 10초 | 최대 대기 시간 |
 
-```python
-llm = ChatOpenAI(
-    model="gpt-4",
-    temperature=0.7,
-    request_timeout=30,  # 30초 타임아웃
-    max_retries=2
-)
-```
+**구현 방식:**
+- `@retry` 데코레이터를 사용하여 LLM 호출 함수에 자동 재시도 적용
+- 에러 발생 시 로거에 기록 후 재시도
+- 구현 파일: `src/llm/client.py`
+
+### 3.4 타임아웃 설정
+
+**LLM 초기화 시 타임아웃 파라미터:**
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| request_timeout | 30 | API 호출 타임아웃 (초) |
+| max_retries | 2 | 자동 재시도 횟수 |
 
 ---
 
 ## 4. 토큰 사용량 추적
 
-### 4.1 토큰 카운팅
+### 4.1 토큰 카운팅 방식
 
-```python
-from langchain.callbacks import get_openai_callback
+**사용 라이브러리:** `langchain.callbacks.get_openai_callback`
 
-with get_openai_callback() as cb:
-    response = llm.invoke("논문 요약해줘")
+**추적 항목:**
 
-    logger.write(f"총 토큰: {cb.total_tokens}")
-    logger.write(f"프롬프트 토큰: {cb.prompt_tokens}")
-    logger.write(f"완성 토큰: {cb.completion_tokens}")
-    logger.write(f"총 비용: ${cb.total_cost}")
-```
+| 항목 | 설명 |
+|------|------|
+| total_tokens | 전체 사용 토큰 수 |
+| prompt_tokens | 입력 프롬프트 토큰 수 |
+| completion_tokens | 생성된 답변 토큰 수 |
+| total_cost | 총 비용 (USD) |
 
-### 4.2 비용 모니터링
+**구현 방식:**
+- `get_openai_callback()` 컨텍스트 매니저로 LLM 호출을 감싸서 토큰 사용량 자동 추적
+- 호출 후 로거에 토큰 사용량 기록
 
-```python
-def monitor_cost(func):
-    """비용 모니터링 데코레이터"""
-    def wrapper(*args, **kwargs):
-        with get_openai_callback() as cb:
-            result = func(*args, **kwargs)
-            logger.write(f"[비용] {func.__name__}: ${cb.total_cost:.4f}")
-            return result
-    return wrapper
+### 4.2 비용 모니터링 방식
 
-@monitor_cost
-def generate_answer(question):
-    return llm.invoke(question)
-```
+**구현 방법:**
+- 데코레이터 패턴을 사용한 비용 모니터링 함수 구현
+- 모든 LLM 호출 함수에 `@monitor_cost` 데코레이터 적용
+- 함수 실행 후 비용을 로거에 자동 기록
+
+**기록 형식:** `[비용] 함수명: $비용`
 
 ---
 
 ## 5. 스트리밍 응답
 
-### 5.1 기본 스트리밍
+### 5.1 기본 스트리밍 설정
 
-```python
-llm = ChatOpenAI(
-    model="gpt-4",
-    streaming=True,
-    callbacks=[StreamingStdOutCallbackHandler()]
-)
+**LLM 초기화 시 스트리밍 활성화:**
 
-for chunk in llm.stream("논문 요약해줘"):
-    print(chunk.content, end="", flush=True)
-```
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| streaming | True | 스트리밍 응답 활성화 |
+| callbacks | StreamingStdOutCallbackHandler() | 표준 출력 핸들러 |
 
-### 5.2 Streamlit 통합
+**스트리밍 응답 방식:**
+- `llm.stream()` 메서드로 실시간 청크 단위 응답 수신
+- 각 청크를 즉시 출력하여 사용자 경험 향상
 
-```python
-from langchain.callbacks import StreamlitCallbackHandler
+### 5.2 Streamlit 통합 방식
 
-import streamlit as st
+**사용 라이브러리:** `langchain.callbacks.StreamlitCallbackHandler`
 
-st_callback = StreamlitCallbackHandler(st.container())
-
-llm = ChatOpenAI(
-    model="gpt-4",
-    streaming=True,
-    callbacks=[st_callback]
-)
-```
+**통합 방법:**
+- Streamlit 컨테이너를 생성하여 StreamlitCallbackHandler에 전달
+- LLM 초기화 시 callbacks에 StreamlitCallbackHandler 지정
+- Streamlit UI에서 실시간으로 LLM 응답 표시
 
 ---
 
@@ -300,23 +279,22 @@ llm = ChatOpenAI(
 | 0.3-0.5 | 요약, 분류 | 약간의 창의성 |
 | 0.7-0.9 | 답변 생성 | 자연스러운 답변 |
 
-```python
-# 라우팅용: 낮은 temperature
-router_llm = ChatOpenAI(model="gpt-4", temperature=0.0)
-
-# 답변 생성용: 높은 temperature
-answer_llm = ChatOpenAI(model="gpt-4", temperature=0.7)
-```
+**용도별 설정:**
+- **라우팅용 LLM**: temperature=0.0 (일관된 라우팅 결정)
+- **답변 생성용 LLM**: temperature=0.7 (자연스러운 답변)
 
 ### 6.2 Max Tokens 설정
 
-```python
-llm = ChatOpenAI(
-    model="gpt-4",
-    max_tokens=3000,  # 최대 토큰 수 제한
-    stop=["\n\n---\n\n"]  # 중단 시퀀스
-)
-```
+**파라미터:**
+
+| 항목 | 값 | 설명 |
+|------|-----|------|
+| max_tokens | 3000 | 최대 생성 토큰 수 |
+| stop | ["\n\n---\n\n"] | 중단 시퀀스 (선택적) |
+
+**설정 이유:**
+- 답변 길이 제한으로 비용 관리
+- 중단 시퀀스로 불필요한 생성 방지
 
 ---
 
