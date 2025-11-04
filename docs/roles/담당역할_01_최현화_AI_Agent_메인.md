@@ -132,7 +132,7 @@ def general_answer_node(state: AgentState, exp_manager=None):
         """)
 
     # LLM 초기화
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+    llm = ChatOpenAI(model="gpt-5", temperature=0.7)
 
     # 메시지 구성 및 LLM 호출
     messages = [system_msg, HumanMessage(content=question)]
@@ -290,7 +290,7 @@ def summarize_paper(paper_title: str, difficulty: str = "easy", exp_manager=None
     PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
 
     # 4. 요약 체인 실행
-    llm = ChatOpenAI(model="gpt-4", temperature=0)
+    llm = ChatOpenAI(model="gpt-5", temperature=0)
     chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
 
     if tool_logger:
@@ -480,7 +480,7 @@ def search_paper_node(state: AgentState, exp_manager=None):
         tool_logger.write("LLM 답변 생성 시작")
 
     # 6. LLM 호출
-    llm = ChatOpenAI(model="gpt-4", temperature=0.7)
+    llm = ChatOpenAI(model="gpt-5", temperature=0.7)
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
@@ -613,7 +613,7 @@ def web_search_node(state: AgentState, exp_manager=None):
         tool_logger.write("LLM 답변 생성 시작")
 
     # 5. LLM 호출
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+    llm = ChatOpenAI(model="gpt-5", temperature=0.7)
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt)
@@ -697,7 +697,7 @@ def glossary_node(state: AgentState, exp_manager=None):
         tool_logger.write(f"난이도: {difficulty}")
 
     # 1. 질문에서 용어 추출
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    llm = ChatOpenAI(model="gpt-5", temperature=0)
     extract_prompt = f"""
 다음 질문에서 핵심 용어를 추출하세요. 용어만 반환하세요:
 
@@ -917,9 +917,9 @@ graph TB
     A[작업 유형] --> B{작업 분류}
 
     B -->|라우팅| C[Solar<br/>빠른 응답]
-    B -->|답변 생성| D[GPT-4<br/>높은 정확도]
-    B -->|요약| E[GPT-4<br/>품질 중요]
-    B -->|기타| F[GPT-3.5<br/>비용 효율]
+    B -->|답변 생성| D[GPT-5<br/>높은 정확도]
+    B -->|요약| E[GPT-5<br/>품질 중요]
+    B -->|기타| F[GPT-5<br/>비용 효율]
 
     C --> G[LLM 호출]
     D --> G
@@ -1080,7 +1080,7 @@ def router_node(state: AgentState, exp_manager=None):
 하나의 도구 이름만 반환하세요:
     """
 
-    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+    llm = ChatOpenAI(model="gpt-5", temperature=0)
     tool_choice = llm.invoke(routing_prompt).content.strip()
 
     if exp_manager:
@@ -1182,9 +1182,9 @@ def create_agent_graph(exp_manager=None):
 - `get_llm_for_task` 함수 구현
 - 작업 유형별 최적 LLM 선택:
   - routing: Solar (빠른 응답)
-  - generation: GPT-4 (높은 정확도)
-  - summarization: GPT-4 (품질 중요)
-  - 기본값: GPT-3.5-turbo (비용 효율)
+  - generation: GPT-5 (높은 정확도)
+  - summarization: GPT-5 (품질 중요)
+  - 기본값: GPT-5 (비용 효율)
 
 ### 예제 코드
 
@@ -1202,7 +1202,7 @@ from langchain.callbacks import get_openai_callback
 class LLMClient:
     """다중 LLM 클라이언트 클래스"""
 
-    def __init__(self, provider="openai", model="gpt-3.5-turbo", temperature=0.7, logger=None):
+    def __init__(self, provider="openai", model="gpt-5", temperature=0.7, logger=None):
         """
         Args:
             provider: "openai" 또는 "solar"
@@ -1275,11 +1275,11 @@ def get_llm_for_task(task_type, logger=None):
     if task_type == "routing":
         return LLMClient(provider="solar", model="solar-1-mini-chat", temperature=0)
     elif task_type == "generation":
-        return LLMClient(provider="openai", model="gpt-4", temperature=0.7)
+        return LLMClient(provider="openai", model="gpt-5", temperature=0.7)
     elif task_type == "summarization":
-        return LLMClient(provider="openai", model="gpt-4", temperature=0)
+        return LLMClient(provider="openai", model="gpt-5", temperature=0)
     else:
-        return LLMClient(provider="openai", model="gpt-3.5-turbo", temperature=0.7)
+        return LLMClient(provider="openai", model="gpt-5", temperature=0.7)
 ```
 
 ---
@@ -1543,7 +1543,7 @@ experiments/
    - src.memory.chat_history에서 ChatMemoryManager
 
 2. **초기화**
-   - LLMClient 인스턴스 생성 (model="gpt-4", temperature=0.7)
+   - LLMClient 인스턴스 생성 (model="gpt-5", temperature=0.7)
    - create_agent_graph()로 Agent 생성
    - ChatMemoryManager 인스턴스 생성
 

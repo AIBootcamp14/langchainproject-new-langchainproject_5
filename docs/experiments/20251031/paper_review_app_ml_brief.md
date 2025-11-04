@@ -57,7 +57,7 @@
 
 ## LLM/임베딩 정책
 - LLM: OpenAI만 지원(요청에 따라 단순화). 복잡한 폴백 제거.
-  - 모델 기본값: `gpt-4o-mini`
+  - 모델 기본값: `gpt-5o-mini`
   - API 키 검증: 접두(`sk-` 또는 `sk-proj-`), 길이(>=20자), 미설정 시 명확한 오류 메시지
 - 임베딩: `sentence-transformers/all-MiniLM-L6-v2`
   - HuggingFaceEmbeddings 사용(키 불필요)
@@ -122,7 +122,7 @@
   - `transformers`, `torch`
 - `.env` 설정
   - `OPENAI_API_KEY=sk-...` 또는 `OPENAI_API_KEY=sk-proj-...`
-  - 선택: `OPENAI_MODEL=gpt-4o-mini`
+  - 선택: `OPENAI_MODEL=gpt-5o-mini`
 
 ## 운용 팁
 - 키 오류 발생 시: 사이드바의 에러 메시지와 `.env` 경로 안내 확인

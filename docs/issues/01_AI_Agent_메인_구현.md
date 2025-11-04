@@ -36,8 +36,8 @@ LangGraph를 사용하여 논문 리뷰 챗봇의 핵심 AI Agent 시스템을 �
 
 #### 1-1. LLM 클라이언트 구현
 - [ ] LLMClient 클래스 구현 (`src/llm/client.py`)
-  - [ ] ChatOpenAI 지원 (gpt-3.5-turbo, gpt-4)
-  - [ ] Solar(Upstage) 지원 (solar-pro, solar-mini)
+  - [ ] ChatOpenAI 지원 (gpt-5, gpt-5)
+  - [ ] Solar(Upstage) 지원 (solar-pro2, solar-pro2)
   - [ ] 에러 핸들링 및 재시도 (tenacity)
   - [ ] 토큰 사용량 추적 (get_openai_callback)
   - [ ] 스트리밍 응답 처리 (astream)

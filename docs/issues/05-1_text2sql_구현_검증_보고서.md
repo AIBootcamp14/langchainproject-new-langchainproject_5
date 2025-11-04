@@ -30,7 +30,7 @@
    - return_direct=False 설정
 
 2. **자연어 → SQL 변환** ✅
-   - OpenAI GPT-4o-mini 모델 사용
+   - OpenAI GPT-5o-mini 모델 사용
    - Few-shot 프롬프트 구성 (5개 예시)
    - 정확한 SQL 생성
 
@@ -66,7 +66,7 @@
 
 - **환경 변수 관리**: `.env` 파일 사용 ✅
   - POSTGRES_HOST/PORT/USER/PASSWORD/DB
-  - TEXT2SQL_MODEL (기본: gpt-4o-mini)
+  - TEXT2SQL_MODEL (기본: gpt-5o-mini)
   - OPENAI_API_KEY
 
 #### 사용 예시
