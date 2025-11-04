@@ -555,24 +555,35 @@ class ExperimentManager:
 
     # ---------------------- 빈 폴더 정리 ---------------------- #
     def cleanup_empty_folders(self):
-        """현재 세션 폴더 내 빈 폴더 삭제"""
-        if not self.experiment_dir.exists():
+        """
+        현재 날짜 폴더 전체의 빈 폴더 삭제
+
+        현재 세션뿐만 아니라 오늘 날짜의 모든 세션에서 생성된 빈 폴더를 정리합니다.
+        """
+        # 현재 날짜 폴더 경로 (예: experiments/20251104)
+        today = datetime.now().strftime("%Y%m%d")
+        date_dir = Path(f"experiments/{today}")
+
+        if not date_dir.exists():
             return
 
         deleted_count = 0
 
-        # 현재 세션의 빈 폴더만 찾기 (하위 폴더부터 상위 폴더 순으로)
-        for folder in sorted(self.experiment_dir.rglob("*"), key=lambda p: -len(p.parts)):
+        # 날짜 폴더 전체의 빈 폴더 찾기 (하위 폴더부터 상위 폴더 순으로)
+        for folder in sorted(date_dir.rglob("*"), key=lambda p: -len(p.parts)):
             if folder.is_dir() and not any(folder.iterdir()):
                 try:
                     folder.rmdir()
                     deleted_count += 1
-                except Exception:
+                    self.logger.write(f"빈 폴더 삭제: {folder}")
+                except Exception as e:
                     # 권한 오류 등은 무시
-                    pass
+                    self.logger.write(f"폴더 삭제 실패: {folder} - {e}")
 
         if deleted_count > 0:
-            self.logger.write(f"빈 폴더 {deleted_count}개 삭제 완료")
+            self.logger.write(f"총 {deleted_count}개의 빈 폴더 삭제 완료")
+        else:
+            self.logger.write("삭제할 빈 폴더 없음")
 
 
     # ---------------------- 실험 종료 ---------------------- #

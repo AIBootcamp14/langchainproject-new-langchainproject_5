@@ -12,6 +12,8 @@ Streamlit 메인 UI
 # ------------------------- 표준 라이브러리 ------------------------- #
 import os
 import sys
+import atexit
+from pathlib import Path
 
 # ------------------------- 서드파티 라이브러리 ------------------------- #
 import streamlit as st
@@ -103,6 +105,45 @@ agent_executor, exp_manager = initialize_agent(today)
 
 # Storage 초기화
 initialize_storage()
+
+
+# ==================== 앱 종료 시 빈 폴더 정리 ==================== #
+def cleanup_on_exit():
+    """
+    Streamlit 앱 종료 시 빈 폴더 정리
+
+    오늘 날짜의 experiments 폴더에서 빈 폴더를 모두 정리합니다.
+    """
+    try:
+        from datetime import datetime
+        from pathlib import Path
+
+        today = datetime.now().strftime("%Y%m%d")
+        date_dir = Path(f"experiments/{today}")
+
+        if not date_dir.exists():
+            return
+
+        deleted_count = 0
+
+        # 날짜 폴더 전체의 빈 폴더 찾기 (하위 폴더부터 상위 폴더 순으로)
+        for folder in sorted(date_dir.rglob("*"), key=lambda p: -len(p.parts)):
+            if folder.is_dir() and not any(folder.iterdir()):
+                try:
+                    folder.rmdir()
+                    deleted_count += 1
+                except Exception:
+                    pass
+
+        if deleted_count > 0:
+            print(f"🧹 앱 종료: {deleted_count}개의 빈 폴더 정리 완료")
+
+    except Exception as e:
+        print(f"⚠️ 빈 폴더 정리 중 오류: {e}")
+
+
+# atexit에 cleanup 함수 등록
+atexit.register(cleanup_on_exit)
 
 
 # ==================== 메인 헤더 ==================== #
