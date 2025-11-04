@@ -131,6 +131,7 @@ def fallback_router_node(state: AgentState, exp_manager=None):
     # -------------- 현재 상태 정보 추출 -------------- #
     question = state["question"]
     failed_tool = state.get("tool_choice", "unknown")
+    failure_reason = state.get("failure_reason", "알 수 없는 이유")
     retry_count = state.get("retry_count", 0)
     max_retries = state.get("max_retries", 3)
     fallback_chain = state.get("fallback_chain", [])
@@ -141,6 +142,7 @@ def fallback_router_node(state: AgentState, exp_manager=None):
         exp_manager.logger.write("=" * 60)
         exp_manager.logger.write("Fallback Router 실행")
         exp_manager.logger.write(f"실패한 도구: {failed_tool}")
+        exp_manager.logger.write(f"실패 사유: {failure_reason}")
         exp_manager.logger.write(f"재시도 횟수: {retry_count}/{max_retries}")
 
     # -------------- 실패한 도구 기록 -------------- #
@@ -179,7 +181,8 @@ def fallback_router_node(state: AgentState, exp_manager=None):
 
     # -------------- 로깅 -------------- #
     if exp_manager:
-        exp_manager.logger.write(f"다음 도구 선택: {next_tool}")
+        exp_manager.logger.write(f"다음 도구로 전환: {next_tool}")
+        exp_manager.logger.write(f"전환 이유: {failed_tool} 도구가 실패했기 때문")
         exp_manager.logger.write(f"Fallback Chain: {' → '.join(fallback_chain)}")
         exp_manager.logger.write("=" * 60)
 
@@ -193,6 +196,7 @@ def fallback_router_node(state: AgentState, exp_manager=None):
         "event": "fallback",
         "from_tool": failed_tool,
         "to_tool": next_tool,
+        "failure_reason": failure_reason,
         "retry_count": retry_count
     })
     state["tool_timeline"] = timeline
