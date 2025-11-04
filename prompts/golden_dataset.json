@@ -1,479 +1,786 @@
 {
-  "golden_dataset": {
-    "basic_queries": [
-      {
-        "id": "basic_001",
-        "question": "BERT가 뭐야?",
-        "user_intent": "용어 정의 요청",
-        "difficulty": "easy",
-        "complexity": "low",
-        "expected_tool": "glossary",
-        "expected_answer": "BERT(Bidirectional Encoder Representations from Transformers)는 Google이 2018년에 발표한 언어 모델로, 양방향으로 문맥을 이해하는 것이 특징입니다. 마치 책을 읽을 때 앞뒤 문맥을 모두 고려하는 것처럼, 단어의 의미를 양쪽에서 파악합니다. (Devlin et al., 2018)",
-        "reference_docs": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2018)",
-        "expected_answer_keywords": ["양방향", "Transformer", "사전학습", "문맥", "Google"],
-        "evaluation_criteria": {
-          "must_include": ["양방향", "Transformer"],
-          "should_include": ["사전학습", "Devlin"],
-          "must_not_include": ["단방향", "autoregressive"],
-          "citation_required": true
-        },
-        "category": "용어 정의",
-        "tags": ["NLP", "언어모델", "기초개념"]
-      },
-      {
-        "id": "basic_002",
-        "question": "Self-Attention이 뭔지 쉽게 설명해줘",
-        "user_intent": "복잡한 개념의 쉬운 설명 요청",
-        "difficulty": "easy",
-        "complexity": "medium",
-        "expected_tool": "glossary",
-        "expected_answer": "Self-Attention은 문장 내 각 단어가 다른 단어들과 얼마나 관련있는지를 계산하는 메커니즘입니다. 예를 들어 '그가 공을 찼다'라는 문장에서 '그'가 누구를 가리키는지 이해하려면 문장의 다른 단어들을 함께 봐야 하는데, Self-Attention이 이런 관계를 자동으로 파악합니다.",
-        "reference_docs": "Attention is All You Need (Vaswani et al., 2017)",
-        "expected_answer_keywords": ["관계", "가중치", "단어", "문맥"],
-        "evaluation_criteria": {
-          "must_include": ["관계", "가중치"],
-          "should_include": ["예시", "비유"],
-          "tone": "easy",
-          "citation_required": false
-        },
-        "category": "용어 정의",
-        "tags": ["Attention", "기초개념", "쉬운설명"]
-      }
-    ],
-
-    "search_queries": [
-      {
-        "id": "search_001",
-        "question": "RAG 관련 논문 찾아줘",
-        "user_intent": "논문 검색 요청",
-        "difficulty": "easy",
-        "complexity": "low",
-        "expected_tool": "search_paper",
-        "expected_answer": "RAG(Retrieval-Augmented Generation) 관련 주요 논문을 찾았습니다:\n\n1. **Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks** (Lewis et al., 2020) - RAG의 원조 논문으로, 검색과 생성을 결합한 방법론을 제안합니다.\n\n필요하신 특정 측면(성능 개선, 적용 사례 등)이 있으시면 말씀해주세요!",
-        "reference_docs": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)",
-        "expected_answer_keywords": ["Retrieval", "Generation", "Lewis", "2020"],
-        "evaluation_criteria": {
-          "must_include": ["논문 제목", "저자"],
-          "should_include": ["발행연도", "핵심 내용"],
-          "citation_required": true
-        },
-        "category": "논문 검색",
-        "tags": ["RAG", "논문검색"]
-      },
-      {
-        "id": "search_002",
-        "question": "2024년에 나온 Mixture of Experts 최신 연구 알려줘",
-        "user_intent": "특정 기간의 최신 연구 검색",
-        "difficulty": "hard",
-        "complexity": "medium",
-        "expected_tool": "web_search",
-        "expected_answer": "2024년 Mixture of Experts(MoE) 관련 최신 연구를 검색했습니다:\n\n1. **Mixtral 8x7B** - 희소 MoE 아키텍처로 효율성을 크게 개선\n2. **MoE 스케일링 연구** - 더 많은 전문가 모델을 효과적으로 활용하는 방법\n\n(실제 검색 결과 기반 답변)",
-        "reference_docs": "N/A - Web search required",
-        "expected_answer_keywords": ["2024", "MoE", "Mixture of Experts", "최신"],
-        "evaluation_criteria": {
-          "must_include": ["2024", "최신"],
-          "should_include": ["구체적 연구명"],
-          "must_not_include": ["2023년 이전 정보만"],
-          "citation_required": true
-        },
-        "category": "최신 정보",
-        "tags": ["MoE", "최신연구", "웹검색"]
-      }
-    ],
-
-    "comparison_queries": [
-      {
-        "id": "compare_001",
-        "question": "BERT랑 GPT 차이가 뭐야?",
-        "user_intent": "두 개념의 핵심 차이 비교",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "general",
-        "expected_answer": "BERT와 GPT의 주요 차이점:\n\n**1. 학습 방향**\n- BERT: 양방향 (문장 전체를 동시에 고려)\n- GPT: 단방향 (왼쪽에서 오른쪽으로만)\n\n**2. 학습 목표**\n- BERT: Masked Language Modeling (빈칸 채우기)\n- GPT: Next Token Prediction (다음 단어 예측)\n\n**3. 주요 용도**\n- BERT: 분류, 질의응답 등 이해 task\n- GPT: 텍스트 생성, 대화 등 생성 task\n\nBERT는 'Devlin et al., 2018', GPT는 'Radford et al., 2018'에서 소개되었습니다.",
-        "reference_docs": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2018)\nImproving Language Understanding by Generative Pre-Training (Radford et al., 2018)",
-        "expected_answer_keywords": ["양방향", "단방향", "MLM", "autoregressive", "차이"],
-        "evaluation_criteria": {
-          "must_include": ["양방향", "단방향", "차이점"],
-          "should_include": ["학습 방법", "용도", "두 논문 모두 인용"],
-          "structure": "comparison_table_or_sections",
-          "citation_required": true
-        },
-        "category": "개념 비교",
-        "tags": ["BERT", "GPT", "비교분석"]
-      },
-      {
-        "id": "compare_002",
-        "question": "LoRA랑 Full Fine-tuning 중에 뭐가 더 좋아?",
-        "user_intent": "방법론 비교 및 추천 요청",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "general",
-        "expected_answer": "상황에 따라 다릅니다:\n\n**LoRA가 유리한 경우:**\n- 제한된 GPU 메모리 (LoRA는 학습 파라미터가 0.1-1%)\n- 여러 task에 빠르게 적용 (모델 교체 용이)\n- 비용 효율성 중시\n\n**Full Fine-tuning이 유리한 경우:**\n- 충분한 컴퓨팅 리소스\n- 최고 성능이 필수적인 경우\n- 도메인이 pre-training과 매우 다른 경우\n\n실무에서는 LoRA가 성능 손실이 1-2% 이내면서 효율이 높아 자주 사용됩니다. (Hu et al., 2021)",
-        "reference_docs": "LoRA: Low-Rank Adaptation of Large Language Models (Hu et al., 2021)",
-        "expected_answer_keywords": ["LoRA", "Fine-tuning", "파라미터", "효율", "성능", "상황에 따라"],
-        "evaluation_criteria": {
-          "must_include": ["장단점", "상황별 추천"],
-          "should_include": ["구체적 수치", "실무 관점"],
-          "must_not_include": ["무조건적 추천"],
-          "citation_required": true
-        },
-        "category": "개념 비교",
-        "tags": ["LoRA", "Fine-tuning", "비교분석", "실무"]
-      }
-    ],
-
-    "technical_queries": [
-      {
-        "id": "tech_001",
-        "question": "Self-Attention의 시간 복잡도가 O(n²)인 이유를 수식으로 설명해줘",
-        "user_intent": "기술적 원리의 수학적 설명 요청",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "general",
-        "expected_answer": "Self-Attention의 시간 복잡도가 O(n²)인 이유:\n\n**수식:**\nAttention(Q, K, V) = softmax(QK^T / √d_k)V\n\n**복잡도 분석:**\n1. QK^T 계산: (n × d_k) × (d_k × n) = O(n² × d_k)\n2. softmax 적용: O(n²)\n3. V와 곱셈: (n × n) × (n × d_k) = O(n² × d_k)\n\n여기서 n은 시퀀스 길이, d_k는 차원입니다.\n\n**핵심:** 각 토큰(n개)이 모든 토큰(n개)과 attention 점수를 계산하므로 n × n = O(n²)입니다. 이것이 긴 시퀀스 처리 시 병목이 되는 이유입니다.\n\n(Vaswani et al., 2017)",
-        "reference_docs": "Attention is All You Need (Vaswani et al., 2017)",
-        "expected_answer_keywords": ["O(n²)", "QK^T", "시퀀스 길이", "수식"],
-        "evaluation_criteria": {
-          "must_include": ["O(n²)", "수식", "이유"],
-          "should_include": ["단계별 설명", "n의 의미"],
-          "tone": "hard",
-          "citation_required": true
-        },
-        "category": "기술적 분석",
-        "tags": ["복잡도", "수식", "Attention", "하드"]
-      },
-      {
-        "id": "tech_002",
-        "question": "Transformer가 RNN보다 나은 이유 3가지만 알려줘",
-        "user_intent": "기술적 장점의 구조화된 설명 요청",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "general",
-        "expected_answer": "Transformer가 RNN보다 우수한 3가지 이유:\n\n**1. 병렬 처리 가능**\n- RNN: 순차적 처리 필수 (t-1 계산 후 t 계산)\n- Transformer: 모든 위치를 동시에 계산 가능\n- 결과: 학습 속도 수십~수백 배 향상\n\n**2. Long-range Dependency 처리**\n- RNN: 멀리 떨어진 단어 관계 파악 어려움 (gradient vanishing)\n- Transformer: Self-Attention으로 거리 관계없이 직접 연결\n- 결과: 긴 문맥 이해 능력 향상\n\n**3. 표현력**\n- RNN: 고정된 hidden state 크기로 정보 압축\n- Transformer: Multi-head Attention으로 다양한 관점 동시 학습\n- 결과: 더 풍부한 표현 가능\n\n(Vaswani et al., 2017)",
-        "reference_docs": "Attention is All You Need (Vaswani et al., 2017)",
-        "expected_answer_keywords": ["병렬화", "long-range", "의존성", "속도"],
-        "evaluation_criteria": {
-          "must_include": ["3가지", "각각의 이유"],
-          "should_include": ["구체적 설명", "결과/효과"],
-          "structure": "numbered_list",
-          "citation_required": true
-        },
-        "category": "개념 비교",
-        "tags": ["Transformer", "RNN", "비교", "기술분석"]
-      }
-    ],
-
-    "summarization_queries": [
-      {
-        "id": "summary_001",
-        "question": "Attention Is All You Need 논문 핵심만 3문장으로 요약해줘",
-        "user_intent": "논문의 간결한 요약 요청",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "summarize",
-        "expected_answer": "1) Transformer는 RNN/CNN 없이 오직 Attention 메커니즘만으로 구성된 새로운 아키텍처입니다.\n\n2) Encoder-Decoder 구조에서 Multi-Head Self-Attention과 Position-wise FFN을 사용하여 병렬 처리가 가능하며, 번역 task에서 SOTA를 달성했습니다.\n\n3) 이 구조는 이후 BERT, GPT 등 현대 언어 모델의 기반이 되었습니다.\n\n(Vaswani et al., 2017)",
-        "reference_docs": "Attention is All You Need (Vaswani et al., 2017)",
-        "expected_answer_keywords": ["Transformer", "Attention", "Encoder-Decoder", "병렬", "Vaswani"],
-        "evaluation_criteria": {
-          "must_include": ["핵심 기여", "Attention only"],
-          "should_include": ["영향력", "성능"],
-          "max_sentences": 3,
-          "citation_required": true
-        },
-        "category": "논문 요약",
-        "tags": ["Transformer", "논문요약", "간결"]
-      }
-    ],
-
-    "statistical_queries": [
-      {
-        "id": "stat_001",
-        "question": "2024년에 발표된 논문 개수는?",
-        "user_intent": "논문 통계 조회 - 연도별 개수",
-        "difficulty": "easy",
-        "complexity": "medium",
-        "expected_tool": "text2sql",
-        "expected_answer": "2024년에 발표된 논문은 총 XX편입니다.\n\n[연도별 논문 수 표]\n| 연도 | 논문 수 |\n| 2024 | XX |\n\n(데이터베이스 조회 결과)",
-        "reference_docs": "논문 데이터베이스 (papers 테이블)",
-        "expected_answer_keywords": ["2024", "개수", "통계", "표"],
-        "evaluation_criteria": {
-          "must_include": ["숫자", "년도"],
-          "should_include": ["표 형식"],
-          "must_not_include": ["오류"],
-          "citation_required": false
-        },
-        "category": "통계 조회",
-        "tags": ["text2sql", "통계", "논문개수"]
-      },
-      {
-        "id": "stat_002",
-        "question": "카테고리별 논문 수를 보여줘",
-        "user_intent": "논문 분포 통계 조회",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "text2sql",
-        "expected_answer": "카테고리별 논문 분포는 다음과 같습니다:\n\n[카테고리별 논문 수]\n| 카테고리 | 논문 수 | 비율 |\n| NLP | XX | XX% |\n| CV | XX | XX% |\n| ML | XX | XX% |\n\n총 XX개 카테고리, XX편의 논문이 데이터베이스에 등록되어 있습니다.",
-        "reference_docs": "논문 데이터베이스 (papers 테이블 - category 필드)",
-        "expected_answer_keywords": ["카테고리", "분포", "통계", "표"],
-        "evaluation_criteria": {
-          "must_include": ["카테고리명", "숫자"],
-          "should_include": ["표 형식", "비율"],
-          "citation_required": false
-        },
-        "category": "통계 조회",
-        "tags": ["text2sql", "통계", "분포"]
-      },
-      {
-        "id": "stat_003",
-        "question": "가장 많이 인용된 논문 Top 5는?",
-        "user_intent": "순위 통계 조회 - 인용 수 기준",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "text2sql",
-        "expected_answer": "인용 수 기준 상위 5개 논문:\n\n[Top 5 논문]\n| 순위 | 논문 제목 | 저자 | 인용 수 |\n| 1 | Attention Is All You Need | Vaswani et al. | XXXX |\n| 2 | BERT | Devlin et al. | XXXX |\n| 3 | ... | ... | ... |\n\n(데이터베이스 조회 결과)",
-        "reference_docs": "논문 데이터베이스 (papers 테이블 - citations 필드)",
-        "expected_answer_keywords": ["Top", "순위", "인용", "표"],
-        "evaluation_criteria": {
-          "must_include": ["순위", "제목", "인용 수"],
-          "should_include": ["표 형식", "저자"],
-          "citation_required": false
-        },
-        "category": "통계 조회",
-        "tags": ["text2sql", "순위", "인용"]
-      }
-    ],
-
-    "edge_cases": [
-      {
-        "id": "edge_001",
-        "question": "버트가 뭐야?",
-        "user_intent": "오타가 있는 질문",
-        "difficulty": "easy",
-        "complexity": "low",
-        "expected_tool": "glossary",
-        "expected_answer": "BERT에 대해 설명드리겠습니다. [정상 답변과 동일]",
-        "reference_docs": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2018)",
-        "expected_answer_keywords": ["BERT", "양방향"],
-        "evaluation_criteria": {
-          "must_include": ["오타 교정 인식"],
-          "should_include": ["정상 답변"]
-        },
-        "category": "오타 처리",
-        "tags": ["edge_case", "typo"]
-      },
-      {
-        "id": "edge_002",
-        "question": "BERT 설명하고 논문도 찾아줘",
-        "user_intent": "다중 의도 - 정의 + 논문검색",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "multiple",
-        "expected_tools": ["glossary", "search_paper"],
-        "expected_answer": "**BERT 설명:**\nBERT는 양방향 Transformer 기반 언어 모델로... [정의]\n\n**관련 논문:**\n- BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2018)\n- 원문: https://arxiv.org/abs/1810.04805",
-        "reference_docs": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (Devlin et al., 2018)",
-        "expected_answer_keywords": ["정의", "논문", "링크"],
-        "evaluation_criteria": {
-          "must_include": ["두 가지 답변 모두"],
-          "should_include": ["구분된 섹션"],
-          "structure": "multi_section"
-        },
-        "category": "다중 의도",
-        "tags": ["edge_case", "multi_intent"]
-      },
-      {
-        "id": "edge_003",
-        "question": "Transformer 논문 내용 중에 Positional Encoding 부분만 자세히 설명해줘",
-        "user_intent": "논문의 특정 부분만 상세 설명",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "summarize",
-        "expected_answer": "Transformer의 Positional Encoding:\n\n**필요성:**\nSelf-Attention은 순서 정보가 없어, 위치 정보를 수동으로 주입해야 합니다.\n\n**수식:**\nPE(pos, 2i) = sin(pos / 10000^(2i/d_model))\nPE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))\n\n**특징:**\n- pos: 위치, i: 차원\n- sin/cos 함수로 고유한 위치 표현\n- 상대적 위치 관계 학습 가능\n- 학습이 아닌 고정된 함수 사용\n\n(Vaswani et al., 2017)",
-        "reference_docs": "Attention is All You Need (Vaswani et al., 2017)",
-        "expected_answer_keywords": ["Positional Encoding", "sin", "cos", "위치"],
-        "evaluation_criteria": {
-          "must_include": ["수식", "이유", "특징"],
-          "should_include": ["구체적 설명"],
-          "must_not_include": ["전체 논문 요약"],
-          "citation_required": true
-        },
-        "category": "부분 요약",
-        "tags": ["edge_case", "partial_summary"]
-      },
-      {
-        "id": "edge_004",
-        "question": "AI가 뭐야?",
-        "user_intent": "너무 일반적인 질문",
-        "difficulty": "easy",
-        "complexity": "low",
-        "expected_tool": "general",
-        "expected_answer": "AI(Artificial Intelligence, 인공지능)는 인간의 지능을 컴퓨터로 구현하는 기술입니다.\n\n질문이 광범위한데, 다음 중 어떤 부분이 궁금하신가요?\n1. NLP(자연어처리) 분야의 AI\n2. 머신러닝과 딥러닝\n3. 특정 AI 모델 (GPT, BERT 등)\n4. AI의 역사와 발전",
-        "reference_docs": "N/A",
-        "expected_answer_keywords": ["AI", "인공지능", "구체화 요청"],
-        "evaluation_criteria": {
-          "must_include": ["간단한 정의", "구체화 요청"],
-          "should_include": ["선택지 제시"],
-          "must_not_include": ["지나치게 긴 설명"]
-        },
-        "category": "모호한 질문",
-        "tags": ["edge_case", "too_broad"]
-      },
-      {
-        "id": "edge_005",
-        "question": "내 논문 요약해줘",
-        "user_intent": "파일 업로드 없이 요약 요청",
-        "difficulty": "easy",
-        "complexity": "low",
-        "expected_tool": "error_handling",
-        "expected_answer": "논문을 요약해드리려면 파일이나 링크가 필요합니다.\n\n다음 방법 중 하나를 선택해주세요:\n1. PDF 파일 업로드\n2. 논문 제목과 저자 알려주시면 검색 후 요약\n3. arXiv 등 논문 링크 제공\n\n어떤 방법이 편하신가요?",
-        "reference_docs": "N/A",
-        "expected_answer_keywords": ["파일 필요", "대안 제시"],
-        "evaluation_criteria": {
-          "must_include": ["불가능 이유", "대안"],
-          "should_include": ["친절한 톤"],
-          "must_not_include": ["거절만 하기"]
-        },
-        "category": "불완전한 요청",
-        "tags": ["edge_case", "missing_info"]
-      }
-    ],
-
-    "realistic_scenarios": [
-      {
-        "id": "real_001",
-        "question": "우리 회사에서 RAG 시스템 도입하려고 하는데, 어떤 논문들 참고하면 좋을까? 그리고 실제 구현할 때 주의사항도 알려줘",
-        "user_intent": "실무 적용을 위한 복합적 정보 요청",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "multiple",
-        "expected_tools": ["search_paper", "general"],
-        "expected_answer": "**참고 논문:**\n1. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020) - RAG 기초\n2. In-Context Retrieval-Augmented Language Models (Ram et al., 2023) - 실전 개선\n\n**실무 구현 주의사항:**\n1. 검색 품질이 전체 성능을 좌우 - 임베딩 모델과 chunking 전략 중요\n2. Latency 관리 - 검색 시간이 추가되므로 캐싱 필수\n3. 문서 업데이트 주기 설정\n4. Retrieval 실패 시 fallback 전략\n5. 비용 - API 호출이 2배 (검색 + 생성)\n\n구체적인 도메인이나 규모를 알려주시면 더 맞춤형 조언 가능합니다!",
-        "reference_docs": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks (Lewis et al., 2020)",
-        "expected_answer_keywords": ["논문", "실무", "주의사항", "구현"],
-        "evaluation_criteria": {
-          "must_include": ["논문 추천", "실무 조언"],
-          "should_include": ["구체적 주의사항", "후속 질문 유도"],
-          "tone": "practical",
-          "citation_required": true
-        },
-        "category": "실무 컨설팅",
-        "tags": ["realistic", "multi_intent", "practical"]
-      },
-      {
-        "id": "real_002",
-        "question": "GPT-3 논문 읽어봤는데 few-shot learning 부분이 이해가 안 돼. 왜 example을 주면 성능이 올라가는 거야?",
-        "user_intent": "논문의 특정 개념 심화 이해",
-        "difficulty": "hard",
-        "complexity": "high",
-        "expected_tool": "general",
-        "expected_answer": "Few-shot learning이 효과적인 이유:\n\n**1. Context로부터의 패턴 학습**\nGPT-3는 사전학습 시 수많은 패턴을 본 상태입니다. Few-shot example은 \"지금 해야 할 task가 이런 패턴이다\"라는 힌트를 주는 것입니다.\n\n**비유:**\n시험 문제 유형을 모를 때 vs 예시 문제를 볼 때의 차이와 같습니다.\n\n**2. In-context Learning 능력**\nGPT-3의 175B 파라미터는 충분히 크기 때문에, 새로운 파라미터 학습 없이도 context에서 task를 추론할 수 있습니다.\n\n**성능 향상 메커니즘:**\n- 0-shot: 모델이 추측\n- Few-shot: 입출력 패턴 명시 → 불확실성 감소\n\n논문 표 3.1을 보면 few-shot이 0-shot보다 10-20% 성능 향상을 보입니다.\n\n(Brown et al., 2020 - GPT-3 논문)",
-        "reference_docs": "Language Models are Few-Shot Learners (Brown et al., 2020)",
-        "expected_answer_keywords": ["few-shot", "in-context", "패턴", "예시"],
-        "evaluation_criteria": {
-          "must_include": ["이유 설명", "메커니즘"],
-          "should_include": ["비유", "구체적 근거"],
-          "tone": "educational",
-          "citation_required": true
-        },
-        "category": "개념 심화",
-        "tags": ["realistic", "deep_understanding", "paper_specific"]
-      }
-    ]
-  },
-
-  "evaluation_templates": {
-    "basic_answer_template": {
-      "question": "{question}",
-      "answer": "{ai_generated_answer}",
-      "reference_docs": "{reference_docs}",
-      "difficulty": "{difficulty}",
-      "expected_scores": {
-        "question_answer_alignment": "질문이 요구한 정보를 포함하는가?",
-        "factual_accuracy": "참고 문서와 사실이 일치하는가?",
-        "completeness": "답변이 충분히 완전한가?",
-        "difficulty_alignment": "난이도에 맞는 설명인가?",
-        "citation_quality": "출처를 명확히 밝혔는가?"
-      }
+  "golden_dataset": [
+    {
+      "question": "BERT가 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "언어 모델",
+        "컴퓨터",
+        "단어 이해",
+        "문장"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "매우 쉬운 비유와 일상 언어 사용 (초등학생 수준)",
+      "example_answer_intro": "BERT는 컴퓨터가 우리말을 이해하도록 도와주는 특별한 프로그램이에요. 마치 책을 읽을 때...",
+      "expected_tools": []
+    },
+    {
+      "question": "BERT가 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "언어 모델",
+        "양방향",
+        "사전 학습",
+        "Transformer"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "쉬운 용어로 설명, 간단한 비유 포함 (초급자 수준)",
+      "example_answer_intro": "BERT는 Google이 만든 언어 모델로, 문장의 앞뒤 문맥을 모두 고려하여...",
+      "expected_tools": []
+    },
+    {
+      "question": "BERT의 핵심 구조는?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Transformer",
+        "인코더",
+        "어텐션",
+        "임베딩",
+        "레이어"
+      ],
+      "category": "기술적 분석",
+      "complexity": "medium",
+      "answer_style": "기술 용어 사용, 구조적 설명 (중급자 수준)",
+      "example_answer_intro": "BERT는 Transformer 인코더를 기반으로 하며, 다층 어텐션 메커니즘을...",
+      "expected_tools": []
+    },
+    {
+      "question": "BERT의 양방향 학습 메커니즘과 시간 복잡도는?",
+      "difficulty": "advanced",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Masked LM",
+        "NSP",
+        "O(n²)",
+        "복잡도",
+        "Self-Attention"
+      ],
+      "category": "기술적 분석",
+      "complexity": "high",
+      "answer_style": "전문 용어, 수식, 알고리즘 설명 (고급자/전문가 수준)",
+      "example_answer_intro": "BERT는 Masked Language Modeling(MLM)과 Next Sentence Prediction(NSP)를 통해 양방향 문맥을 학습하며, Self-Attention의 시간 복잡도는 O(n²d)로...",
+      "expected_tools": []
+    },
+    {
+      "question": "RAG가 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "검색",
+        "답변",
+        "자료 찾기"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "초등학생도 이해할 수 있는 비유",
+      "example_answer_intro": "RAG는 도서관 사서처럼 먼저 필요한 책을 찾고, 그 책의 내용을 읽어서 답을 해주는 거예요...",
+      "expected_tools": []
+    },
+    {
+      "question": "RAG 논문 찾아줘",
+      "difficulty": "beginner",
+      "expected_tool": "search_paper",
+      "expected_answer_keywords": [
+        "Retrieval",
+        "Generation",
+        "논문",
+        "검색"
+      ],
+      "category": "논문 검색",
+      "complexity": "low",
+      "answer_style": "논문 제목, 저자, 핵심 내용 간단 요약",
+      "example_answer_intro": "RAG(Retrieval-Augmented Generation) 논문을 찾았습니다. Lewis et al. (2020)의 연구로...",
+      "expected_tools": []
+    },
+    {
+      "question": "RAG의 Retriever와 Generator 구조는?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "DPR",
+        "BART",
+        "파이프라인",
+        "문서 검색",
+        "생성"
+      ],
+      "category": "기술적 분석",
+      "complexity": "medium",
+      "answer_style": "구조적 설명, 컴포넌트별 역할",
+      "example_answer_intro": "RAG는 Retriever(DPR)와 Generator(BART)로 구성되며, 두 단계 파이프라인으로...",
+      "expected_tools": []
+    },
+    {
+      "question": "RAG의 학습 방법과 Dense Passage Retrieval의 손실 함수는?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "End-to-End",
+        "NLL",
+        "Contrastive Loss",
+        "In-batch Negatives"
+      ],
+      "category": "기술적 분석",
+      "complexity": "high",
+      "answer_style": "수식, 알고리즘, 학습 전략 상세 설명",
+      "example_answer_intro": "RAG는 End-to-End 학습이 가능하며, DPR의 손실 함수는 Contrastive Loss로...",
+      "expected_tools": []
+    },
+    {
+      "question": "2024년 최신 AI 뉴스",
+      "difficulty": "beginner",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "최신",
+        "AI",
+        "뉴스",
+        "간단 설명"
+      ],
+      "category": "최신 정보",
+      "complexity": "low",
+      "answer_style": "쉬운 단어로 뉴스 요약",
+      "example_answer_intro": "요즘 AI는 그림도 그리고, 숙제도 도와주고, 노래도 만들어요...",
+      "expected_tools": []
+    },
+    {
+      "question": "2024년 최신 Transformer 연구",
+      "difficulty": "beginner",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "2024",
+        "Transformer",
+        "최신",
+        "연구"
+      ],
+      "category": "최신 정보",
+      "complexity": "low",
+      "answer_style": "주요 연구 동향 간단 요약",
+      "example_answer_intro": "2024년 Transformer 연구는 효율성 개선과 긴 문맥 처리에 집중하고 있으며...",
+      "expected_tools": []
+    },
+    {
+      "question": "2024년 Transformer 변형 모델들의 효율성 비교",
+      "difficulty": "intermediate",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "Linformer",
+        "Performer",
+        "효율성",
+        "비교",
+        "복잡도"
+      ],
+      "category": "최신 정보",
+      "complexity": "medium",
+      "answer_style": "모델별 성능 지표, 비교 분석",
+      "example_answer_intro": "2024년 주요 Transformer 변형들은 선형 복잡도를 목표로 하며, Linformer는...",
+      "expected_tools": []
+    },
+    {
+      "question": "2024년 State Space Model과 Transformer의 이론적 등가성",
+      "difficulty": "advanced",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "Mamba",
+        "S4",
+        "등가성",
+        "수학적 증명",
+        "복잡도 분석"
+      ],
+      "category": "최신 정보",
+      "complexity": "high",
+      "answer_style": "수학적 증명, 이론적 분석, 논문 인용",
+      "example_answer_intro": "Gu et al. (2024)는 Mamba의 선형 복잡도가 Transformer의 어텐션과 이론적으로 등가함을 증명...",
+      "expected_tools": []
+    },
+    {
+      "question": "Attention Is All You Need 읽어줘",
+      "difficulty": "beginner",
+      "expected_tool": "summarize",
+      "expected_answer_keywords": [
+        "Transformer",
+        "집중",
+        "단어",
+        "번역"
+      ],
+      "category": "논문 요약",
+      "complexity": "low",
+      "answer_style": "동화책처럼 쉽게 설명",
+      "example_answer_intro": "이 논문은 컴퓨터가 중요한 단어에 집중하는 새로운 방법을 소개해요...",
+      "expected_tools": []
+    },
+    {
+      "question": "Attention Is All You Need 요약해줘",
+      "difficulty": "beginner",
+      "expected_tool": "summarize",
+      "expected_answer_keywords": [
+        "Transformer",
+        "Attention",
+        "인코더",
+        "디코더"
+      ],
+      "category": "논문 요약",
+      "complexity": "low",
+      "answer_style": "주요 내용 3-5개 항목으로 정리",
+      "example_answer_intro": "Vaswani et al. (2017)의 Transformer 논문 요약: 1. RNN 없이 어텐션만 사용...",
+      "expected_tools": []
+    },
+    {
+      "question": "Transformer 논문의 핵심 기여와 구조",
+      "difficulty": "intermediate",
+      "expected_tool": "summarize",
+      "expected_answer_keywords": [
+        "Multi-Head Attention",
+        "Positional Encoding",
+        "병렬화",
+        "성능"
+      ],
+      "category": "논문 요약",
+      "complexity": "medium",
+      "answer_style": "구조도 설명, 핵심 기여 분석",
+      "example_answer_intro": "Transformer의 핵심은 (1) Multi-Head Attention으로 여러 관점에서 문맥 파악...",
+      "expected_tools": []
+    },
+    {
+      "question": "Transformer 논문의 Self-Attention 수식 유도와 복잡도 증명",
+      "difficulty": "advanced",
+      "expected_tool": "summarize",
+      "expected_answer_keywords": [
+        "수식",
+        "Scaled Dot-Product",
+        "O(n²)",
+        "증명",
+        "연산량"
+      ],
+      "category": "논문 요약",
+      "complexity": "high",
+      "answer_style": "수식 전개, 복잡도 증명, 알고리즘 분석",
+      "example_answer_intro": "Self-Attention은 Attention(Q,K,V) = softmax(QK^T/√d_k)V로 정의되며, 시간 복잡도 증명...",
+      "expected_tools": []
+    },
+    {
+      "question": "인공지능이 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "컴퓨터",
+        "똑똑하게",
+        "생각",
+        "학습"
+      ],
+      "category": "개념 설명",
+      "complexity": "low",
+      "answer_style": "초등학생 눈높이 설명",
+      "example_answer_intro": "인공지능은 컴퓨터가 사람처럼 생각하고 배우는 거예요...",
+      "expected_tools": []
+    },
+    {
+      "question": "BERT와 GPT의 차이는?",
+      "difficulty": "beginner",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "양방향",
+        "단방향",
+        "마스킹",
+        "생성"
+      ],
+      "category": "개념 비교",
+      "complexity": "low",
+      "answer_style": "표로 비교, 주요 차이점 3가지",
+      "example_answer_intro": "BERT와 GPT의 주요 차이: (1) BERT는 양방향, GPT는 단방향...",
+      "expected_tools": []
+    },
+    {
+      "question": "BERT와 GPT의 아키텍처 및 학습 목표 비교",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Encoder",
+        "Decoder",
+        "MLM",
+        "CLM",
+        "구조"
+      ],
+      "category": "개념 비교",
+      "complexity": "medium",
+      "answer_style": "구조도 비교, 학습 방식 상세 설명",
+      "example_answer_intro": "BERT는 Transformer Encoder 기반 MLM, GPT는 Decoder 기반 CLM으로...",
+      "expected_tools": []
+    },
+    {
+      "question": "BERT와 GPT의 표현력 차이 이론적 분석",
+      "difficulty": "advanced",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Perplexity",
+        "GLUE",
+        "벤치마크",
+        "수학적 증명",
+        "정보 이론"
+      ],
+      "category": "개념 비교",
+      "complexity": "high",
+      "answer_style": "수학적 증명, 정보 이론 기반 분석, 벤치마크 비교",
+      "example_answer_intro": "정보 이론 관점에서 BERT의 양방향 문맥은 조건부 엔트로피 H(X|Context)를 최소화하는 반면...",
+      "expected_tools": []
+    },
+    {
+      "question": "Self-Attention이 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "집중",
+        "중요한 단어",
+        "관계"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "일상생활 비유",
+      "example_answer_intro": "Self-Attention은 여러 단어 중에서 중요한 단어에 집중하는 거예요. 마치 선생님 말씀 중에서...",
+      "expected_tools": []
+    },
+    {
+      "question": "Attention 메커니즘 설명해줘",
+      "difficulty": "beginner",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "Attention",
+        "가중치",
+        "중요도",
+        "집중"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "그림으로 설명 가능한 수준",
+      "example_answer_intro": "Attention은 입력 시퀀스에서 중요한 부분에 가중치를 두는 메커니즘으로...",
+      "expected_tools": []
+    },
+    {
+      "question": "Multi-Head Attention의 동작 원리는?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Query",
+        "Key",
+        "Value",
+        "Head",
+        "병렬"
+      ],
+      "category": "기술적 분석",
+      "complexity": "medium",
+      "answer_style": "단계별 프로세스 설명",
+      "example_answer_intro": "Multi-Head Attention은 여러 개의 어텐션 헤드를 병렬로 실행하여...",
+      "expected_tools": []
+    },
+    {
+      "question": "Self-Attention의 시간 복잡도와 공간 복잡도 증명",
+      "difficulty": "advanced",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "O(n²)",
+        "O(n²d)",
+        "메모리",
+        "증명",
+        "최적화"
+      ],
+      "category": "기술적 분석",
+      "complexity": "high",
+      "answer_style": "수식 전개, 복잡도 증명",
+      "example_answer_intro": "Self-Attention의 시간 복잡도 T(n) = O(n²d) 증명: QK^T 연산이 O(n²d), softmax가 O(n²)이므로...",
+      "expected_tools": []
+    },
+    {
+      "question": "Transformer가 RNN보다 좋은 이유는?",
+      "difficulty": "beginner",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "빠름",
+        "병렬",
+        "장거리 의존성"
+      ],
+      "category": "개념 비교",
+      "complexity": "low",
+      "answer_style": "장단점 비교",
+      "example_answer_intro": "Transformer는 RNN보다 (1) 병렬 처리가 가능해 빠르고...",
+      "expected_tools": []
+    },
+    {
+      "question": "Transformer와 RNN의 병렬화 가능성 비교",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "순차",
+        "병렬",
+        "GPU",
+        "연산 효율"
+      ],
+      "category": "개념 비교",
+      "complexity": "medium",
+      "answer_style": "GPU 아키텍처 관점 설명",
+      "example_answer_intro": "RNN은 순차적 의존성으로 병렬화 불가능하나, Transformer는 Self-Attention으로...",
+      "expected_tools": []
+    },
+    {
+      "question": "Transformer가 RNN보다 나은 이유는?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "병렬화",
+        "long-range",
+        "의존성",
+        "속도",
+        "Gradient",
+        "Vanishing"
+      ],
+      "category": "개념 비교",
+      "complexity": "high",
+      "answer_style": "이론적 증명, 실험 결과",
+      "example_answer_intro": "Transformer가 RNN을 능가하는 이론적 근거: (1) Gradient Flow 측면에서 RNN은 BPTT 시 Vanishing Gradient...",
+      "expected_tools": []
+    },
+    {
+      "question": "LoRA가 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "효율적",
+        "학습",
+        "적은 파라미터"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "핵심만 간단히",
+      "example_answer_intro": "LoRA는 큰 모델을 적은 파라미터로 효율적으로 학습하는 방법이에요...",
+      "expected_tools": []
+    },
+    {
+      "question": "LoRA와 Full Fine-tuning의 차이는?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Low-Rank",
+        "파라미터",
+        "효율",
+        "메모리"
+      ],
+      "category": "개념 비교",
+      "complexity": "medium",
+      "answer_style": "파라미터 수, 메모리, 성능 비교표",
+      "example_answer_intro": "LoRA는 Low-Rank 행렬로 파라미터를 0.1%로 줄이며, Full Fine-tuning 대비...",
+      "expected_tools": []
+    },
+    {
+      "question": "LoRA의 Low-Rank Adaptation 수학적 원리",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "SVD",
+        "행렬 분해",
+        "Rank",
+        "수학적 증명"
+      ],
+      "category": "기술적 분석",
+      "complexity": "high",
+      "answer_style": "수식 유도, SVD 설명",
+      "example_answer_intro": "LoRA는 가중치 업데이트 ΔW를 ΔW=BA (B∈R^(d×r), A∈R^(r×k))로 분해하여...",
+      "expected_tools": []
+    },
+    {
+      "question": "BLEU Score가 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "번역",
+        "점수",
+        "비교"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "쉬운 비유",
+      "example_answer_intro": "BLEU Score는 번역이 얼마나 잘됐는지 점수를 주는 거예요...",
+      "expected_tools": []
+    },
+    {
+      "question": "BLEU Score가 뭐야?",
+      "difficulty": "elementary",
+      "expected_tool": "glossary",
+      "expected_answer_keywords": [
+        "평가 지표",
+        "번역",
+        "유사도",
+        "n-gram"
+      ],
+      "category": "용어 정의",
+      "complexity": "low",
+      "answer_style": "계산 방법 간단 설명",
+      "example_answer_intro": "BLEU는 기계 번역 품질을 평가하는 지표로, n-gram 일치도를 측정하여...",
+      "expected_tools": []
+    },
+    {
+      "question": "BLEU Score 계산 방법과 한계점은?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Precision",
+        "Brevity Penalty",
+        "n-gram",
+        "한계"
+      ],
+      "category": "기술적 분석",
+      "complexity": "medium",
+      "answer_style": "수식, 예시, 한계점 분석",
+      "example_answer_intro": "BLEU = BP × exp(Σw_n log p_n)으로 계산되며, Brevity Penalty는...",
+      "expected_tools": []
+    },
+    {
+      "question": "BLEU Score의 수학적 정의와 대안 지표 비교",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "Modified Precision",
+        "Geometric Mean",
+        "METEOR",
+        "BERTScore"
+      ],
+      "category": "기술적 분석",
+      "complexity": "high",
+      "answer_style": "수식 증명, 지표 간 상관관계 분석",
+      "example_answer_intro": "BLEU의 Modified Precision p_n = Σ_C Σ_ngram min(Count, Count_ref) / Σ_C Σ_ngram Count로 정의되며...",
+      "expected_tools": []
+    },
+    {
+      "question": "GPT-4 논문 검색",
+      "difficulty": "beginner",
+      "expected_tool": "search_paper",
+      "expected_answer_keywords": [
+        "GPT-4",
+        "논문",
+        "OpenAI"
+      ],
+      "category": "논문 검색",
+      "complexity": "low",
+      "answer_style": "논문 제목, 저자, 간단 요약",
+      "example_answer_intro": "GPT-4 Technical Report (OpenAI, 2023)을 찾았습니다...",
+      "expected_tools": []
+    },
+    {
+      "question": "GPT-4의 주요 개선사항은?",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "멀티모달",
+        "성능",
+        "안전성",
+        "벤치마크"
+      ],
+      "category": "기술적 분석",
+      "complexity": "medium",
+      "answer_style": "GPT-3.5 대비 비교, 벤치마크 결과",
+      "example_answer_intro": "GPT-4는 GPT-3.5 대비 (1) 멀티모달 지원 (2) 추론 능력 향상...",
+      "expected_tools": []
+    },
+    {
+      "question": "GPT-4의 아키텍처와 학습 방법론",
+      "difficulty": "intermediate",
+      "expected_tool": "general",
+      "expected_answer_keywords": [
+        "RLHF",
+        "Alignment",
+        "Constitutional AI",
+        "스케일링"
+      ],
+      "category": "기술적 분석",
+      "complexity": "high",
+      "answer_style": "학습 알고리즘, RLHF 수식, 스케일링 법칙",
+      "example_answer_intro": "GPT-4는 RLHF와 Constitutional AI를 결합하여, 보상 모델 r_θ(x,y) = log P(y_w > y_l | x)를...",
+      "expected_tools": []
+    },
+    {
+      "question": "2025년 LLM 트렌드",
+      "difficulty": "beginner",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "2025",
+        "LLM",
+        "트렌드",
+        "최신"
+      ],
+      "category": "최신 정보",
+      "complexity": "low",
+      "answer_style": "주요 트렌드 3-5개 나열",
+      "example_answer_intro": "2025년 LLM 주요 트렌드: (1) 멀티모달 확장 (2) 효율성 개선...",
+      "expected_tools": []
+    },
+    {
+      "question": "2025년 LLM의 주요 기술적 혁신은?",
+      "difficulty": "intermediate",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "MoE",
+        "긴 문맥",
+        "효율성",
+        "추론"
+      ],
+      "category": "최신 정보",
+      "complexity": "medium",
+      "answer_style": "기술별 상세 설명, 논문 인용",
+      "example_answer_intro": "2025년 LLM 혁신: (1) Mixture-of-Experts로 1T 파라미터 달성...",
+      "expected_tools": []
+    },
+    {
+      "question": "2025년 LLM 트렌드",
+      "difficulty": "intermediate",
+      "expected_tool": "web_search",
+      "expected_answer_keywords": [
+        "2025",
+        "LLM",
+        "트렌드",
+        "최신",
+        "이론",
+        "스케일링"
+      ],
+      "category": "최신 정보",
+      "complexity": "high",
+      "answer_style": "이론적 배경, 스케일링 법칙, 논문 심층 분석",
+      "example_answer_intro": "2025년 LLM은 Chinchilla 스케일링 법칙을 넘어 N_optimal ∝ C^a (a≈0.5)를 수정한...",
+      "expected_tools": []
+    },
+    {
+      "question": "대화 내용 저장해줘",
+      "difficulty": "beginner",
+      "expected_tool": "save_file",
+      "expected_answer_keywords": [
+        "저장",
+        "파일"
+      ],
+      "category": "파일 관리",
+      "complexity": "low",
+      "answer_style": "간단 확인 메시지",
+      "example_answer_intro": "네, 대화 내용을 파일로 저장했어요!",
+      "expected_tools": []
+    },
+    {
+      "question": "대화 내용 저장해줘",
+      "difficulty": "beginner",
+      "expected_tool": "save_file",
+      "expected_answer_keywords": [
+        "저장",
+        "파일",
+        "다운로드"
+      ],
+      "category": "파일 관리",
+      "complexity": "low",
+      "answer_style": "파일명, 경로 포함",
+      "example_answer_intro": "대화 내용을 response_20250104_143025.txt로 저장했습니다...",
+      "expected_tools": []
     }
-  },
-
+  ],
   "dataset_metadata": {
-    "version": "2.1",
+    "total_questions": 42,
+    "version": "2.0",
     "created_date": "2025-11-04",
-    "total_questions": 23,
-    "description": "프롬프트 엔지니어링 고도화 Golden Dataset - Text-to-SQL 통합, 실전 시나리오 및 엣지 케이스 포함",
-
+    "updated_date": "2025-11-04",
+    "description": "4단계 난이도, user_level 필드 제거 완료",
     "difficulty_distribution": {
-      "easy": 9,
-      "hard": 14
+      "elementary": 8,
+      "beginner": 12,
+      "intermediate": 17,
+      "advanced": 5
     },
-
-    "complexity_distribution": {
-      "low": 6,
-      "medium": 6,
-      "high": 11
+    "user_level_distribution": {
+      "elementary": 8,
+      "beginner": 12,
+      "intermediate": 10,
+      "advanced": 10
     },
-
-    "category_distribution": {
-      "용어 정의": 3,
-      "논문 검색": 2,
-      "최신 정보": 2,
-      "논문 요약": 2,
-      "개념 비교": 4,
-      "기술적 분석": 2,
-      "통계 조회": 3,
-      "오타 처리": 1,
-      "다중 의도": 1,
-      "모호한 질문": 1,
-      "불완전한 요청": 1,
-      "실무 컨설팅": 1
-    },
-
     "tool_distribution": {
-      "glossary": 3,
-      "search_paper": 2,
-      "web_search": 2,
-      "summarize": 3,
-      "text2sql": 3,
-      "general": 6,
-      "multiple": 2,
-      "error_handling": 1
+      "glossary": 8,
+      "search_paper": 4,
+      "web_search": 8,
+      "summarize": 4,
+      "general": 14,
+      "save_file": 2
     },
-
-    "coverage": {
-      "basic_queries": "기본적인 정의, 검색, 비교 질문",
-      "technical_queries": "심화 기술 분석, 수식, 복잡도 등",
-      "statistical_queries": "논문 통계, 개수, 순위, 분포 조회",
-      "edge_cases": "오타, 다중 의도, 모호한 질문, 불완전한 요청",
-      "realistic_scenarios": "실무 적용, 논문 심화 이해 등 현실적 시나리오"
+    "category_distribution": {
+      "용어 정의": 10,
+      "논문 검색": 4,
+      "최신 정보": 8,
+      "논문 요약": 4,
+      "개념 비교": 8,
+      "개념 설명": 2,
+      "기술적 분석": 10,
+      "파일 관리": 2
     },
-    
-    "quality_features": [
-      "참고 문서(reference_docs) 포함",
-      "예상 답변(expected_answer) 샘플 제공",
-      "구체적인 평가 기준(evaluation_criteria) 명시",
-      "엣지 케이스 5개 포함",
-      "실전 시나리오 2개 포함",
-      "다중 Tool 사용 시나리오 포함"
-    ],
-    
+    "complexity_distribution": {
+      "low": 18,
+      "medium": 12,
+      "high": 10
+    },
+    "user_level_mapping": {
+      "elementary": {
+        "description": "초등학생 수준 - 일상 언어, 쉬운 비유",
+        "difficulty_range": [
+          "easy"
+        ],
+        "answer_characteristics": [
+          "전문 용어 최소화",
+          "실생활 비유 사용",
+          "짧고 간단한 문장",
+          "동화책 스타일"
+        ]
+      },
+      "beginner": {
+        "description": "초급자 수준 - 기본 개념 이해",
+        "difficulty_range": [
+          "easy"
+        ],
+        "answer_characteristics": [
+          "기본 용어 설명 포함",
+          "간단한 비유",
+          "3-5개 핵심 포인트",
+          "그림으로 설명 가능한 수준"
+        ]
+      },
+      "intermediate": {
+        "description": "중급자 수준 - 기술적 이해",
+        "difficulty_range": [
+          "hard"
+        ],
+        "answer_characteristics": [
+          "기술 용어 사용",
+          "구조적 설명",
+          "알고리즘 프로세스",
+          "비교 분석 포함"
+        ]
+      },
+      "advanced": {
+        "description": "고급자/전문가 수준 - 깊이 있는 분석",
+        "difficulty_range": [
+          "hard"
+        ],
+        "answer_characteristics": [
+          "수식과 증명",
+          "이론적 배경",
+          "논문 인용",
+          "복잡도 분석"
+        ]
+      }
+    },
+    "quality_criteria": {
+      "answer_completeness": "각 user_level에 맞는 답변 완성도",
+      "consistency": "동일 질문에 대한 user_level별 답변 일관성",
+      "progression": "elementary → beginner → intermediate → advanced 점진적 난이도 증가",
+      "tool_accuracy": "질문에 적합한 도구 선택 정확도"
+    },
     "usage_guide": {
-      "step1": "질문 카테고리 선택 (basic/search/comparison/technical/edge/realistic)",
-      "step2": "AI 시스템에 질문 입력",
-      "step3": "생성된 답변과 expected_answer 비교",
-      "step4": "evaluation_criteria에 따라 5가지 기준 평가",
-      "step5": "total_score 계산 및 개선점 도출"
-    }
-  },
-
-  "annotation_guidelines": {
-    "difficulty_criteria": {
-      "easy": "일반인도 이해 가능한 수준, 단순 정의나 검색",
-      "hard": "전문가 수준의 깊이, 비교/분석/수식 포함"
+      "router_test": "expected_tool로 라우팅 정확도 테스트",
+      "difficulty_test": "user_level별 답변 스타일 적합성 테스트",
+      "prompt_engineering": "user_level별 프롬프트 최적화",
+      "evaluation": "expected_answer_keywords + answer_style로 답변 품질 평가"
     },
-    "complexity_criteria": {
-      "low": "단일 Tool, 단일 의도, 명확한 답변",
-      "medium": "1-2개 Tool, 약간의 맥락 파악 필요",
-      "high": "복수 Tool, 다중 의도, 심화 분석 필요"
-    }
+    "last_updated": "2025-11-04"
   }
 }
