@@ -207,7 +207,11 @@ paper_count
 
 ### Q2-4. 용어 추출은 누가 하나요?
 
-**A:** **별도의 LLM (GPT-4o-mini)**이 자동으로 추출합니다.
+**A:** **별도의 LLM (GPT-4o Mini)**이 자동으로 추출합니다.
+
+**사용 모델 설정:**
+- 용어 추출 LLM은 `configs/model_config.yaml`에서 사용자가 정의한 모델 사용
+- 기본값: `embeddings.provider` 및 `embeddings.model` 설정 (OpenAI의 경우 `gpt-4o-mini`)
 
 **왜 별도의 LLM을 사용하나요?**
 
@@ -215,16 +219,16 @@ paper_count
 
 | 항목 | 답변 생성 LLM | 용어 추출 LLM |
 |------|-------------|--------------|
-| **모델** | GPT-4o 또는 Solar Pro (난이도별) | GPT-4o-mini (고정) |
+| **모델** | GPT-5 또는 Solar Pro2 (난이도별) | GPT-4o Mini (기본값) |
 | **역할** | 사용자 질문에 답변 | 답변에서 AI/ML 용어 추출 |
-| **비용** | 높음 | 낮음 (GPT-4o-mini) |
+| **비용** | 높음 | 낮음 (GPT-4o Mini) |
 | **속도** | 느림 (답변 생성) | 빠름 (용어 추출만) |
 
-**왜 GPT-4o-mini를 사용하나요?**
+**왜 GPT-4o Mini를 사용하나요?**
 
 1. **비용 절감**: 용어 추출은 간단한 작업이므로 저렴한 모델로 충분
 2. **빠른 처리**: 답변 표시 후 백그라운드에서 빠르게 실행
-3. **정확도 충분**: JSON 파싱 및 용어 분류에 GPT-4o-mini로 충분
+3. **정확도 충분**: JSON 파싱 및 용어 분류에 GPT-4o Mini로 충분
 
 **전체 프로세스 (초보자 설명):**
 
@@ -232,14 +236,14 @@ paper_count
 [1단계] 사용자 질문
 "GAN이 뭐야?"
     ↓
-[2단계] 답변 생성 LLM (GPT-4o 또는 Solar Pro)
+[2단계] 답변 생성 LLM (GPT-5 또는 Solar Pro2)
 답변: "GAN은 Generator와 Discriminator로 구성된...
        적대적 학습(Adversarial Learning)을 통해..."
     ↓
 [3단계] 답변 표시 (사용자에게)
 사용자는 즉시 답변을 볼 수 있음
     ↓
-[4단계] 용어 추출 LLM (GPT-4o-mini) - 백그라운드 실행
+[4단계] 용어 추출 LLM (GPT-4o Mini) - 백그라운드 실행
 프롬프트:
   "다음 답변에서 AI/ML 관련 전문 용어를 1-5개 추출하고,
    각 용어에 대한 정의와 난이도별 설명을 생성하세요.
@@ -291,7 +295,9 @@ def extract_and_save_terms(answer, difficulty, min_terms, max_terms, logger):
     """
     LLM을 사용하여 답변에서 AI/ML 용어 추출 및 저장
     """
-    # 1. LLM 초기화 (GPT-4o-mini 고정)
+    # 1. LLM 초기화
+    # configs/model_config.yaml의 embeddings.model 설정을 최우선시
+    # 기본값: gpt-4o-mini (비용 효율적)
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 
     # 2. 프롬프트 구성
@@ -356,7 +362,7 @@ JSON 형식으로만 반환:
 
 | 항목 | 값 |
 |------|-----|
-| **LLM 모델** | GPT-4o-mini |
+| **LLM 모델** | GPT-4o Mini (기본값) |
 | **토큰 수** | 약 500-1000 토큰 (답변 + 프롬프트) |
 | **비용** | 약 $0.0001-0.0003 (답변당) |
 | **응답 시간** | 1-3초 (백그라운드) |
@@ -478,18 +484,22 @@ openai.error.RateLimitError: Rate limit exceeded
 
 ```python
 # 옵션 1: 재시도 로직 (현재 미구현)
-for retry in range(3):
+# configs/model_config.yaml의 embeddings.max_retries 설정값 사용 (기본값: 3)
+max_retries = config.get("embeddings.max_retries", 3)
+
+for retry in range(max_retries):
     try:
         return extract_and_save_terms(...)
     except Exception as e:
-        if retry == 2:  # 마지막 시도
-            logger.write("3번 시도 모두 실패")
+        if retry == max_retries - 1:  # 마지막 시도
+            logger.write(f"{max_retries}번 시도 모두 실패")
         else:
             time.sleep(1)  # 1초 대기 후 재시도
 
 # 옵션 2: 대체 모델 사용
+# configs/model_config.yaml에서 사용자가 정의한 모델을 최우선시
 try:
-    llm = ChatOpenAI(model="gpt-4o-mini")
+    llm = ChatOpenAI(model="gpt-4o-mini")  # 기본값
     ...
 except:
     # GPT 실패 시 Solar로 대체
@@ -572,7 +582,7 @@ Step 3. 검색 결과 처리
     [Case B] 검색 결과 없음: ⚠️ 현재 시스템의 Fallback
         - _format_glossary_md() 함수가 "관련 용어를 찾을 수 없습니다." 반환
         - 이 메시지를 glossary 도구의 LLM에게 전달
-        - LLM이 자체 지식(GPT-5 또는 Solar 학습 데이터)으로 답변 생성
+        - LLM이 자체 지식(GPT-5 또는 Solar Pro2 학습 데이터)으로 답변 생성
         - 예: "ML은 Machine Learning의 약자로..."
         - END
 ```
