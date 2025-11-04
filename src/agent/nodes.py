@@ -45,31 +45,53 @@ def router_node(state: AgentState, exp_manager=None):
     if exp_manager:
         exp_manager.logger.write(f"라우터 노드 실행: {question}")
 
-    # -------------- JSON 프롬프트 로드 -------------- #
+    # -------------- 다중 요청 감지 (간단한 키워드 기반) -------------- #
+    multi_request_patterns = {
+        ("찾", "요약"): ["search_paper", "summarize"],
+        ("검색", "요약"): ["search_paper", "summarize"],
+        ("찾", "정리"): ["search_paper", "summarize", "general"],
+        ("논문", "요약"): ["search_paper", "summarize"],
+        ("검색", "설명"): ["search_paper", "general"]
+    }
+
+    # 다중 요청 패턴 확인
+    for keywords, tools in multi_request_patterns.items():
+        if all(kw in question for kw in keywords):
+            if exp_manager:
+                exp_manager.logger.write(f"다중 요청 감지: {keywords} → {tools}")
+
+            # tool_pipeline 설정 (순차 실행 도구 목록)
+            state["tool_pipeline"] = tools
+            state["tool_choice"] = tools[0]  # 첫 번째 도구부터 실행
+
+            return state
+
+    # -------------- 단일 요청 처리 (기존 로직) -------------- #
+    # JSON 프롬프트 로드
     routing_prompt_template = get_routing_prompt()    # JSON 파일에서 프롬프트 로드
     routing_prompt = routing_prompt_template.format(question=question)  # 질문 삽입
 
-    # -------------- 난이도별 LLM 초기화 -------------- #
+    # 난이도별 LLM 초기화
     difficulty = state.get("difficulty", "easy")  # 난이도 (기본값: easy)
     llm_client = LLMClient.from_difficulty(
         difficulty=difficulty,
         logger=exp_manager.logger if exp_manager else None
     )
 
-    # -------------- LLM 호출 -------------- #
+    # LLM 호출
     raw_response = llm_client.llm.invoke(routing_prompt).content.strip()  # 도구 선택
 
-    # -------------- 응답 파싱: 첫 번째 단어만 추출 -------------- #
-    # LLM이 설명을 포함할 수 있으므로, 첫 번째 단어만 가져옴
+    # 응답 파싱: 첫 번째 단어만 추출
     tool_choice = raw_response.split()[0] if raw_response else "general"
 
-    # -------------- 로깅 -------------- #
+    # 로깅
     if exp_manager:
         exp_manager.logger.write(f"라우팅 결정 (원본): {raw_response[:100]}...")
         exp_manager.logger.write(f"라우팅 결정 (파싱): {tool_choice}")
 
-    # -------------- 상태 업데이트 -------------- #
+    # 상태 업데이트
     state["tool_choice"] = tool_choice          # 선택된 도구 저장
+    state["tool_pipeline"] = [tool_choice]      # 단일 도구도 파이프라인으로 관리
 
     return state                                # 업데이트된 상태 반환
 
