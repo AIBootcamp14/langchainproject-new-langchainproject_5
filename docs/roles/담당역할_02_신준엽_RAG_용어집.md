@@ -253,7 +253,7 @@ class RAGRetriever:
         )
 
         # MultiQuery Retriever 구현
-        self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        self.llm = ChatOpenAI(model="gpt-5", temperature=0)
         self.multi_query_retriever = MultiQueryRetriever.from_llm(
             retriever=self.base_retriever,
             llm=self.llm

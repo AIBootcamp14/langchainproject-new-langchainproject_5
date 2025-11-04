@@ -111,7 +111,7 @@ Few-shot learning 성능 개선을 위한 주요 접근법:
    - AutoAugment: 자동 증강 정책 학습
 
 3. **전이 학습 강화**:
-   - 대규모 사전 학습 모델 활용 (CLIP, GPT-4)
+   - 대규모 사전 학습 모델 활용 (CLIP, GPT-5)
    - Task-specific fine-tuning
 
 4. **관계 네트워크**:

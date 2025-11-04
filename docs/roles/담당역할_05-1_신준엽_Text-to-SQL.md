@@ -26,7 +26,7 @@
 1. **Text-to-SQL 도구 구현** (`src/tools/text2sql.py`)
    - LangChain Tool 정의
    - Few-shot 프롬프트 설계
-   - SQL 쿼리 생성 (GPT-4o-mini)
+   - SQL 쿼리 생성 (GPT-5o-mini)
    - 보안 및 안전성 강화 (화이트리스트, 금지 패턴)
 
 2. **데이터베이스 연동**
@@ -321,7 +321,7 @@ def create_agent_graph(exp_manager=None):
 - [x] `src/tools/text2sql.py` 파일 생성
 - [x] LangChain Tool 정의
 - [x] Few-shot 프롬프트 설계 (5개 예시)
-- [x] SQL 쿼리 생성 (OpenAI GPT-4o-mini)
+- [x] SQL 쿼리 생성 (OpenAI GPT-5o-mini)
 - [x] DB 연결 및 쿼리 실행
 - [x] 결과 포맷팅 (Markdown 표)
 
@@ -449,7 +449,7 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_password
 POSTGRES_DB=papers
 
-TEXT2SQL_MODEL=gpt-4o-mini
+TEXT2SQL_MODEL=gpt-5o-mini
 OPENAI_API_KEY=your_openai_key
 ```
 
