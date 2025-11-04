@@ -85,11 +85,15 @@ graph TB
     H -->|Web| I2[웹 검색]
     H -->|Glossary| I3[용어 설명]
     H -->|Summarize| I4[논문 요약]
+    H -->|Text2SQL| I5[통계 조회]
+    H -->|FileSave| I6[파일 저장]
 
     I1 --> J[답변 생성]
     I2 --> J
     I3 --> J
     I4 --> J
+    I5 --> J
+    I6 --> J
 
     J --> K[채팅 화면<br/>답변 표시]
     K --> L{계속 질문?}
