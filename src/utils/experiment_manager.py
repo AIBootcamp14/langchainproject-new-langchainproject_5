@@ -411,6 +411,9 @@ class ExperimentManager:
         Returns:
             str: 저장된 파일 경로
         """
+        # outputs 폴더가 없으면 생성 (다른 세션의 cleanup으로 삭제된 경우 대비)
+        self.outputs_dir.mkdir(parents=True, exist_ok=True)
+
         output_path = self.outputs_dir / filename
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(content)
