@@ -35,6 +35,7 @@ class AgentState(TypedDict, total=False):
         fallback_chain (List[str]): 현재 질문에 대한 도구 우선순위 리스트
         validation_failed (bool): Router 검증 실패 여부
         tool_status (str): 도구 실행 상태 (success, failed, partial, error)
+        failure_reason (str): 도구 실패 사유
         tool_timeline (List[Dict[str, Any]]): 도구 실행 타임라인
         max_retries (int): 최대 재시도 횟수
         validation_enabled (bool): Router 검증 활성화 여부
@@ -57,6 +58,7 @@ class AgentState(TypedDict, total=False):
     fallback_chain: List[str]                   # 도구 우선순위 리스트
     validation_failed: bool                     # Router 검증 실패 여부
     tool_status: str                            # 도구 실행 상태
+    failure_reason: str                         # 도구 실패 사유
     tool_timeline: List[Dict[str, Any]]         # 도구 실행 타임라인
     max_retries: int                            # 최대 재시도 횟수
     validation_enabled: bool                    # Router 검증 활성화 여부
