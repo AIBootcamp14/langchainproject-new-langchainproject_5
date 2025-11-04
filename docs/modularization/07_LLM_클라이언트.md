@@ -18,7 +18,7 @@ LLM 클라이언트는 **OpenAI와 Solar(Upstage) 듀얼 LLM을 지원**하며, 
 
 ### 주요 역할
 
-1. **다중 LLM 지원**: OpenAI (GPT-3.5, GPT-4) + Solar (solar-mini, solar-pro)
+1. **다중 LLM 지원**: OpenAI (GPT-5) + Solar (Solar Pro2)
 2. **에러 핸들링**: 자동 재시도 (최대 3회, 지수 백오프)
 3. **토큰 추적**: OpenAI 토큰 사용량 및 비용 추적
 4. **스트리밍**: 실시간 응답 스트리밍 지원
@@ -28,10 +28,8 @@ LLM 클라이언트는 **OpenAI와 Solar(Upstage) 듀얼 LLM을 지원**하며, 
 
 | Provider | 모델 | 용도 | 비용 | Temperature |
 |----------|------|------|------|-------------|
-| OpenAI | gpt-3.5-turbo | 일반 답변 | 낮음 | 0.7 |
-| OpenAI | gpt-4 | 복잡한 답변, 요약 | 높음 | 0.7 |
-| Solar | solar-mini | 빠른 라우팅 | 낮음 | 0 |
-| Solar | solar-pro | 전문적 답변 | 중간 | 0.7 |
+| OpenAI | gpt-5 | 복잡한 답변, 요약 | 높음 | 0.7 |
+| Solar | solar-pro2 | 빠른 라우팅, 전문적 답변 | 중간 | 0.7 |
 
 ---
 
@@ -51,10 +49,10 @@ sequenceDiagram
     Client->>Client: 난이도별 모델 선택
 
     alt Easy 모드 + 한국어
-        Client->>API2: Solar API 호출<br/>solar-pro
+        Client->>API2: Solar API 호출<br/>solar-pro2
         API2-->>Client: 한국어 답변
     else Hard 모드 or 영어
-        Client->>API1: OpenAI API 호출<br/>GPT-4
+        Client->>API1: OpenAI API 호출<br/>GPT-5
         API1-->>Client: 상세 답변
     end
 
@@ -64,8 +62,8 @@ sequenceDiagram
 **LLM API 호출 흐름 설명:**
 - AI Agent가 질문에 대한 답변을 생성할 때 LLM Client가 난이도에 따라 적절한 모델을 선택하는 과정을 표현
 - Agent가 질문과 난이도를 LLM Client에 전달하면 Client는 난이도별로 최적의 모델을 선택
-- Easy 모드와 한국어 답변이 필요한 경우 Solar API의 solar-pro 모델을 호출하여 한국어에 특화된 답변을 생성
-- Hard 모드이거나 영어 답변이 필요한 경우 OpenAI API의 GPT-4 모델을 호출하여 상세하고 전문적인 답변을 생성
+- Easy 모드와 한국어 답변이 필요한 경우 Solar API의 Solar Pro2 모델을 호출하여 한국어에 특화된 답변을 생성
+- Hard 모드이거나 영어 답변이 필요한 경우 OpenAI API의 GPT-5 모델을 호출하여 상세하고 전문적인 답변을 생성
 - 선택된 API에서 답변을 받아 Agent에 최종 답변을 반환
 
 ### 에러 처리 흐름
@@ -163,19 +161,17 @@ def invoke_with_retry(self, messages):
 
 | 작업 유형 | 추천 LLM | Temperature | 이유 |
 |----------|----------|-------------|------|
-| **라우팅** | Solar solar-mini | 0.0 | 빠르고 저렴, 결정론적 |
-| **답변 생성** | OpenAI GPT-4 | 0.7 | 높은 품질, 자연스러운 답변 |
-| **요약** | OpenAI GPT-4 | 0.0 | 정확성 중시 |
-| **일반 질문** | OpenAI GPT-3.5 | 0.7 | 비용 효율적 |
+| **라우팅** | Solar Pro2 | 0.0 | 빠르고 저렴, 결정론적 |
+| **답변 생성** | OpenAI GPT-5 | 0.7 | 높은 품질, 자연스러운 답변 |
+| **요약** | OpenAI GPT-5 | 0.0 | 정확성 중시 |
 
 ### 난이도별 선택
 
 **Easy 모드 (초심자):**
-- Solar solar-pro (한국어 특화)
-- OpenAI GPT-3.5-turbo (일반)
+- Solar Pro2 (한국어 특화)
 
 **Hard 모드 (전문가):**
-- OpenAI GPT-4 (기술적 정확도)
+- OpenAI GPT-5 (기술적 정확도)
 - Temperature: 0.7 (자연스러운 답변)
 
 ---
@@ -186,11 +182,11 @@ def invoke_with_retry(self, messages):
 
 LLMClient는 모든 Agent 노드에서 사용됩니다:
 
-- **Router 노드**: Solar solar-mini (빠른 라우팅)
-- **General 노드**: GPT-3.5-turbo (일반 답변)
-- **RAG 노드**: GPT-4 (복잡한 답변)
-- **Glossary 노드**: GPT-3.5-turbo (용어 설명)
-- **Summarize 노드**: GPT-4 (정확한 요약)
+- **Router 노드**: Solar Pro2 (빠른 라우팅)
+- **General 노드**: Solar Pro2 (일반 답변 - Easy) / GPT-5 (일반 답변 - Hard)
+- **RAG 노드**: GPT-5 (복잡한 답변)
+- **Glossary 노드**: GPT-5 (용어 설명)
+- **Summarize 노드**: GPT-5 (정확한 요약)
 
 ### Fallback 전략
 
@@ -198,11 +194,11 @@ OpenAI 실패 시 Solar로 자동 전환:
 
 ```python
 try:
-    llm_openai = LLMClient(provider="openai", model="gpt-4")
+    llm_openai = LLMClient(provider="openai", model="gpt-5")
     return llm_openai.invoke_with_retry(messages)
 except Exception as e:
     logger.write(f"OpenAI 실패, Solar로 Fallback: {e}")
-    llm_solar = LLMClient(provider="solar", model="solar-pro")
+    llm_solar = LLMClient(provider="solar", model="solar-pro2")
     return llm_solar.invoke_with_retry(messages)
 ```
 
@@ -223,21 +219,19 @@ SOLAR_API_KEY=up-...
 
 | 모델 | 1K 토큰 비용 (입력) | 1K 토큰 비용 (출력) |
 |------|---------------------|---------------------|
-| gpt-3.5-turbo | $0.0015 | $0.002 |
-| gpt-4 | $0.03 | $0.06 |
-| solar-mini | 무료 (제한적) | 무료 (제한적) |
-| solar-pro | 무료 (제한적) | 무료 (제한적) |
+| gpt-5 | $0.04 | $0.08 |
+| solar-pro2 | 무료 (제한적) | 무료 (제한적) |
 
 **비용 절감 팁:**
-- 라우팅은 Solar 사용
-- 간단한 질문은 GPT-3.5-turbo
-- 복잡한 답변만 GPT-4
+- 라우팅은 Solar Pro2 사용
+- Easy 모드는 Solar Pro2 사용
+- Hard 모드만 GPT-5 사용
 
 ### 3. 타임아웃 설정
 
 ```python
 llm = ChatOpenAI(
-    model="gpt-4",
+    model="gpt-5",
     request_timeout=30,  # 30초 타임아웃
     max_retries=2
 )
@@ -274,10 +268,10 @@ llm = ChatOpenAI(
 
 ```python
 # OpenAI 사용
-llm_openai = LLMClient(provider="openai", model="gpt-4", temperature=0.7)
+llm_openai = LLMClient(provider="openai", model="gpt-5", temperature=0.7)
 
 # Solar 사용
-llm_solar = LLMClient(provider="solar", model="solar-mini", temperature=0)
+llm_solar = LLMClient(provider="solar", model="solar-pro2", temperature=0)
 
 # 재시도 로직
 response = llm_openai.invoke_with_retry(messages)
@@ -288,8 +282,8 @@ response = llm_openai.invoke_with_tracking(messages)
 
 ### 모범 사례
 
-1. **라우팅**: Solar solar-mini (빠르고 저렴)
-2. **답변 생성**: GPT-4 (높은 품질)
+1. **라우팅**: Solar Pro2 (빠르고 저렴)
+2. **답변 생성**: GPT-5 (높은 품질)
 3. **재시도 로직**: 모든 호출에 적용 (안정성)
 4. **Fallback**: OpenAI 실패 시 Solar 사용 (가용성)
 5. **토큰 모니터링**: OpenAI 비용 추적 (비용 관리)
