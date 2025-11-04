@@ -58,7 +58,7 @@ PostgreSQL 실행
 | 모델 | 비용 (1K 토큰) | 속도 | SQL 생성 정확도 |
 |------|---------------|------|----------------|
 | **Solar Pro2** | $0.0005 | ⚡⚡⚡ 매우 빠름 | ⭐⭐⭐ 높음 |
-| GPT-4 | $0.03 | ⚡⚡ 중간 | ⭐⭐⭐ 매우 높음 |
+| GPT-5 | $0.03 | ⚡⚡ 중간 | ⭐⭐⭐ 매우 높음 |
 | GPT-3.5 | $0.002 | ⚡⚡⚡ 빠름 | ⭐⭐ 중간 |
 
 **Solar Pro2 선택 이유:**
@@ -69,10 +69,15 @@ PostgreSQL 실행
 **설정 (configs/model_config.yaml):**
 ```yaml
 text2sql:
-  provider: solar
-  model: solar-pro2
-  temperature: 0.0  # 결정론적 SQL 생성
+  provider: solar              # Solar 사용 (비용 효율)
+  model: solar-pro2            # Solar Pro2 모델 (사용자 설정 최우선)
+  temperature: 0.0             # 결정론적 SQL 생성
+  max_retries: 2               # SQL 생성 실패 시 최대 재시도 횟수 (기본값: 2)
 ```
+
+**참고:**
+- `configs/model_config.yaml`에서 사용자가 정의한 모델을 최우선시
+- `text2sql.max_retries` 설정으로 재시도 횟수 조절 가능
 
 ---
 
@@ -892,8 +897,9 @@ echo $SOLAR_API_KEY
 # configs/model_config.yaml
 text2sql:
   provider: openai
-  model: gpt-4
+  model: gpt-5               # GPT-5 사용 (더 높은 정확도)
   temperature: 0.0
+  max_retries: 2             # 재시도 횟수
 ```
 
 ---
