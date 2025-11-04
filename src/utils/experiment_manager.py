@@ -64,6 +64,9 @@ class ExperimentManager:
                        self.ui_dir, self.outputs_dir, self.evaluation_dir]:
             folder.mkdir(exist_ok=True)
 
+        # 전체 설정 파일 복사 (config.yaml)
+        self._save_config_snapshot()
+
         # 메타데이터 초기화
         self.metadata = {
             'session_id': f"{session_id:03d}",               # Session ID
@@ -131,6 +134,46 @@ class ExperimentManager:
                 continue
 
         return max_id + 1
+
+
+    # ---------------------- 설정 스냅샷 저장 ---------------------- #
+    def _save_config_snapshot(self):
+        """
+        configs/ 폴더의 모든 설정 파일을 읽어서 config.yaml로 병합 저장
+
+        실험 실행 시점의 전체 설정을 보존하여 재현성 확보
+        """
+        import yaml
+
+        config_files = [
+            "configs/db_config.yaml",
+            "configs/model_config.yaml",
+            "configs/prompt_config.yaml"
+        ]
+
+        merged_config = {}
+
+        for config_file in config_files:
+            try:
+                config_path = Path(config_file)
+                if config_path.exists():
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        config_data = yaml.safe_load(f)
+                        if config_data:
+                            # 파일명에서 key 추출 (예: db_config.yaml -> db_config)
+                            config_key = config_path.stem
+                            merged_config[config_key] = config_data
+            except Exception as e:
+                self.logger.write(f"설정 파일 읽기 실패: {config_file} - {e}")
+
+        # 병합된 설정을 config.yaml로 저장
+        config_output_path = self.experiment_dir / "config.yaml"
+        try:
+            with open(config_output_path, 'w', encoding='utf-8') as f:
+                yaml.dump(merged_config, f, allow_unicode=True, default_flow_style=False)
+            self.logger.write(f"전체 설정 저장 완료: config.yaml")
+        except Exception as e:
+            self.logger.write(f"config.yaml 저장 실패: {e}")
 
 
     # ==================== 도구 로그 메서드 ==================== #
