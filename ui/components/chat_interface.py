@@ -24,6 +24,7 @@ from ui.components.chat_manager import (
     add_message_to_current_chat,
     export_current_chat
 )
+from src.evaluation import AnswerEvaluator, save_evaluation_results
 
 
 # ==================== 채팅 히스토리 관리 ==================== #
@@ -308,6 +309,71 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             except Exception as e:
                 if exp_manager:
                     exp_manager.logger.write(f"용어 자동 저장 실패: {e}", print_error=True)
+
+            # -------------- 실시간 답변 품질 평가 -------------- #
+            evaluation_result = None
+            try:
+                if exp_manager:
+                    exp_manager.log_ui_interaction("답변 품질 평가 시작")
+
+                with st.spinner("📊 답변 품질 평가 중..."):
+                    # 참고 문서 문자열 생성
+                    reference_docs = ""
+                    if "source_documents" in response and response["source_documents"]:
+                        doc_texts = []
+                        for doc in response["source_documents"]:
+                            metadata = doc.metadata
+                            doc_text = f"제목: {metadata.get('title', 'N/A')}\n"
+                            doc_text += f"저자: {metadata.get('authors', 'N/A')}\n"
+                            doc_text += f"내용: {doc.page_content[:200]}..."
+                            doc_texts.append(doc_text)
+                        reference_docs = "\n\n".join(doc_texts)
+                    else:
+                        reference_docs = "참고 문서 없음 (일반 답변)"
+
+                    # 평가 수행
+                    evaluator = AnswerEvaluator(exp_manager=exp_manager)
+                    evaluation_result = evaluator.evaluate(
+                        question=prompt,
+                        answer=answer,
+                        reference_docs=reference_docs,
+                        difficulty=difficulty
+                    )
+
+                    # 평가 결과 DB 저장
+                    save_evaluation_results([evaluation_result])
+
+                    if exp_manager:
+                        exp_manager.log_ui_interaction(
+                            f"평가 완료 - 총점: {evaluation_result.get('total_score', 0)}/40"
+                        )
+
+                    st.toast(f"✅ 답변 평가 완료: {evaluation_result.get('total_score', 0)}/40점", icon="📊")
+
+            except Exception as e:
+                if exp_manager:
+                    exp_manager.logger.write(f"답변 평가 실패: {e}", print_error=True)
+                st.warning(f"⚠️ 답변 평가 중 오류 발생: {str(e)}")
+
+            # -------------- 평가 결과 표시 -------------- #
+            if evaluation_result:
+                with st.expander("📊 답변 품질 평가 결과", expanded=False):
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        st.metric("정확도", f"{evaluation_result.get('accuracy_score', 0)}/10")
+                        st.metric("관련성", f"{evaluation_result.get('relevance_score', 0)}/10")
+
+                    with col2:
+                        st.metric("난이도 적합성", f"{evaluation_result.get('difficulty_score', 0)}/10")
+                        st.metric("출처 명시", f"{evaluation_result.get('citation_score', 0)}/10")
+
+                    st.divider()
+                    st.metric("총점", f"{evaluation_result.get('total_score', 0)}/40",
+                             delta=None, delta_color="normal")
+
+                    if evaluation_result.get('comment'):
+                        st.info(f"💬 **평가 코멘트**\n\n{evaluation_result['comment']}")
 
             # -------------- 출처 정보 표시 -------------- #
             sources = []
