@@ -170,113 +170,47 @@
 
 ### 예제 코드
 
-```python
-# src/tools/summarize.py
+**파일:** `src/tools/summarize.py`
 
-from langchain.tools import tool
-from langchain_postgres.vectorstores import PGVector
-from langchain_openai import ChatOpenAI
-from langchain.chains.summarize import load_summarize_chain
-from langchain.prompts import PromptTemplate
-import psycopg2
+**필요 라이브러리:**
+- `langchain.tools.tool`
+- `langchain_postgres.vectorstores.PGVector`
+- `langchain_openai.ChatOpenAI`
+- `langchain.chains.summarize.load_summarize_chain`
+- `langchain.prompts.PromptTemplate`
+- `psycopg2`
 
-# ExperimentManager는 main에서 전달받아 사용
+**함수: summarize_paper**
 
-@tool
-def summarize_paper(paper_title: str, difficulty: str = "easy", exp_manager=None) -> str:
-    """
-    특정 논문을 요약합니다. 난이도에 따라 초심자용/전문가용 요약을 제공합니다.
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| paper_title | str | (필수) | 논문 제목 |
+| difficulty | str | "easy" | 난이도 ('easy' 또는 'hard') |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        paper_title: 논문 제목
-        difficulty: 'easy' (초심자) 또는 'hard' (전문가)
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
+**처리 흐름:**
 
-    Returns:
-        논문 요약 내용
-    """
-    # 도구별 Logger 생성
-    tool_logger = exp_manager.get_tool_logger('summary_paper') if exp_manager else None
+| 단계 | 동작 |
+|------|------|
+| 1 | exp_manager로부터 도구별 Logger 생성 ('summary_paper') |
+| 2 | psycopg2로 PostgreSQL 연결 |
+| 3 | papers 테이블에서 제목으로 논문 검색 (ILIKE 사용) |
+| 4 | 논문이 없으면 오류 메시지 반환, 있으면 paper_id 추출 |
+| 5 | PGVector 초기화 (collection_name="paper_chunks") |
+| 6 | similarity_search로 해당 논문의 청크 조회 (k=10, filter={"paper_id": paper_id}) |
+| 7 | difficulty에 따라 프롬프트 템플릿 선택 (easy: 쉬운 요약 / hard: 전문가용 요약) |
+| 8 | PromptTemplate 생성 (input_variables=["text"]) |
+| 9 | ChatOpenAI 초기화 (model="gpt-5", temperature=0) |
+| 10 | load_summarize_chain으로 요약 체인 생성 (chain_type="stuff") |
+| 11 | chain.run()으로 논문 청크 요약 실행 |
+| 12 | 요약 결과 반환 |
 
-    if tool_logger:
-        tool_logger.write(f"논문 요약 시작: {paper_title}")
-        tool_logger.write(f"난이도: {difficulty}")
+**난이도별 프롬프트:**
 
-    # 1. PostgreSQL에서 논문 메타데이터 조회
-    conn = psycopg2.connect("postgresql://user:password@localhost/papers")
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT * FROM papers WHERE title ILIKE %s",
-        (f"%{paper_title}%",)
-    )
-    paper_meta = cursor.fetchone()
-
-    if not paper_meta:
-        if tool_logger:
-            tool_logger.write(f"논문을 찾을 수 없음: {paper_title}")
-        return f"'{paper_title}' 논문을 찾을 수 없습니다."
-
-    paper_id = paper_meta[0]
-    if tool_logger:
-        tool_logger.write(f"논문 ID: {paper_id}")
-
-    # 2. Vector DB에서 논문 전체 내용 조회
-    vectorstore = PGVector(
-        collection_name="paper_chunks",
-        connection_string="postgresql://user:password@localhost:5432/papers"
-    )
-
-    paper_chunks = vectorstore.similarity_search(
-        paper_title,
-        k=10,
-        filter={"paper_id": paper_id}
-    )
-
-    if tool_logger:
-        tool_logger.write(f"검색된 청크 수: {len(paper_chunks)}")
-
-    # 3. 난이도별 프롬프트
-    if difficulty == "easy":
-        prompt_template = """
-다음 논문을 초심자도 이해할 수 있도록 쉽게 요약해주세요:
-- 전문 용어는 풀어서 설명
-- 핵심 아이디어 3가지
-- 실생활 비유 포함
-
-논문 내용: {text}
-
-쉬운 요약:
-        """
-    else:  # hard
-        prompt_template = """
-다음 논문을 전문가 수준으로 요약해주세요:
-- 기술적 세부사항 포함
-- 수식 및 알고리즘 설명
-- 관련 연구와의 비교
-
-논문 내용: {text}
-
-전문가용 요약:
-        """
-
-    PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
-
-    # 4. 요약 체인 실행
-    llm = ChatOpenAI(model="gpt-5", temperature=0)
-    chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
-
-    if tool_logger:
-        tool_logger.write("요약 체인 실행 중...")
-
-    summary = chain.run(paper_chunks)
-
-    if tool_logger:
-        tool_logger.write(f"요약 완료: {len(summary)} 글자")
-        tool_logger.close()
-
-    return summary
-```
+| 난이도 | 요약 방식 |
+|--------|----------|
+| easy | 전문 용어 풀이, 핵심 아이디어 3가지, 실생활 비유 포함 |
+| hard | 기술적 세부사항, 수식/알고리즘 설명, 관련 연구 비교 |
 
 ---
 
@@ -321,155 +255,52 @@ def summarize_paper(paper_title: str, difficulty: str = "easy", exp_manager=None
 - **역할**: 논문 메타데이터 조회 (제목, 저자, 년도, 카테고리)
 - **쿼리**: `SELECT * FROM papers WHERE paper_id IN (...)`
 
-### 예제 코드
+**파일:** `src/agent/nodes.py`
 
-```python
-# src/agent/nodes.py
+**필요 라이브러리:**
+- `langchain_postgres.vectorstores.PGVector`
+- `langchain_openai.ChatOpenAI`, `OpenAIEmbeddings`
+- `langchain.schema.SystemMessage`, `HumanMessage`
+- `psycopg2`
+- `os`
 
-from langchain_postgres.vectorstores import PGVector
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.schema import SystemMessage, HumanMessage
-import psycopg2
-import os
+**함수: search_paper_node**
 
-def search_paper_node(state: AgentState, exp_manager=None):
-    """
-    RAG 검색 노드: 논문 DB에서 관련 논문 검색 및 답변 생성
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| state | AgentState | (필수) | Agent 상태 |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        state: Agent 상태
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    question = state["question"]
-    difficulty = state.get("difficulty", "easy")
+**처리 흐름:**
 
-    # 도구별 Logger 생성
-    tool_logger = exp_manager.get_tool_logger('rag_paper') if exp_manager else None
+| 단계 | 동작 |
+|------|------|
+| 1 | state에서 question, difficulty 추출 |
+| 2 | exp_manager로부터 도구별 Logger 생성 ('rag_paper') |
+| 3 | OpenAIEmbeddings 초기화 (model="text-embedding-3-small") |
+| 4 | PGVector 초기화 (collection_name="paper_chunks") |
+| 5 | similarity_search로 유사도 검색 (k=5) |
+| 6 | exp_manager.log_pgvector_search()로 검색 기록 |
+| 7 | 검색된 문서에서 paper_id 추출 |
+| 8 | paper_id가 없으면 오류 메시지 반환, 있으면 계속 |
+| 9 | psycopg2로 PostgreSQL 연결 |
+| 10 | papers 테이블에서 메타데이터 조회 (paper_id IN ...) |
+| 11 | exp_manager.log_sql_query()로 SQL 쿼리 기록 |
+| 12 | 검색된 문서들로 컨텍스트 문자열 구성 |
+| 13 | difficulty에 따라 system_prompt 선택 (easy: 쉬운 설명 / hard: 전문적 설명) |
+| 14 | user_prompt 구성 (참고 논문 + 질문) |
+| 15 | exp_manager.save_system_prompt(), save_user_prompt() 호출 |
+| 16 | ChatOpenAI 초기화 (model="gpt-5", temperature=0.7) |
+| 17 | [SystemMessage, HumanMessage] 구성하여 llm.invoke() 호출 |
+| 18 | response.content를 state["final_answer"]에 저장 |
+| 19 | state 반환 |
 
-    if tool_logger:
-        tool_logger.write(f"RAG 검색 노드 실행: {question}")
-        tool_logger.write(f"난이도: {difficulty}")
+**난이도별 시스템 프롬프트:**
 
-    # 1. Vector DB 초기화
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    vectorstore = PGVector(
-        collection_name="paper_chunks",
-        embedding_function=embeddings,
-        connection_string=os.getenv("DATABASE_URL")
-    )
-
-    # 2. 유사도 검색 (Top-5)
-    if tool_logger:
-        tool_logger.write("Vector DB 유사도 검색 시작 (Top-5)")
-
-    docs = vectorstore.similarity_search(question, k=5)
-
-    if tool_logger:
-        tool_logger.write(f"검색된 문서 수: {len(docs)}")
-
-        # pgvector 검색 기록
-        if exp_manager:
-            exp_manager.log_pgvector_search({
-                "tool": "rag_paper",
-                "query_text": question,
-                "top_k": 5,
-                "results_count": len(docs)
-            })
-
-    # 3. paper_id 추출 및 메타데이터 조회
-    paper_ids = list(set([doc.metadata.get("paper_id") for doc in docs if doc.metadata.get("paper_id")]))
-
-    if not paper_ids:
-        if tool_logger:
-            tool_logger.write("검색된 논문이 없음")
-            tool_logger.close()
-        state["final_answer"] = "관련 논문을 찾을 수 없습니다."
-        return state
-
-    # PostgreSQL 연결
-    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-    cursor = conn.cursor()
-
-    # papers 테이블에서 메타데이터 조회
-    placeholders = ','.join(['%s'] * len(paper_ids))
-    query = f"SELECT paper_id, title, authors, publish_date FROM papers WHERE paper_id IN ({placeholders})"
-
-    if tool_logger:
-        tool_logger.write(f"SQL 쿼리 실행: paper_id IN {paper_ids}")
-
-        # SQL 쿼리 기록
-        if exp_manager:
-            exp_manager.log_sql_query(
-                query=query,
-                description="논문 메타데이터 조회",
-                tool="rag_paper"
-            )
-
-    cursor.execute(query, paper_ids)
-    papers_meta = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    # 4. 컨텍스트 구성
-    context = "\n\n".join([
-        f"[논문 {i+1}] {doc.page_content}\n출처: {doc.metadata.get('title', 'Unknown')}"
-        for i, doc in enumerate(docs)
-    ])
-
-    # 5. 난이도별 프롬프트
-    if difficulty == "easy":
-        system_prompt = """
-당신은 논문을 쉽게 설명하는 전문가입니다.
-초심자도 이해할 수 있도록 쉽고 명확하게 답변해주세요.
-- 전문 용어는 풀어서 설명
-- 비유와 예시 사용
-- 수식은 최소화
-        """
-    else:  # hard
-        system_prompt = """
-당신은 논문 분석 전문가입니다.
-기술적 세부사항을 포함하여 정확하고 전문적으로 답변해주세요.
-- 논문의 핵심 기여 설명
-- 수식 및 알고리즘 포함
-- 관련 연구와 비교
-        """
-
-    user_prompt = f"""
-[참고 논문]
-{context}
-
-[질문]
-{question}
-
-위 논문을 참고하여 질문에 답변해주세요.
-    """
-
-    # 프롬프트 저장
-    if exp_manager:
-        exp_manager.save_system_prompt(system_prompt, metadata={"difficulty": difficulty})
-        exp_manager.save_user_prompt(user_prompt, metadata={"papers_count": len(papers_meta)})
-
-    if tool_logger:
-        tool_logger.write("LLM 답변 생성 시작")
-
-    # 6. LLM 호출
-    llm = ChatOpenAI(model="gpt-5", temperature=0.7)
-    messages = [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt)
-    ]
-
-    response = llm.invoke(messages)
-
-    if tool_logger:
-        tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
-        tool_logger.close()
-
-    # 7. 최종 답변 저장
-    state["final_answer"] = response.content
-
-    return state
-```
+| 난이도 | 프롬프트 내용 |
+|--------|--------------|
+| easy | 논문을 쉽게 설명, 전문 용어 풀이, 비유와 예시 사용, 수식 최소화 |
+| hard | 논문 분석 전문가, 기술적 세부사항, 수식/알고리즘 포함, 관련 연구 비교 |
 
 ---
 
@@ -500,109 +331,44 @@ Tavily Search API를 사용하여 웹에서 최신 논문 정보를 검색하고
 ### 사용하는 DB
 **DB 사용 없음** (Tavily API 외부 웹 검색)
 
-### 예제 코드
+**파일:** `src/agent/nodes.py`
 
-```python
-# src/agent/nodes.py
+**필요 라이브러리:**
+- `langchain_community.tools.tavily_search.TavilySearchResults`
+- `langchain_openai.ChatOpenAI`
+- `langchain.schema.SystemMessage`, `HumanMessage`
+- `os`
 
-from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
-import os
+**함수: web_search_node**
 
-def web_search_node(state: AgentState, exp_manager=None):
-    """
-    웹 검색 노드: Tavily API로 최신 논문 정보 검색
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| state | AgentState | (필수) | Agent 상태 |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        state: Agent 상태
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    question = state["question"]
-    difficulty = state.get("difficulty", "easy")
+**처리 흐름:**
 
-    # 도구별 Logger 생성
-    tool_logger = exp_manager.get_tool_logger('web_search') if exp_manager else None
+| 단계 | 동작 |
+|------|------|
+| 1 | state에서 question, difficulty 추출 |
+| 2 | exp_manager로부터 도구별 Logger 생성 ('web_search') |
+| 3 | TavilySearchResults 초기화 (max_results=5, api_key=TAVILY_API_KEY) |
+| 4 | search_tool.invoke()로 웹 검색 실행 |
+| 5 | 검색 결과를 포맷팅 (제목, 내용, URL) |
+| 6 | difficulty에 따라 system_prompt 선택 (easy: 쉬운 설명 / hard: 전문적 설명) |
+| 7 | user_prompt 구성 (웹 검색 결과 + 질문) |
+| 8 | exp_manager.save_system_prompt(), save_user_prompt() 호출 |
+| 9 | ChatOpenAI 초기화 (model="gpt-5", temperature=0.7) |
+| 10 | [SystemMessage, HumanMessage] 구성하여 llm.invoke() 호출 |
+| 11 | response.content를 state["final_answer"]에 저장 |
+| 12 | state 반환 |
 
-    if tool_logger:
-        tool_logger.write(f"웹 검색 노드 실행: {question}")
-        tool_logger.write(f"난이도: {difficulty}")
+**난이도별 시스템 프롬프트:**
 
-    # 1. Tavily Search API 초기화
-    search_tool = TavilySearchResults(
-        max_results=5,
-        api_key=os.getenv("TAVILY_API_KEY")
-    )
-
-    if tool_logger:
-        tool_logger.write("Tavily Search API 호출 시작")
-
-    # 2. 웹 검색 실행
-    search_results = search_tool.invoke({"query": question})
-
-    if tool_logger:
-        tool_logger.write(f"검색 결과 수: {len(search_results)}")
-
-    # 3. 검색 결과 포맷팅
-    formatted_results = "\n\n".join([
-        f"[결과 {i+1}]\n제목: {result.get('title', 'N/A')}\n내용: {result.get('content', 'N/A')}\nURL: {result.get('url', 'N/A')}"
-        for i, result in enumerate(search_results)
-    ])
-
-    # 4. 난이도별 프롬프트
-    if difficulty == "easy":
-        system_prompt = """
-당신은 최신 논문 정보를 쉽게 설명하는 전문가입니다.
-초심자도 이해할 수 있도록 검색 결과를 정리해주세요.
-- 핵심 내용 요약
-- 쉬운 언어 사용
-- 중요한 정보만 선별
-        """
-    else:  # hard
-        system_prompt = """
-당신은 논문 분석 전문가입니다.
-검색 결과를 전문적으로 정리해주세요.
-- 기술적 세부사항 포함
-- 최신 연구 동향 분석
-- 관련 논문 비교
-        """
-
-    user_prompt = f"""
-[웹 검색 결과]
-{formatted_results}
-
-[질문]
-{question}
-
-위 검색 결과를 바탕으로 질문에 답변해주세요.
-    """
-
-    # 프롬프트 저장
-    if exp_manager:
-        exp_manager.save_system_prompt(system_prompt, metadata={"difficulty": difficulty})
-        exp_manager.save_user_prompt(user_prompt, metadata={"results_count": len(search_results)})
-
-    if tool_logger:
-        tool_logger.write("LLM 답변 생성 시작")
-
-    # 5. LLM 호출
-    llm = ChatOpenAI(model="gpt-5", temperature=0.7)
-    messages = [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt)
-    ]
-
-    response = llm.invoke(messages)
-
-    if tool_logger:
-        tool_logger.write(f"답변 생성 완료: {len(response.content)} 글자")
-        tool_logger.close()
-
-    # 6. 최종 답변 저장
-    state["final_answer"] = response.content
-
-    return state
-```
+| 난이도 | 프롬프트 내용 |
+|--------|--------------|
+| easy | 최신 논문 정보를 쉽게 설명, 핵심 내용 요약, 쉬운 언어 사용 |
+| hard | 논문 분석 전문가, 기술적 세부사항, 최신 연구 동향 분석, 관련 논문 비교 |
 
 ---
 
@@ -641,113 +407,43 @@ PostgreSQL glossary 테이블에서 용어 정의를 검색하고, 난이도에 
 - **컬렉션**: `glossary_embeddings`
 - **역할**: 유사 용어 검색
 
-### 예제 코드
+**파일:** `src/agent/nodes.py`
 
-```python
-# src/agent/nodes.py
+**필요 라이브러리:**
+- `langchain_openai.ChatOpenAI`
+- `langchain.schema.SystemMessage`, `HumanMessage`
+- `psycopg2`
+- `os`
 
-from langchain_openai import ChatOpenAI
-from langchain.schema import SystemMessage, HumanMessage
-import psycopg2
-import os
+**함수: glossary_node**
 
-def glossary_node(state: AgentState, exp_manager=None):
-    """
-    용어집 노드: glossary 테이블에서 용어 정의 검색
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| state | AgentState | (필수) | Agent 상태 |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        state: Agent 상태
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    question = state["question"]
-    difficulty = state.get("difficulty", "easy")
+**처리 흐름:**
 
-    # 도구별 Logger 생성
-    tool_logger = exp_manager.get_tool_logger('rag_glossary') if exp_manager else None
+| 단계 | 동작 |
+|------|------|
+| 1 | state에서 question, difficulty 추출 |
+| 2 | exp_manager로부터 도구별 Logger 생성 ('rag_glossary') |
+| 3 | ChatOpenAI로 질문에서 핵심 용어 추출 |
+| 4 | psycopg2로 PostgreSQL 연결 |
+| 5 | glossary 테이블에서 용어 검색 (ILIKE 사용) |
+| 6 | exp_manager.log_sql_query()로 SQL 쿼리 기록 |
+| 7 | 결과가 없으면 오류 메시지 반환, 있으면 계속 |
+| 8 | difficulty에 따라 설명 선택 (easy: easy_explanation / hard: hard_explanation) |
+| 9 | 최종 답변 구성 (용어명, 카테고리, 설명) |
+| 10 | 답변을 state["final_answer"]에 저장 |
+| 11 | state 반환 |
 
-    if tool_logger:
-        tool_logger.write(f"용어집 노드 실행: {question}")
-        tool_logger.write(f"난이도: {difficulty}")
+**난이도별 설명 선택:**
 
-    # 1. 질문에서 용어 추출
-    llm = ChatOpenAI(model="gpt-5", temperature=0)
-    extract_prompt = f"""
-다음 질문에서 핵심 용어를 추출하세요. 용어만 반환하세요:
-
-질문: {question}
-
-용어:
-    """
-
-    term = llm.invoke(extract_prompt).content.strip()
-
-    if tool_logger:
-        tool_logger.write(f"추출된 용어: {term}")
-
-    # 2. PostgreSQL glossary 테이블에서 검색
-    conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-    cursor = conn.cursor()
-
-    query = "SELECT term, definition, easy_explanation, hard_explanation, category FROM glossary WHERE term ILIKE %s"
-
-    if tool_logger:
-        tool_logger.write(f"SQL 쿼리 실행: term ILIKE '%{term}%'")
-
-        # SQL 쿼리 기록
-        if exp_manager:
-            exp_manager.log_sql_query(
-                query=query,
-                description="용어집 검색",
-                tool="rag_glossary"
-            )
-
-    cursor.execute(query, (f"%{term}%",))
-    result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    # 3. 결과 처리
-    if not result:
-        if tool_logger:
-            tool_logger.write("용어를 찾을 수 없음")
-            tool_logger.close()
-        state["final_answer"] = f"'{term}' 용어를 용어집에서 찾을 수 없습니다."
-        return state
-
-    term_name, definition, easy_exp, hard_exp, category = result
-
-    if tool_logger:
-        tool_logger.write(f"용어 발견: {term_name} (카테고리: {category})")
-
-    # 4. 난이도별 설명 선택
-    if difficulty == "easy":
-        explanation = easy_exp if easy_exp else definition
-        if tool_logger:
-            tool_logger.write("Easy 모드 설명 사용")
-    else:  # hard
-        explanation = hard_exp if hard_exp else definition
-        if tool_logger:
-            tool_logger.write("Hard 모드 설명 사용")
-
-    # 5. 최종 답변 구성
-    answer = f"""
-**용어**: {term_name}
-
-**카테고리**: {category}
-
-**설명**:
-{explanation}
-    """
-
-    if tool_logger:
-        tool_logger.write(f"답변 생성 완료: {len(answer)} 글자")
-        tool_logger.close()
-
-    # 6. 최종 답변 저장
-    state["final_answer"] = answer
-
-    return state
-```
+| 난이도 | 사용 필드 | 대체 값 |
+|--------|---------|--------|
+| easy | easy_explanation | definition (없을 경우) |
+| hard | hard_explanation | definition (없을 경우) |
 
 ---
 
@@ -778,75 +474,39 @@ def glossary_node(state: AgentState, exp_manager=None):
 ### 사용하는 DB
 **DB 사용 없음** (파일 시스템만 사용)
 
-### 예제 코드
+**파일:** `src/agent/nodes.py`
 
-```python
-# src/agent/nodes.py
+**필요 라이브러리:**
+- `datetime.datetime`
+- `os`
 
-from datetime import datetime
-import os
+**함수: save_file_node**
 
-def save_file_node(state: AgentState, exp_manager=None):
-    """
-    파일 저장 노드: 답변 내용을 파일로 저장
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| state | AgentState | (필수) | Agent 상태 |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        state: Agent 상태
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    question = state["question"]
+**처리 흐름:**
 
-    # 도구별 Logger 생성
-    tool_logger = exp_manager.get_tool_logger('file_save') if exp_manager else None
+| 단계 | 동작 |
+|------|------|
+| 1 | state에서 question 추출 |
+| 2 | exp_manager로부터 도구별 Logger 생성 ('file_save') |
+| 3 | 저장할 내용 확인 (tool_result → final_answer → 기본 메시지 순) |
+| 4 | 타임스탬프 기반 파일명 생성 (response_YYYYMMDD_HHMMSS.txt) |
+| 5 | exp_manager 있으면 exp_manager.save_output() 호출 |
+| 6 | exp_manager 없으면 outputs/ 폴더에 직접 저장 |
+| 7 | 파일 경로를 포함한 성공 메시지 구성 |
+| 8 | 성공 메시지를 state["final_answer"]에 저장 |
+| 9 | state 반환 |
 
-    if tool_logger:
-        tool_logger.write(f"파일 저장 노드 실행: {question}")
+**파일 저장 경로:**
 
-    # 1. 저장할 내용 확인
-    # 이전 답변이 있으면 그것을 저장, 없으면 대화 히스토리 저장
-    content_to_save = state.get("tool_result") or state.get("final_answer") or "저장할 내용이 없습니다."
-
-    if tool_logger:
-        tool_logger.write(f"저장할 내용 길이: {len(content_to_save)} 글자")
-
-    # 2. 파일명 생성
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"response_{timestamp}.txt"
-
-    if tool_logger:
-        tool_logger.write(f"파일명: {filename}")
-
-    # 3. 파일 저장
-    if exp_manager:
-        # ExperimentManager의 save_output 메서드 사용
-        file_path = exp_manager.save_output(filename, content_to_save)
-
-        if tool_logger:
-            tool_logger.write(f"파일 저장 완료: {file_path}")
-            tool_logger.close()
-
-        # 성공 메시지
-        answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
-    else:
-        # ExperimentManager 없을 때 (테스트 환경)
-        output_dir = "outputs"
-        os.makedirs(output_dir, exist_ok=True)
-        file_path = os.path.join(output_dir, filename)
-
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(content_to_save)
-
-        if tool_logger:
-            tool_logger.write(f"파일 저장 완료: {file_path}")
-            tool_logger.close()
-
-        answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
-
-    # 4. 최종 답변 저장
-    state["final_answer"] = answer
-
-    return state
-```
+| 조건 | 저장 경로 |
+|------|----------|
+| exp_manager 있음 | experiments/날짜/session_XXX/outputs/ |
+| exp_manager 없음 | outputs/ (테스트 환경) |
 
 ---
 
@@ -1004,118 +664,78 @@ sequenceDiagram
 - `route_to_tool` 함수: state["tool_choice"] 값을 반환
 - add_conditional_edges에서 이 함수를 사용하여 다음 노드 결정
 
-### 예제 코드
+**파일:** `src/agent/graph.py`
 
-```python
-# src/agent/graph.py
+**필요 라이브러리:**
+- `langgraph.graph.StateGraph`, `END`
+- `typing.TypedDict`
+- `langchain_openai.ChatOpenAI`
 
-from langgraph.graph import StateGraph, END
-from typing import TypedDict
-from langchain_openai import ChatOpenAI
+**클래스: AgentState (TypedDict)**
 
-# ExperimentManager는 main에서 전달받아 사용
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| question | str | 사용자 질문 |
+| difficulty | str | 난이도 (easy/hard) |
+| tool_choice | str | 선택된 도구 |
+| tool_result | str | 도구 실행 결과 |
+| final_answer | str | 최종 답변 |
+| messages | list | 대화 히스토리 |
 
-class AgentState(TypedDict):
-    question: str
-    difficulty: str
-    tool_choice: str
-    tool_result: str
-    final_answer: str
-    messages: list  # 대화 히스토리
+**함수: router_node**
 
-def router_node(state: AgentState, exp_manager=None):
-    """
-    질문을 분석하여 어떤 도구를 사용할지 결정
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| state | AgentState | (필수) | Agent 상태 |
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    Args:
-        state: Agent 상태
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    question = state["question"]
+**router_node 처리 흐름:**
 
-    if exp_manager:
-        exp_manager.logger.write(f"라우터 노드 실행: {question}")
+| 단계 | 동작 |
+|------|------|
+| 1 | state에서 question 추출 |
+| 2 | exp_manager.logger로 라우터 실행 로그 기록 |
+| 3 | 6가지 도구 목록을 포함한 라우팅 프롬프트 작성 |
+| 4 | ChatOpenAI (model="gpt-5", temperature=0) 초기화 |
+| 5 | llm.invoke()로 도구 선택 요청 |
+| 6 | 반환된 도구 이름을 state["tool_choice"]에 저장 |
+| 7 | exp_manager.logger로 라우팅 결정 기록 |
+| 8 | state 반환 |
 
-    # LLM에게 라우팅 결정 요청
-    routing_prompt = f"""
-사용자 질문을 분석하여 적절한 도구를 선택하세요:
+**함수: route_to_tool**
 
-도구 목록:
-- search_paper: 논문 데이터베이스에서 검색
-- web_search: 웹에서 최신 논문 검색
-- glossary: 용어 정의 검색
-- summarize: 논문 요약
-- save_file: 파일 저장
-- general: 일반 답변
+- state["tool_choice"] 값을 반환하여 다음 노드 결정
 
-질문: {question}
+**함수: create_agent_graph**
 
-하나의 도구 이름만 반환하세요:
-    """
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| exp_manager | ExperimentManager | None | 실험 관리자 인스턴스 |
 
-    llm = ChatOpenAI(model="gpt-5", temperature=0)
-    tool_choice = llm.invoke(routing_prompt).content.strip()
+**create_agent_graph 처리 흐름:**
 
-    if exp_manager:
-        exp_manager.logger.write(f"라우팅 결정: {tool_choice}")
+| 단계 | 동작 |
+|------|------|
+| 1 | exp_manager.logger로 그래프 생성 로그 기록 |
+| 2 | StateGraph(AgentState) 인스턴스 생성 |
+| 3 | 7개 노드 추가 (router, search_paper, web_search, glossary, summarize, save_file, general) |
+| 4 | workflow.set_entry_point("router")로 시작점 설정 |
+| 5 | add_conditional_edges로 라우터에서 6개 도구로 분기 설정 |
+| 6 | 모든 도구 노드에서 END로 엣지 연결 |
+| 7 | workflow.compile()로 그래프 컴파일 |
+| 8 | exp_manager.logger로 컴파일 완료 기록 |
+| 9 | agent_executor 반환 |
 
-    state["tool_choice"] = tool_choice
-    return state
+**도구 목록:**
 
-def route_to_tool(state: AgentState):
-    """라우팅 결정에 따라 다음 노드 선택"""
-    return state["tool_choice"]
-
-def create_agent_graph(exp_manager=None):
-    """
-    LangGraph Agent 그래프 생성
-
-    Args:
-        exp_manager: ExperimentManager 인스턴스 (선택 사항)
-    """
-    if exp_manager:
-        exp_manager.logger.write("Agent 그래프 생성 시작")
-
-    workflow = StateGraph(AgentState)
-
-    # 노드 추가
-    workflow.add_node("router", router_node)
-    workflow.add_node("search_paper", search_paper_node)
-    workflow.add_node("web_search", web_search_node)
-    workflow.add_node("glossary", glossary_node)
-    workflow.add_node("summarize", summarize_node)
-    workflow.add_node("save_file", save_file_node)
-    workflow.add_node("general", general_answer_node)
-
-    # 시작점 설정
-    workflow.set_entry_point("router")
-
-    # 조건부 엣지 설정
-    workflow.add_conditional_edges(
-        "router",
-        route_to_tool,
-        {
-            "search_paper": "search_paper",
-            "web_search": "web_search",
-            "glossary": "glossary",
-            "summarize": "summarize",
-            "save_file": "save_file",
-            "general": "general"
-        }
-    )
-
-    # 모든 노드에서 종료
-    for node in ["search_paper", "web_search", "glossary", "summarize", "save_file", "general"]:
-        workflow.add_edge(node, END)
-
-    # 그래프 컴파일
-    agent_executor = workflow.compile()
-
-    if exp_manager:
-        exp_manager.logger.write("Agent 그래프 컴파일 완료")
-
-    return agent_executor
-```
+| 도구 이름 | 사용 케이스 |
+|---------|------------|
+| search_paper | 논문 데이터베이스에서 검색 |
+| web_search | 웹에서 최신 논문 검색 |
+| glossary | 용어 정의 검색 |
+| summarize | 논문 요약 |
+| save_file | 파일 저장 |
+| general | 일반 답변 |
 
 ---
 
@@ -1159,101 +779,59 @@ def create_agent_graph(exp_manager=None):
   - summarization: GPT-5 (품질 중요)
   - 기본값: GPT-5 (비용 효율)
 
-### 예제 코드
+**파일:** `src/llm/client.py`
 
-```python
-# src/llm/client.py
+**필요 라이브러리:**
+- `os`
+- `langchain_openai.ChatOpenAI`
+- `langchain_upstage.ChatUpstage`
+- `tenacity.retry`, `stop_after_attempt`, `wait_exponential`
+- `langchain.callbacks.get_openai_callback`
 
-import os
-from langchain_openai import ChatOpenAI
-from langchain_upstage import ChatUpstage
-from tenacity import retry, stop_after_attempt, wait_exponential
-from langchain.callbacks import get_openai_callback
+**클래스: LLMClient**
 
-# ExperimentManager는 main에서 전달받아 사용
+**__init__ 메서드:**
 
-class LLMClient:
-    """다중 LLM 클라이언트 클래스"""
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| provider | str | "openai" | "openai" 또는 "solar" |
+| model | str | "gpt-5" | 모델 이름 |
+| temperature | float | 0.7 | 창의성 수준 (0-1) |
+| logger | Logger | None | Logger 인스턴스 |
 
-    def __init__(self, provider="openai", model="gpt-5", temperature=0.7, logger=None):
-        """
-        Args:
-            provider: "openai" 또는 "solar"
-            model: 모델 이름
-            temperature: 창의성 수준 (0-1)
-            logger: Logger 인스턴스 (선택 사항)
-        """
-        self.provider = provider
-        self.logger = logger
+**초기화 로직:**
 
-        if self.logger:
-            self.logger.write(f"LLM 초기화: provider={provider}, model={model}")
+| provider | LLM 인스턴스 | 설정 |
+|----------|-------------|------|
+| openai | ChatOpenAI | model, temperature, OPENAI_API_KEY, streaming=True |
+| solar | ChatUpstage | solar-1-mini-chat, temperature, SOLAR_API_KEY, streaming=True |
 
-        if provider == "openai":
-            self.llm = ChatOpenAI(
-                model=model,
-                temperature=temperature,
-                openai_api_key=os.getenv("OPENAI_API_KEY"),
-                streaming=True
-            )
-        elif provider == "solar":
-            self.llm = ChatUpstage(
-                model="solar-1-mini-chat",
-                temperature=temperature,
-                api_key=os.getenv("SOLAR_API_KEY"),
-                streaming=True
-            )
+**메서드: invoke_with_retry**
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=8))
-    def invoke_with_retry(self, messages):
-        """
-        에러 핸들링 및 재시도
-        최대 3회 재시도, 지수 백오프 (2초 → 4초 → 8초)
-        """
-        if self.logger:
-            self.logger.write("LLM 호출 시작 (재시도 가능)")
-        return self.llm.invoke(messages)
+- @retry 데코레이터: stop_after_attempt(3), wait_exponential (2초 → 4초 → 8초)
+- 에러 발생 시 최대 3회 자동 재시도
+- llm.invoke(messages) 호출 및 반환
 
-    def invoke_with_tracking(self, messages):
-        """토큰 사용량 추적"""
-        if self.provider == "openai":
-            with get_openai_callback() as cb:
-                response = self.llm.invoke(messages)
-                if self.logger:
-                    self.logger.write(f"Tokens Used: {cb.total_tokens}")
-                    self.logger.write(f"Total Cost: ${cb.total_cost:.4f}")
-                return response
-        else:
-            return self.llm.invoke(messages)
+**메서드: invoke_with_tracking**
 
-    async def astream(self, messages):
-        """스트리밍 응답 처리"""
-        if self.logger:
-            self.logger.write("스트리밍 응답 시작")
-        async for chunk in self.llm.astream(messages):
-            yield chunk
+| provider | 동작 |
+|----------|------|
+| openai | get_openai_callback으로 토큰 수와 비용 추적, 로그 기록 |
+| solar | 기본 llm.invoke() 호출 |
 
+**메서드: astream**
 
-def get_llm_for_task(task_type, logger=None):
-    """
-    작업 유형별 최적 LLM 선택
+- 비동기 스트리밍 응답 처리
+- async for로 llm.astream() 청크 단위 yield
 
-    Args:
-        task_type: 작업 유형
-        logger: Logger 인스턴스 (선택 사항)
-    """
-    if logger:
-        logger.write(f"작업 유형별 LLM 선택: {task_type}")
+**함수: get_llm_for_task**
 
-    if task_type == "routing":
-        return LLMClient(provider="solar", model="solar-1-mini-chat", temperature=0)
-    elif task_type == "generation":
-        return LLMClient(provider="openai", model="gpt-5", temperature=0.7)
-    elif task_type == "summarization":
-        return LLMClient(provider="openai", model="gpt-5", temperature=0)
-    else:
-        return LLMClient(provider="openai", model="gpt-5", temperature=0.7)
-```
+| task_type | 반환 LLMClient |
+|-----------|---------------|
+| routing | Solar (solar-1-mini-chat, temperature=0) |
+| generation | OpenAI (gpt-5, temperature=0.7) |
+| summarization | OpenAI (gpt-5, temperature=0) |
+| 기본값 | OpenAI (gpt-5, temperature=0.7) |
 
 ---
 
@@ -1284,79 +862,54 @@ def get_llm_for_task(task_type, logger=None):
 - 응답 생성 후 사용자 메시지와 AI 메시지를 메모리에 추가
 - 이후 질문에서 이전 대화 컨텍스트 활용
 
-### 예제 코드
+**파일:** `src/memory/chat_history.py`
 
-```python
-# src/memory/chat_history.py
+**필요 라이브러리:**
+- `langchain.memory.ConversationBufferMemory`
+- `langchain_postgres.PostgresChatMessageHistory`
+- `os`
 
-from langchain.memory import ConversationBufferMemory
-from langchain_postgres import PostgresChatMessageHistory
-import os
+**클래스: ChatMemoryManager**
 
-class ChatMemoryManager:
-    """대화 메모리 관리 클래스"""
+**__init__ 메서드:**
 
-    def __init__(self):
-        """ConversationBufferMemory 초기화"""
-        self.memory = ConversationBufferMemory(
-            return_messages=True,
-            memory_key="chat_history"
-        )
+- ConversationBufferMemory 초기화
+  - return_messages=True: 메시지 객체 형태로 반환
+  - memory_key="chat_history": 메모리 키 설정
 
-    def add_user_message(self, message: str):
-        """사용자 메시지 추가"""
-        self.memory.chat_memory.add_user_message(message)
+**메서드:**
 
-    def add_ai_message(self, message: str):
-        """AI 메시지 추가"""
-        self.memory.chat_memory.add_ai_message(message)
+| 메서드 | 파라미터 | 반환값 | 설명 |
+|--------|---------|--------|------|
+| add_user_message | message: str | None | 사용자 메시지 추가 |
+| add_ai_message | message: str | None | AI 메시지 추가 |
+| get_history | 없음 | dict | 전체 대화 히스토리 반환 |
+| clear | 없음 | None | 대화 히스토리 초기화 |
 
-    def get_history(self):
-        """전체 대화 히스토리 반환"""
-        return self.memory.load_memory_variables({})
+**함수: get_session_history**
 
-    def clear(self):
-        """대화 히스토리 초기화"""
-        self.memory.clear()
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| session_id | str | 세션 ID |
 
+**반환값:** PostgresChatMessageHistory 인스턴스
 
-def get_session_history(session_id: str):
-    """
-    세션 기반 메모리 (PostgreSQL 저장)
+**동작:**
+- DATABASE_URL에서 PostgreSQL 연결 문자열 가져오기
+- PostgresChatMessageHistory 생성 (session_id, connection_string, table_name="chat_history")
+- PostgreSQL에 대화 내용 영구 저장
 
-    Args:
-        session_id: 세션 ID
+**사용 예시:**
 
-    Returns:
-        PostgresChatMessageHistory 인스턴스
-    """
-    connection_string = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/papers")
+1. **기본 메모리 사용**
+   - ChatMemoryManager 인스턴스 생성
+   - add_user_message(), add_ai_message()로 대화 추가
+   - get_history()로 전체 히스토리 조회
 
-    return PostgresChatMessageHistory(
-        session_id=session_id,
-        connection_string=connection_string,
-        table_name="chat_history"
-    )
-
-
-# 사용 예시
-if __name__ == "__main__":
-    # 기본 메모리 사용
-    memory_manager = ChatMemoryManager()
-
-    memory_manager.add_user_message("Transformer 논문 설명해줘")
-    memory_manager.add_ai_message("Transformer는 2017년 Google에서 발표한...")
-
-    logger.write(f"메모리 히스토리: {memory_manager.get_history()}")
-
-    # 세션 기반 메모리 사용
-    session_history = get_session_history("user_123")
-    session_history.add_user_message("BERT 논문은?")
-    session_history.add_ai_message("BERT는 2018년에...")
-
-    logger.write(f"세션 메시지: {session_history.messages}")
-    logger.close()
-```
+2. **세션 기반 메모리 사용**
+   - get_session_history("user_123")로 세션 히스토리 생성
+   - add_user_message(), add_ai_message()로 대화 추가
+   - messages 속성으로 메시지 조회
 
 ---
 
