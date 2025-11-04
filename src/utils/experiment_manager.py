@@ -556,20 +556,44 @@ class ExperimentManager:
         self.logger.write(f"평가 결과 저장: {eval_file.name}")
 
     # ---------------------- 전체 대화 저장 ---------------------- #
-    def save_conversation(self, conversation_data: list):
+    def save_conversation(self, conversation_data: list, difficulty: str = "easy"):
         """
-        전체 대화 기록 저장
+        전체 대화 기록 저장 (이어쓰기 방식)
 
         Args:
             conversation_data: 대화 기록 리스트
+            difficulty: 난이도 (easy/hard)
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        conv_file = self.outputs_dir / f"conversation_{timestamp}.json"
+        # 세션당 하나의 conversation 파일 사용 (모드별로 구분)
+        if not hasattr(self, f'conversation_file_{difficulty}'):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            conv_file = self.outputs_dir / f"conversation_{difficulty}_{timestamp}.json"
+            setattr(self, f'conversation_file_{difficulty}', conv_file)
+        else:
+            conv_file = getattr(self, f'conversation_file_{difficulty}')
 
+        # 기존 내용 읽기 (있다면)
+        if conv_file.exists():
+            with open(conv_file, 'r', encoding='utf-8') as f:
+                try:
+                    existing_data = json.load(f)
+                except json.JSONDecodeError:
+                    existing_data = []
+        else:
+            existing_data = []
+
+        # 새 메시지만 추가 (중복 방지 - content 기준)
+        existing_contents = {msg.get('content', '') for msg in existing_data}
+        for msg in conversation_data:
+            if msg.get('content', '') not in existing_contents:
+                existing_data.append(msg)
+                existing_contents.add(msg.get('content', ''))
+
+        # 저장
         with open(conv_file, 'w', encoding='utf-8') as f:
-            json.dump(conversation_data, f, ensure_ascii=False, indent=2)
+            json.dump(existing_data, f, ensure_ascii=False, indent=2)
 
-        self.logger.write(f"전체 대화 저장: {conv_file.name}")
+        self.logger.write(f"대화 저장: {conv_file.name} ({len(existing_data)}개 메시지)")
 
     # ---------------------- SQL 쿼리 플러시 ---------------------- #
     def flush_queries_to_file(self):
