@@ -139,41 +139,32 @@ class ExperimentManager:
     # ---------------------- 설정 스냅샷 저장 ---------------------- #
     def _save_config_snapshot(self):
         """
-        configs/ 폴더의 모든 설정 파일을 읽어서 config.yaml로 병합 저장
+        configs/ 폴더를 실험 폴더에 복사하여 설정 보존
 
         실험 실행 시점의 전체 설정을 보존하여 재현성 확보
+        실제 사용하는 설정 파일만 복사 (db_config.yaml, model_config.yaml)
         """
-        import yaml
+        import shutil
 
+        # configs 폴더 생성
+        configs_dir = self.experiment_dir / "configs"
+        configs_dir.mkdir(exist_ok=True)
+
+        # 실제 사용하는 설정 파일만 복사
         config_files = [
             "configs/db_config.yaml",
-            "configs/model_config.yaml",
-            "configs/prompt_config.yaml"
+            "configs/model_config.yaml"
         ]
-
-        merged_config = {}
 
         for config_file in config_files:
             try:
-                config_path = Path(config_file)
-                if config_path.exists():
-                    with open(config_path, 'r', encoding='utf-8') as f:
-                        config_data = yaml.safe_load(f)
-                        if config_data:
-                            # 파일명에서 key 추출 (예: db_config.yaml -> db_config)
-                            config_key = config_path.stem
-                            merged_config[config_key] = config_data
+                src_path = Path(config_file)
+                if src_path.exists():
+                    dst_path = configs_dir / src_path.name
+                    shutil.copy2(src_path, dst_path)
+                    self.logger.write(f"설정 파일 저장: {src_path.name}")
             except Exception as e:
-                self.logger.write(f"설정 파일 읽기 실패: {config_file} - {e}")
-
-        # 병합된 설정을 config.yaml로 저장
-        config_output_path = self.experiment_dir / "config.yaml"
-        try:
-            with open(config_output_path, 'w', encoding='utf-8') as f:
-                yaml.dump(merged_config, f, allow_unicode=True, default_flow_style=False)
-            self.logger.write(f"전체 설정 저장 완료: config.yaml")
-        except Exception as e:
-            self.logger.write(f"config.yaml 저장 실패: {e}")
+                self.logger.write(f"설정 파일 복사 실패: {config_file} - {e}")
 
 
     # ==================== 도구 로그 메서드 ==================== #
