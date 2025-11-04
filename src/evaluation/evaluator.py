@@ -175,6 +175,12 @@ class AnswerEvaluator:
             # JSON 파싱
             result = json.loads(result_text)
 
+            # 질문과 답변 추가 (DB 저장용)
+            result["question"] = question
+            result["answer"] = answer
+            result["reference_docs"] = reference_docs
+            result["difficulty"] = difficulty
+
             self.logger.write(f"평가 완료: 총점 {result.get('total_score', 0)}/40")
 
             return result
@@ -183,6 +189,10 @@ class AnswerEvaluator:
         except json.JSONDecodeError as e:
             self.logger.write(f"JSON 파싱 오류: {e}")
             return {
+                "question": question,
+                "answer": answer,
+                "reference_docs": reference_docs,
+                "difficulty": difficulty,
                 "accuracy_score": 0,
                 "relevance_score": 0,
                 "difficulty_score": 0,
@@ -194,6 +204,10 @@ class AnswerEvaluator:
         except Exception as e:
             self.logger.write(f"평가 오류: {e}")
             return {
+                "question": question,
+                "answer": answer,
+                "reference_docs": reference_docs,
+                "difficulty": difficulty,
                 "accuracy_score": 0,
                 "relevance_score": 0,
                 "difficulty_score": 0,
@@ -222,17 +236,13 @@ class AnswerEvaluator:
         for i, case in enumerate(test_cases, 1):
             self.logger.write(f"[{i}/{len(test_cases)}] 평가 중...")
 
-            # 평가 수행
+            # 평가 수행 (evaluate에서 이미 question, answer 포함)
             result = self.evaluate(
                 question=case["question"],
                 answer=case["answer"],
                 reference_docs=case.get("reference_docs", ""),
                 difficulty=case.get("difficulty", "easy")
             )
-
-            # 질문과 답변 추가
-            result["question"] = case["question"]
-            result["answer"] = case["answer"]
 
             results.append(result)
 
