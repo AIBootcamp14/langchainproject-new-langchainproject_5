@@ -183,15 +183,35 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             # -------------- Agent 실행 -------------- #
             if exp_manager:
                 exp_manager.log_ui_interaction(f"Agent 실행 시작 (난이도: {difficulty})")
+                exp_manager.update_metadata(difficulty=difficulty)
+
+            # 시작 시간 기록
+            from datetime import datetime
+            start_time = datetime.now()
+
+            # 이전 대화 히스토리 가져오기 (멀티턴 대화 지원)
+            from ui.components.chat_manager import get_current_messages
+            previous_messages = get_current_messages()
 
             with st.spinner("🤖 답변 생성 중..."):
                 response = agent_executor.invoke(
                     {
                         "question": prompt,
                         "difficulty": difficulty,
-                        "messages": []          # 대화 메모리 (필요시)
+                        "messages": previous_messages  # 이전 대화 전달
                     },
                     config={"callbacks": [st_callback]}
+                )
+
+            # 종료 시간 계산
+            end_time = datetime.now()
+            response_time_ms = int((end_time - start_time).total_seconds() * 1000)
+
+            # 성공 시 메타데이터 업데이트
+            if exp_manager:
+                exp_manager.update_metadata(
+                    success=True,
+                    response_time_ms=response_time_ms
                 )
 
             # -------------- 답변 표시 -------------- #
@@ -319,7 +339,8 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
 
             # -------------- LLM 응답 로그 기록 -------------- #
             if exp_manager:
-                exp_manager.save_output("response.txt", answer)
+                # response.txt 중복 저장 제거 (save_file 도구 실행 시에만 저장)
+                # exp_manager.save_output("response.txt", answer)
                 exp_manager.log_ui_interaction(f"답변 생성 완료 ({len(answer)} 글자)")
 
             # -------------- AI/ML 용어 자동 추출 및 저장 -------------- #
@@ -458,7 +479,7 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
                 from ui.components.chat_manager import get_current_messages
                 messages = get_current_messages()
                 if messages:
-                    exp_manager.save_conversation(messages)
+                    exp_manager.save_conversation(messages, difficulty=difficulty)
 
             return response
 
@@ -466,6 +487,10 @@ def handle_agent_response(agent_executor, prompt: str, difficulty: str, exp_mana
             # -------------- 에러 처리 -------------- #
             error_msg = f"❌ 오류 발생: {str(e)}"
             st.error(error_msg)
+
+            # 실패 시 메타데이터 업데이트
+            if exp_manager:
+                exp_manager.update_metadata(success=False, error=str(e))
 
             # 로그 기록 (ExperimentManager 사용 시)
             if exp_manager:
