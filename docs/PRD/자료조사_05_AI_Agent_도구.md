@@ -29,31 +29,38 @@
 
 #### 예시: 라우팅 도구
 
-```python
-# 도구 1: 일반 답변 (LLM의 자체 지식 활용)
-def general_answer(question: str) -> str:
-    """
-    간단한 인사, 일반 상식 질문에 LLM이 직접 답변
-    """
-    return llm.invoke(question)
+**도구 1: general_answer**
 
-# 도구 2: RAG 검색 (논문 데이터베이스 검색)
-def search_papers(query: str) -> str:
-    """
-    논문 데이터베이스에서 관련 논문을 검색하여 답변
-    """
-    docs = vectorstore.similarity_search(query, k=3)
-    context = "\n".join([doc.page_content for doc in docs])
-    return llm.invoke(f"Context: {context}\n\nQuestion: {query}")
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| question | str | 사용자 질문 |
 
-# 도구 3: 웹 검색 (최신 논문 검색)
-def web_search(query: str) -> str:
-    """
-    웹에서 최신 논문을 검색
-    """
-    results = tavily_search.run(query)
-    return results
-```
+**반환값:** llm.invoke(question) - LLM의 직접 답변
+
+**용도:** 간단한 인사, 일반 상식 질문
+
+---
+
+**도구 2: search_papers**
+
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| query | str | 검색 쿼리 |
+
+**처리 흐름:**
+1. vectorstore.similarity_search(query, k=3)로 유사 문서 검색
+2. 문서 내용을 context로 결합
+3. llm.invoke()로 컨텍스트 기반 답변 생성
+
+---
+
+**도구 3: web_search**
+
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| query | str | 검색 쿼리 |
+
+**반환값:** tavily_search.run(query) - 웹 검색 결과
 
 **LLM이 자동으로 판단:**
 - "안녕하세요" → `general_answer` 도구 사용
@@ -91,36 +98,25 @@ def web_search(query: str) -> str:
 - "BERT와 GPT의 차이점은?"
 - "Attention 메커니즘이 뭐야?"
 
-**구현 예시:**
-```python
-from langchain.tools import tool
-from langchain_postgres.vectorstores import PGVector
+**필요 라이브러리:**
+- `langchain.tools.tool`
+- `langchain_postgres.vectorstores.PGVector`
 
-@tool
-def search_paper_database(query: str) -> str:
-    """
-    논문 데이터베이스에서 관련 논문을 검색합니다.
+**함수: search_paper_database**
 
-    Args:
-        query: 검색할 질문 또는 키워드
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| query | str | 검색할 질문 또는 키워드 |
 
-    Returns:
-        관련 논문 내용 및 메타데이터
-    """
-    # Vector DB에서 유사도 검색
-    docs = vectorstore.similarity_search(query, k=3)
+**반환값:** str - 포맷된 논문 검색 결과
 
-    results = []
-    for doc in docs:
-        results.append({
-            "content": doc.page_content,
-            "title": doc.metadata.get("title"),
-            "authors": doc.metadata.get("authors"),
-            "year": doc.metadata.get("year")
-        })
+**처리 흐름:**
 
-    return format_paper_results(results)
-```
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | Vector DB 검색 | vectorstore.similarity_search(query, k=3) |
+| 2 | 결과 수집 | 각 문서의 content, title, authors, year 추출 |
+| 3 | 포맷 변환 | format_paper_results()로 결과 포맷 |
 
 **DB 연동:**
 - Vector DB (pgvector): 논문 본문 임베딩 검색
@@ -137,25 +133,22 @@ def search_paper_database(query: str) -> str:
 - "GPT-5가 나왔어?"
 - "오늘 arXiv에 올라온 논문 찾아줘"
 
-**구현 예시:**
-```python
-from langchain.tools import TavilySearchResults
+**필요 라이브러리:** `langchain.tools.TavilySearchResults`
 
-# Tavily Search API 사용 (Langchain 공식 추천)
-web_search_tool = TavilySearchResults(
-    max_results=5,
-    search_depth="advanced",
-    include_answer=True,
-    include_raw_content=True
-)
-```
+**TavilySearchResults 설정:**
+
+| 파라미터 | 값 | 설명 |
+|---------|-----|------|
+| max_results | 5 | 최대 검색 결과 수 |
+| search_depth | "advanced" | 검색 깊이 (basic/advanced) |
+| include_answer | True | 요약 답변 포함 여부 |
+| include_raw_content | True | 원본 컨텐츠 포함 여부 |
 
 **또는 DuckDuckGo (무료):**
-```python
-from langchain.tools import DuckDuckGoSearchRun
 
-web_search_tool = DuckDuckGoSearchRun()
-```
+**필요 라이브러리:** `langchain.tools.DuckDuckGoSearchRun`
+
+**사용:** DuckDuckGoSearchRun() 인스턴스 생성
 
 **특화 검색:**
 - arXiv API 활용: 논문 전문 검색 사이트에 특화된 검색
@@ -172,30 +165,29 @@ web_search_tool = DuckDuckGoSearchRun()
 - "Fine-tuning이란?"
 - "BLEU 스코어 설명해줘"
 
-**구현 예시:**
-```python
-@tool
-def search_glossary(term: str) -> str:
-    """
-    논문 용어집에서 전문 용어를 검색하여 설명합니다.
+**필요 라이브러리:** `langchain.tools.tool`
 
-    Args:
-        term: 검색할 용어
+**함수: search_glossary**
 
-    Returns:
-        용어 정의 및 설명
-    """
-    # PostgreSQL glossary 테이블에서 검색
-    result = db.execute(
-        "SELECT term, definition, category FROM glossary WHERE term ILIKE %s",
-        (f"%{term}%",)
-    ).fetchone()
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| term | str | 검색할 용어 |
 
-    if result:
-        return f"**{result['term']}**: {result['definition']} (카테고리: {result['category']})"
-    else:
-        # 용어집에 없으면 RAG로 논문에서 검색
-        return search_paper_database(f"{term} 정의")
+**반환값:** str - 용어 정의 및 설명
+
+**처리 흐름:**
+
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | PostgreSQL 검색 | glossary 테이블에서 term ILIKE 검색 |
+| 2 | 결과 확인 | 용어 발견 시 정의 반환 |
+| 3 | 대체 검색 | 용어 미발견 시 search_paper_database("{term} 정의") 호출 |
+
+**SQL 쿼리:**
+```sql
+SELECT term, definition, category
+FROM glossary
+WHERE term ILIKE %term%
 ```
 
 **용어집 RAG 활용:**
@@ -213,57 +205,33 @@ def search_glossary(term: str) -> str:
 - "BERT 논문의 핵심 내용은?"
 - "이 논문의 주요 기여도는 뭐야?"
 
-**구현 예시:**
-```python
-@tool
-def summarize_paper(paper_title: str, difficulty: str = "easy") -> str:
-    """
-    특정 논문을 요약합니다. 난이도에 따라 초심자용/전문가용 요약을 제공합니다.
+**필요 라이브러리:** `langchain.tools.tool`
 
-    Args:
-        paper_title: 논문 제목
-        difficulty: 'easy' (초심자) 또는 'hard' (전문가)
+**함수: summarize_paper**
 
-    Returns:
-        논문 요약 내용
-    """
-    # 1. PostgreSQL에서 논문 메타데이터 조회
-    paper_meta = db.execute(
-        "SELECT * FROM papers WHERE title ILIKE %s",
-        (f"%{paper_title}%",)
-    ).fetchone()
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| paper_title | str | (필수) | 논문 제목 |
+| difficulty | str | "easy" | 난이도 ('easy' 또는 'hard') |
 
-    # 2. Vector DB에서 논문 전체 내용 조회
-    paper_chunks = vectorstore.similarity_search(
-        paper_title,
-        k=10,  # 여러 청크 가져오기
-        filter={"paper_id": paper_meta["paper_id"]}
-    )
+**반환값:** str - 난이도별 논문 요약
 
-    full_content = "\n".join([chunk.page_content for chunk in paper_chunks])
+**처리 흐름:**
 
-    # 3. 난이도별 프롬프트
-    if difficulty == "easy":
-        prompt = f"""
-        다음 논문을 초심자도 이해할 수 있도록 쉽게 요약해주세요:
-        - 전문 용어는 풀어서 설명
-        - 핵심 아이디어 3가지
-        - 실생활 비유 포함
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | 메타데이터 조회 | PostgreSQL에서 title ILIKE 검색으로 paper_id 획득 |
+| 2 | 논문 내용 조회 | vectorstore.similarity_search(k=10, filter=paper_id) |
+| 3 | 내용 결합 | 모든 청크를 full_content로 결합 |
+| 4 | 프롬프트 구성 | difficulty에 따라 easy/hard 프롬프트 선택 |
+| 5 | LLM 호출 | llm.invoke(prompt)로 요약 생성 |
 
-        논문 내용: {full_content}
-        """
-    else:  # hard
-        prompt = f"""
-        다음 논문을 전문가 수준으로 요약해주세요:
-        - 기술적 세부사항 포함
-        - 수식 및 알고리즘 설명
-        - 관련 연구와의 비교
+**난이도별 프롬프트:**
 
-        논문 내용: {full_content}
-        """
-
-    return llm.invoke(prompt)
-```
+| 난이도 | 요구사항 |
+|--------|----------|
+| easy | 전문 용어 풀어쓰기, 핵심 아이디어 3가지, 실생활 비유 |
+| hard | 기술적 세부사항, 수식 및 알고리즘, 관련 연구 비교 |
 
 ---
 
@@ -276,38 +244,28 @@ def summarize_paper(paper_title: str, difficulty: str = "easy") -> str:
 - "오늘 대화 내용 저장하고 싶어"
 - "찾은 논문 리스트 파일로 만들어줘"
 
-**구현 예시:**
-```python
-import os
-from datetime import datetime
+**필요 라이브러리:**
+- `langchain.tools.tool`
+- `os`, `datetime`
 
-@tool
-def save_to_file(content: str, filename: str = None) -> str:
-    """
-    내용을 텍스트 파일로 저장합니다.
+**함수: save_to_file**
 
-    Args:
-        content: 저장할 내용
-        filename: 파일명 (선택, 없으면 자동 생성)
+| 파라미터 | 타입 | 기본값 | 설명 |
+|---------|------|--------|------|
+| content | str | (필수) | 저장할 내용 |
+| filename | str | None | 파일명 (없으면 자동 생성) |
 
-    Returns:
-        저장된 파일 경로
-    """
-    if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"paper_review_{timestamp}.txt"
+**반환값:** str - 저장된 파일 경로
 
-    # data/outputs 폴더에 저장
-    output_dir = "data/outputs"
-    os.makedirs(output_dir, exist_ok=True)
+**처리 흐름:**
 
-    filepath = os.path.join(output_dir, filename)
-
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(content)
-
-    return f"파일이 저장되었습니다: {filepath}"
-```
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | 파일명 생성 | filename이 None이면 "paper_review_{timestamp}.txt" 생성 |
+| 2 | 디렉토리 생성 | data/outputs 폴더 생성 (없으면) |
+| 3 | 파일 경로 구성 | os.path.join(output_dir, filename) |
+| 4 | 파일 쓰기 | UTF-8 인코딩으로 content 저장 |
+| 5 | 경로 반환 | 저장된 파일 경로 메시지 반환 |
 
 **추가 기능:**
 - PDF 형식으로 저장 (reportlab 라이브러리 사용)
@@ -327,37 +285,28 @@ def save_to_file(content: str, filename: str = None) -> str:
 - "가장 많이 인용된 논문 Top 5는?"
 - "저자별 논문 수 알려줘"
 
-**구현 예시:**
-```python
-@tool
-def query_paper_statistics(question: str) -> str:
-    """
-    논문 데이터베이스에서 통계 정보를 조회합니다.
+**필요 라이브러리:** `langchain.tools.tool`
 
-    Args:
-        question: 자연어 질문
+**함수: query_paper_statistics**
 
-    Returns:
-        쿼리 결과
-    """
-    # LLM을 사용해 SQL 쿼리 생성
-    sql_prompt = f"""
-    다음 질문을 SQL 쿼리로 변환하세요.
+| 파라미터 | 타입 | 설명 |
+|---------|------|------|
+| question | str | 자연어 질문 |
 
-    테이블 스키마:
-    papers (paper_id, title, authors, publish_date, citation_count, category)
+**반환값:** str - 포맷된 쿼리 결과
 
-    질문: {question}
+**처리 흐름:**
 
-    SQL:
-    """
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | SQL 프롬프트 구성 | 테이블 스키마와 질문을 포함한 프롬프트 생성 |
+| 2 | LLM 호출 | llm.invoke()로 SQL 쿼리 생성 |
+| 3 | 쿼리 실행 | db.execute(sql_query).fetchall() |
+| 4 | 결과 포맷 | format_query_results()로 결과 포맷 |
 
-    sql_query = llm.invoke(sql_prompt)
-
-    # 쿼리 실행
-    results = db.execute(sql_query).fetchall()
-
-    return format_query_results(results)
+**테이블 스키마:**
+```
+papers (paper_id, title, authors, publish_date, citation_count, category)
 ```
 
 ---
@@ -397,83 +346,45 @@ LLM은 사용자 질문을 분석하여 적절한 도구를 선택합니다.
 
 ### 5.2 LangGraph를 활용한 라우팅 구현
 
-```python
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Annotated, Sequence
-import operator
+**필요 라이브러리:**
+- `langgraph.graph.StateGraph`, `langgraph.graph.END`
+- `typing.TypedDict`, `typing.Annotated`, `typing.Sequence`
+- `operator`
 
-class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], operator.add]
-    next_action: str
+**AgentState 정의:**
 
-def router_node(state: AgentState):
-    """
-    사용자 질문을 분석하여 어떤 도구를 사용할지 결정
-    """
-    last_message = state["messages"][-1]
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| messages | Annotated[Sequence[BaseMessage], operator.add] | 메시지 시퀀스 |
+| next_action | str | 다음 실행할 도구명 |
 
-    # LLM에게 라우팅 결정 요청
-    routing_prompt = f"""
-    사용자 질문을 분석하여 적절한 도구를 선택하세요:
+**router_node 함수:**
+- 마지막 메시지 추출: state["messages"][-1]
+- 라우팅 프롬프트에 도구 목록 포함
+- LLM이 적절한 도구 선택
+- {"next_action": tool_choice} 반환
 
-    도구 목록:
-    - search_paper_database: 로컬 논문 DB 검색
-    - web_search: 웹에서 최신 논문 검색
-    - search_glossary: 용어 정의 검색
-    - summarize_paper: 논문 요약
-    - save_to_file: 파일 저장
-    - general_answer: 도구 불필요 (직접 답변)
+**도구 목록:**
+- search_paper_database: 로컬 논문 DB 검색
+- web_search: 웹 최신 논문 검색
+- search_glossary: 용어 정의 검색
+- summarize_paper: 논문 요약
+- save_to_file: 파일 저장
+- general_answer: 직접 답변
 
-    질문: {last_message.content}
+**conditional_edge 함수:**
+- state["next_action"] 값을 반환하여 다음 노드 결정
 
-    선택된 도구:
-    """
+**그래프 구성:**
 
-    tool_choice = llm.invoke(routing_prompt)
-    return {"next_action": tool_choice}
-
-def conditional_edge(state: AgentState):
-    """
-    라우팅 결정에 따라 다음 노드 선택
-    """
-    return state["next_action"]
-
-# 그래프 구성
-workflow = StateGraph(AgentState)
-
-workflow.add_node("router", router_node)
-workflow.add_node("search_paper", search_paper_database_node)
-workflow.add_node("web_search", web_search_node)
-workflow.add_node("glossary", search_glossary_node)
-workflow.add_node("summarize", summarize_paper_node)
-workflow.add_node("save_file", save_to_file_node)
-workflow.add_node("general", general_answer_node)
-
-workflow.set_entry_point("router")
-
-workflow.add_conditional_edges(
-    "router",
-    conditional_edge,
-    {
-        "search_paper_database": "search_paper",
-        "web_search": "web_search",
-        "search_glossary": "glossary",
-        "summarize_paper": "summarize",
-        "save_to_file": "save_file",
-        "general_answer": "general"
-    }
-)
-
-# 모든 노드에서 종료
-workflow.add_edge("search_paper", END)
-workflow.add_edge("web_search", END)
-workflow.add_edge("glossary", END)
-workflow.add_edge("summarize", END)
-workflow.add_edge("save_file", END)
-workflow.add_edge("general", END)
-
-agent = workflow.compile()
-```
+| 단계 | 동작 |
+|------|------|
+| 1 | StateGraph(AgentState) 생성 |
+| 2 | 노드 추가 (router, search_paper, web_search, glossary, summarize, save_file, general) |
+| 3 | 진입점 설정: router |
+| 4 | 조건부 엣지 추가 (router → 각 도구 노드) |
+| 5 | 모든 도구 노드 → END |
+| 6 | workflow.compile()로 agent 생성 |
 
 ---
 
@@ -487,20 +398,18 @@ agent = workflow.compile()
 - 단계별 설명
 - 수식 최소화
 
-**프롬프트 예시:**
-```python
-EASY_MODE_PROMPT = """
-당신은 AI/ML 초심자를 위한 논문 리뷰 어시스턴트입니다.
+**템플릿: EASY_MODE_PROMPT**
 
-답변 규칙:
+| 구성 요소 | 내용 |
+|----------|------|
+| 역할 | AI/ML 초심자를 위한 논문 리뷰 어시스턴트 |
+| 변수 | {question}: 사용자 질문 |
+
+**답변 규칙:**
 1. 전문 용어가 나오면 반드시 쉬운 말로 풀어서 설명
 2. 실생활 비유 사용 (예: "Attention은 사람이 책을 읽을 때 중요한 부분에 집중하는 것과 같습니다")
 3. 수식은 최소화하고, 나오면 직관적으로 설명
 4. 핵심 아이디어 3가지 이내로 요약
-
-사용자 질문: {question}
-"""
-```
 
 ### 6.2 Hard 모드 (전문가)
 
@@ -510,38 +419,34 @@ EASY_MODE_PROMPT = """
 - 관련 논문 비교
 - 구현 세부사항
 
-**프롬프트 예시:**
-```python
-HARD_MODE_PROMPT = """
-당신은 AI/ML 전문가를 위한 논문 리뷰 어시스턴트입니다.
+**템플릿: HARD_MODE_PROMPT**
 
-답변 규칙:
+| 구성 요소 | 내용 |
+|----------|------|
+| 역할 | AI/ML 전문가를 위한 논문 리뷰 어시스턴트 |
+| 변수 | {question}: 사용자 질문 |
+
+**답변 규칙:**
 1. 기술적 세부사항 및 수식 포함
 2. 알고리즘의 시간/공간 복잡도 분석
 3. 관련 논문과의 비교 (장단점)
 4. 구현 시 고려사항
 5. 최신 연구 동향과의 연결
 
-사용자 질문: {question}
-"""
-```
-
 ### 6.3 UI에서 모드 선택
 
-```python
-import streamlit as st
+**필요 라이브러리:** `streamlit`
 
-# Streamlit UI
-difficulty_mode = st.selectbox(
-    "답변 난이도 선택",
-    ["Easy 모드 (초심자용)", "Hard 모드 (전문가용)"]
-)
+**UI 구성:**
 
-difficulty = "easy" if "Easy" in difficulty_mode else "hard"
+| 컴포넌트 | 함수 | 설정 |
+|---------|------|------|
+| 난이도 선택 | st.selectbox | 옵션: ["Easy 모드 (초심자용)", "Hard 모드 (전문가용)"] |
 
-# Agent에 난이도 전달
-response = agent.run(user_query, difficulty=difficulty)
-```
+**처리 로직:**
+1. difficulty_mode에서 "Easy" 포함 여부 확인
+2. difficulty 변수 설정: "Easy" 포함 시 "easy", 아니면 "hard"
+3. agent.run(user_query, difficulty=difficulty)로 Agent에 전달
 
 ---
 
