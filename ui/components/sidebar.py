@@ -168,6 +168,83 @@ def render_sidebar(exp_manager=None):
         # 구분선 추가
         st.divider()
 
+        # -------------- 용어 추출 설정 섹션 -------------- #
+        st.markdown("### 📖 용어 추출 설정")
+
+        # session_state 초기화
+        if "glossary_min_terms" not in st.session_state:
+            st.session_state.glossary_min_terms = 1
+        if "glossary_max_terms" not in st.session_state:
+            st.session_state.glossary_max_terms = 5
+
+        # 슬라이더 위젯 (범위 선택)
+        st.caption("용어 추출 개수 범위:")
+        slider_range = st.slider(
+            "슬라이더로 범위 조정",
+            min_value=1,
+            max_value=100,
+            value=(st.session_state.glossary_min_terms, st.session_state.glossary_max_terms),
+            key="glossary_slider",
+            label_visibility="collapsed"
+        )
+
+        # 텍스트 입력 위젯 (수동 입력)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            min_input = st.number_input(
+                "최소 개수",
+                min_value=1,
+                max_value=100,
+                value=slider_range[0],
+                step=1,
+                key="glossary_min_input"
+            )
+
+        with col2:
+            max_input = st.number_input(
+                "최대 개수",
+                min_value=1,
+                max_value=100,
+                value=slider_range[1],
+                step=1,
+                key="glossary_max_input"
+            )
+
+        # 양방향 동기화 로직
+        # 슬라이더 값이 변경되면 텍스트 입력도 업데이트
+        if slider_range != (st.session_state.glossary_min_terms, st.session_state.glossary_max_terms):
+            st.session_state.glossary_min_terms = slider_range[0]
+            st.session_state.glossary_max_terms = slider_range[1]
+
+            if exp_manager:
+                exp_manager.log_ui_interaction(
+                    f"용어 추출 범위 변경 (슬라이더): {slider_range[0]}-{slider_range[1]}개"
+                )
+
+        # 텍스트 입력 값이 변경되면 슬라이더도 업데이트
+        if min_input != st.session_state.glossary_min_terms or max_input != st.session_state.glossary_max_terms:
+            # 최소값이 최대값보다 크지 않도록 검증
+            if min_input <= max_input:
+                st.session_state.glossary_min_terms = min_input
+                st.session_state.glossary_max_terms = max_input
+
+                if exp_manager:
+                    exp_manager.log_ui_interaction(
+                        f"용어 추출 범위 변경 (수동): {min_input}-{max_input}개"
+                    )
+            else:
+                st.warning("⚠️ 최소 개수는 최대 개수보다 작거나 같아야 합니다.")
+
+        # 설명 표시
+        st.info(
+            "ℹ️ 답변에서 추출할 AI/ML 용어 개수 범위를 설정합니다.\n\n"
+            "IT 관련 용어만 추출되며, 품질 우선으로 저장됩니다."
+        )
+
+        # 구분선 추가
+        st.divider()
+
         # -------------- 채팅 목록 -------------- #
         st.markdown("### 💬 채팅 기록")
 
