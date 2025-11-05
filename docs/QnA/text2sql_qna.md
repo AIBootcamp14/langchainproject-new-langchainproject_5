@@ -863,16 +863,16 @@ python scripts/setup_database.py
 ```sql
 CREATE TABLE papers (
     paper_id SERIAL PRIMARY KEY,
-    title TEXT,
-    authors TEXT,
-    publish_date DATE,
-    source VARCHAR(50),
-    url TEXT,
-    category VARCHAR(50),
-    citation_count INTEGER,
-    abstract TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    title VARCHAR(500) NOT NULL,        -- 논문 제목 (최대 500자, 필수)
+    authors TEXT,                       -- 저자 목록
+    publish_date DATE,                  -- 발행일
+    source VARCHAR(100),                -- 출처 (최대 100자)
+    url TEXT UNIQUE,                    -- 논문 URL (중복 불가)
+    category VARCHAR(100),              -- 카테고리 (최대 100자)
+    citation_count INT DEFAULT 0,       -- 인용 횟수 (기본값 0)
+    abstract TEXT,                      -- 논문 초록
+    created_at TIMESTAMP DEFAULT NOW(), -- DB 생성일 (자동)
+    updated_at TIMESTAMP DEFAULT NOW()  -- DB 수정일 (자동)
 );
 ```
 
