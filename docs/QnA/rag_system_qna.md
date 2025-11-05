@@ -418,7 +418,7 @@ retriever = RAGRetriever(k=5)
 # 2023년 이후 논문만 검색
 docs = retriever.search_with_filter(
     query="최신 LLM 모델",
-    filter_dict={"publish_date": {"$gte": "2023-01-01"}},
+    filter_dict={"year": {"$gte": 2023}},
     k=5
 )
 
@@ -433,7 +433,7 @@ docs = retriever.search_with_filter(
 docs = retriever.search_with_filter(
     query="Transformer",
     filter_dict={
-        "publish_date": {"$gte": "2020-01-01"},
+        "year": {"$gte": 2020},
         "category": "cs.CL"
     },
     k=5
