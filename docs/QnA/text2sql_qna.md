@@ -720,10 +720,10 @@ _log_query(
 ```sql
 CREATE TABLE query_logs (
     log_id SERIAL PRIMARY KEY,
-    user_query TEXT,                -- 사용자 질문
-    difficulty_mode VARCHAR(10),    -- 난이도 (현재 미사용)
+    user_query TEXT NOT NULL,       -- 사용자 질문 (필수)
+    difficulty_mode VARCHAR(20),    -- 난이도 (easy, medium, hard, advanced)
     tool_used VARCHAR(50),          -- 도구명 (text2sql)
-    response TEXT,                  -- 응답 내용 (최대 2000자)
+    response TEXT,                  -- 응답 내용 (코드에서 첫 2000자만 저장)
     response_time_ms INTEGER,       -- 응답 시간 (밀리초)
     success BOOLEAN,                -- 성공 여부
     error_message TEXT,             -- 에러 메시지 (실패 시)
