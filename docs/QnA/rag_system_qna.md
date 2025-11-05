@@ -104,7 +104,7 @@ v1 = embeddings.embed_query("Transformer")
 v2 = embeddings.embed_query("Self-Attention")
 v3 = embeddings.embed_query("사과")
 
-# v1과 v2는 가까움, v1과 v3는 멈
+# v1과 v2는 가까움, v1과 v3는 멀
 ```
 
 ---
