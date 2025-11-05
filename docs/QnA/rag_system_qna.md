@@ -84,9 +84,10 @@ LIMIT 5;
 - 벡터로 변환하면 수학적 거리 계산 가능
 
 **본 프로젝트 설정:**
-- **모델**: `configs/model_config.yaml`의 `embeddings.model` 설정을 최우선시 (기본값: `text-embedding-3-small`)
-- **차원**: 1536차원 (`embeddings.dimension` 설정)
-- **재시도**: `embeddings.max_retries` 설정값 사용 (기본값: 3번)
+- **모델**: 환경변수 `EMBEDDING_MODEL` 사용 (기본값: `text-embedding-3-small`)
+  - 참고: `configs/model_config.yaml`의 `embeddings.model` 설정은 문서용이며, 실제 코드에는 환경변수가 반영됨
+- **차원**: 1536차원 (text-embedding-3-small 기본값)
+- **재시도**: OpenAIEmbeddings 기본 설정 사용
 - **비용**: 매우 저렴 ($0.02 / 1M 토큰)
 
 **예시:**
