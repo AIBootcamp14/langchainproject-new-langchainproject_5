@@ -88,20 +88,20 @@ text2sql:
 **허용 테이블:**
 - `papers` (논문 메타데이터)
 
-**허용 컬럼:**
+**허용 컬럼 (데이터 타입 포함):**
 ```python
 {
-    "paper_id",       # 논문 ID
-    "title",          # 논문 제목
-    "authors",        # 저자 목록
-    "publish_date",   # 발행일
-    "source",         # 출처 (arXiv, PubMed 등)
-    "url",            # 논문 URL
-    "category",       # 카테고리 (cs.CL, cs.AI)
-    "citation_count", # 인용 횟수
-    "abstract",       # 초록
-    "created_at",     # DB 생성일
-    "updated_at"      # DB 수정일
+    "paper_id": "SERIAL PRIMARY KEY",           # 논문 고유 ID (자동 증가)
+    "title": "VARCHAR(500) NOT NULL",           # 논문 제목 (최대 500자, 필수)
+    "authors": "TEXT",                          # 저자 목록
+    "publish_date": "DATE",                     # 발행일 (YYYY-MM-DD 형식)
+    "source": "VARCHAR(100)",                   # 출처 (arXiv, IEEE, ACL 등)
+    "url": "TEXT UNIQUE",                       # 논문 URL (중복 방지)
+    "category": "VARCHAR(100)",                 # 카테고리 (cs.AI, cs.CL 등)
+    "citation_count": "INT DEFAULT 0",          # 인용 횟수 (기본값 0)
+    "abstract": "TEXT",                         # 논문 초록
+    "created_at": "TIMESTAMP DEFAULT NOW()",    # DB 생성일 (자동)
+    "updated_at": "TIMESTAMP DEFAULT NOW()"     # DB 수정일 (자동)
 }
 ```
 
