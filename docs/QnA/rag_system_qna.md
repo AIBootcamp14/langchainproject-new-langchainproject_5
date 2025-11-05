@@ -1037,8 +1037,11 @@ context = "\n\n".join([
 ])
 
 # 3. LLM에 전달
-# configs/model_config.yaml에서 사용자가 정의한 모델을 최우선시
-llm_client = LLMClient(provider="openai", model="gpt-5")  # 기본값: gpt-5
+# LLM 클라이언트 초기화 (권장: 난이도별 자동 선택)
+llm_client = LLMClient.from_difficulty(difficulty="easy")  # solar-pro2
+# 또는 직접 모델 지정: LLMClient(provider="openai", model="gpt-4o")
+# 주의: gpt-5는 특별 권한이 필요할 수 있으므로 일반 사용자는 gpt-4o 사용 권장
+
 messages = [
     SystemMessage(content="논문 정보를 기반으로 답변하세요."),
     HumanMessage(content=f"컨텍스트:\n{context}\n\n질문: Transformer 설명해줘")
