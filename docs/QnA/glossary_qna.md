@@ -296,9 +296,8 @@ def extract_and_save_terms(answer, difficulty, min_terms, max_terms, logger):
     LLM을 사용하여 답변에서 AI/ML 용어 추출 및 저장
     """
     # 1. LLM 초기화
-    # configs/model_config.yaml의 embeddings.model 설정을 최우선시
-    # 기본값: gpt-4o-mini (비용 효율적)
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+    # 난이도별 LLM 클라이언트 생성 (답변 생성과 동일한 모델 사용)
+    llm_client = LLMClient.from_difficulty(difficulty=difficulty, logger=logger)
 
     # 2. 프롬프트 구성
     prompt = f"""다음 답변에서 사용된 AI/ML/NLP/CV/RL 관련 전문 용어를 추출하고,
@@ -330,7 +329,7 @@ JSON 형식으로만 반환:
 }}"""
 
     # 3. LLM 호출
-    response = llm.invoke(prompt)
+    response = llm_client.llm.invoke(prompt)
 
     # 4. JSON 파싱
     import json
