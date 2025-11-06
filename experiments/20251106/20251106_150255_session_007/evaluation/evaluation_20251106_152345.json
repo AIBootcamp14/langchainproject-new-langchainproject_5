@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 4,
+  "relevance_score": 6,
+  "difficulty_score": 1,
+  "citation_score": 0,
+  "total_score": 11,
+  "comment": "정확도: '전체 저장' 요청 대비 단일 파일 저장만 보고되어 의도 충족 여부가 불명확하며, 저장 성공 및 경로의 진위는 검증 불가. 관련성: 저장 요청에는 응답했으나 '전체'의 범위를 확인하거나 무엇이 저장되었는지 구체 설명이 부족. 난이도: hard 모드 요구(전문적 설명, 절차/정책 명시 등)를 충족하지 못함. 출처: 인용 없음.",
+  "question": "전체 저장해줘",
+  "answer": "파일이 성공적으로 저장되었습니다.\n파일 경로: experiments/20251106/20251106_150255_session_007/outputs/save_data/20251106_152319_response_1.md",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "hard",
+  "timestamp": "2025-11-06T15:23:45.462097"
+}

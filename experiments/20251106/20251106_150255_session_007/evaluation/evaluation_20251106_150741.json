@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 5,
+  "relevance_score": 10,
+  "difficulty_score": 10,
+  "citation_score": 0,
+  "total_score": 25,
+  "comment": "요청에는 직접 응답했고 저장 경로를 제시해 관련성은 매우 높습니다. 문장은 쉬워 Easy 모드에 적합합니다. 다만 '전체 내용'이 실제로 모두 저장됐는지 확인 정보가 없고, 파일명이 response_1.md로 보아 일부만 저장한 듯한 여지가 있어 정확도는 보통으로 평가했습니다. 참고 문서가 없어 출처 점수는 0점입니다.",
+  "question": "전체 내용 저장해줘",
+  "answer": "파일이 성공적으로 저장되었습니다.\n파일 경로: experiments/20251106/20251106_150255_session_007/outputs/save_data/20251106_150720_response_1.md",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "easy",
+  "timestamp": "2025-11-06T15:07:41.303956"
+}

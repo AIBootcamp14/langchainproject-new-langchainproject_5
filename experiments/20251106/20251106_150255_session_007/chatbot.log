@@ -1,0 +1,707 @@
+2025-11-06 15:02:55 | 세션 시작: session_007
+2025-11-06 15:02:55 | 폴더 경로: experiments/20251106/20251106_150255_session_007
+2025-11-06 15:02:55 | 설정 파일 저장: db_config.yaml
+2025-11-06 15:02:55 | 설정 파일 저장: model_config.yaml
+2025-11-06 15:02:55 | 설정 파일 저장: multi_request_patterns.yaml
+2025-11-06 15:02:55 | ==========
+2025-11-06 15:02:55 | Agent 그래프 생성 시작
+2025-11-06 15:02:55 | Fallback Chain 활성화
+2025-11-06 15:02:55 | 최대 재시도 횟수: 3
+2025-11-06 15:02:55 | Router 검증 활성화: True
+2025-11-06 15:02:55 | Agent 그래프 컴파일 완료
+2025-11-06 15:02:55 | Streamlit UI 시작
+2025-11-06 15:02:55 | 실험 폴더: experiments/20251106/20251106_150255_session_007
+2025-11-06 15:03:29 | 메타데이터 업데이트: ['user_query']
+2025-11-06 15:03:29 | 메타데이터 업데이트: ['difficulty']
+2025-11-06 15:03:29 | 라우터 노드 실행: CNN에서 필터가 하는 일이 뭐야?
+2025-11-06 15:03:29 | 패턴 매칭 조건 체크:
+2025-11-06 15:03:29 | has_contextual_ref: False
+2025-11-06 15:03:29 | has_multi_request_indicator: False
+2025-11-06 15:03:29 | messages 개수: 1
+2025-11-06 15:03:29 | skip_pattern_matching: False
+2025-11-06 15:03:29 | 패턴 매칭 시작: 총 20개 패턴 체크
+2025-11-06 15:03:29 | ✅ 다중 요청 감지: 키워드: [] + 선택 키워드: ['뭐야', '뭔데', '뭔지', '무엇인지', '어떤건지', '어떤거야'] (제외: ['논문', '검색', '찾아', '저장']) → ['glossary']
+2025-11-06 15:03:29 | 패턴 설명: 용어 정의 질문 (다양한 표현)
+2025-11-06 15:03:29 | 단일 도구 실행: glossary
+2025-11-06 15:03:30 | pgvector 검색 기록: glossary
+2025-11-06 15:03:30 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:03:30 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:03:30 | 시스템 프롬프트 저장 완료
+2025-11-06 15:03:30 | 최종 프롬프트 저장 완료
+2025-11-06 15:03:32 | 시스템 프롬프트 저장 완료
+2025-11-06 15:03:32 | 최종 프롬프트 저장 완료
+2025-11-06 15:03:36 | 도구 실행 성공: glossary
+2025-11-06 15:03:36 | 메타데이터 업데이트: ['success', 'response_time_ms']
+2025-11-06 15:03:36 | 메타데이터 업데이트: ['tool_used']
+2025-11-06 15:03:36 | 용어 추출 시작 (범위: 1-5개)
+2025-11-06 15:03:36 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:03:36 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:03:43 | LLM 응답: ```json
+{
+  "terms": [
+    {
+      "term": "CNN (Convolutional Neural Network)",
+      "definition": "이미지 인식에 특화된 딥러닝 모델로, 지역적 패턴을 계층적으로 학습하는 합성곱 레이어를 사용함",
+      "easy_explanation": "사진을 보는 로봇 눈처럼, 이...
+2025-11-06 15:03:43 | 용어 추출 실패: Invalid \escape: line 7 column 124 (char 399)
+2025-11-06 15:04:15 | 평가 결과 저장: evaluation_20251106_150415.json
+2025-11-06 15:04:15 | 대화 저장: conversation_easy_20251106_150415.json (2개 메시지)
+2025-11-06 15:04:15 | ==========
+2025-11-06 15:05:00 | 메타데이터 업데이트: ['user_query']
+2025-11-06 15:05:00 | 메타데이터 업데이트: ['difficulty']
+2025-11-06 15:05:00 | 라우터 노드 실행: RAG가 뭔지 설명하고 관련 논문도 요약해서 저장해줘
+2025-11-06 15:05:00 | 패턴 매칭 조건 체크:
+2025-11-06 15:05:00 | has_contextual_ref: True
+2025-11-06 15:05:00 | has_multi_request_indicator: True
+2025-11-06 15:05:00 | messages 개수: 3
+2025-11-06 15:05:00 | skip_pattern_matching: False
+2025-11-06 15:05:00 | 패턴 매칭 시작: 총 20개 패턴 체크
+2025-11-06 15:05:00 | ✅ 다중 요청 감지: 키워드: ['논문', '요약', '저장'] + 선택 키워드: ['용어', '뭐야', '뭔지', '뭔데', '무엇인지', '어떤건지', '어떤거야', '설명', '개념'] → ['glossary', 'search_paper', 'web_search', 'general', 'summarize', 'save_file']
+2025-11-06 15:05:00 | 패턴 설명: 용어 설명, 논문 검색, 요약 후 저장 (6단계 파이프라인)
+2025-11-06 15:05:00 | 순차 실행 도구: glossary → search_paper → web_search → general → summarize → save_file
+2025-11-06 15:05:00 | 맥락 참조 감지: LLM 호출하여 질문 재작성
+2025-11-06 15:05:00 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:05:00 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:05:03 | 재작성된 질문 (regex 추출): RAG(검색 증강 생성) 개념 설명 및 주요 논문 요약 2023년 기준
+2025-11-06 15:05:05 | pgvector 검색 기록: glossary
+2025-11-06 15:05:05 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:05:05 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:05:05 | 시스템 프롬프트 저장 완료
+2025-11-06 15:05:05 | 최종 프롬프트 저장 완료
+2025-11-06 15:05:09 | 시스템 프롬프트 저장 완료
+2025-11-06 15:05:09 | 최종 프롬프트 저장 완료
+2025-11-06 15:05:16 | 도구 실행 성공: glossary
+2025-11-06 15:05:16 | Pipeline 진행: 1/6
+2025-11-06 15:05:16 | 다음 도구 실행: search_paper
+2025-11-06 15:05:21 | pgvector 검색 기록: search_paper
+2025-11-06 15:05:21 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:05:21 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:05:21 | 시스템 프롬프트 저장 완료
+2025-11-06 15:05:21 | 최종 프롬프트 저장 완료
+2025-11-06 15:05:25 | 시스템 프롬프트 저장 완료
+2025-11-06 15:05:25 | 최종 프롬프트 저장 완료
+2025-11-06 15:05:34 | 도구 실행 성공: search_paper
+2025-11-06 15:05:34 | Pipeline 진행: 2/6
+2025-11-06 15:05:34 | RAG 검색 성공: web_search, general 스킵 → summarize로 이동
+2025-11-06 15:05:34 | 다음 도구 실행: summarize
+2025-11-06 15:05:34 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:05:34 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:05:40 | 도구 실행 성공: summarize
+2025-11-06 15:05:40 | Pipeline 진행: 5/6
+2025-11-06 15:05:40 | 다음 도구 실행: save_file
+2025-11-06 15:05:40 | 파일 저장 노드 실행: RAG가 뭔지 설명하고 관련 논문도 요약해서 저장해줘
+2025-11-06 15:05:40 | 저장 모드: 단일 답변 저장
+2025-11-06 15:05:40 | 저장 출처: final_answers (2개 수준)
+2025-11-06 15:05:40 | 결과물 저장: 20251106_150540_response_1_elementary.md
+2025-11-06 15:05:40 | 파일 저장 완료: experiments/20251106/20251106_150255_session_007/outputs/save_data/20251106_150540_response_1_elementary.md (초등학생용(8-13세))
+2025-11-06 15:05:40 | 결과물 저장: 20251106_150540_response_1_beginner.md
+2025-11-06 15:05:40 | 파일 저장 완료: experiments/20251106/20251106_150255_session_007/outputs/save_data/20251106_150540_response_1_beginner.md (초급자용(14-22세))
+2025-11-06 15:05:40 | 도구 실행 성공: save_file
+2025-11-06 15:05:40 | 메타데이터 업데이트: ['success', 'response_time_ms']
+2025-11-06 15:05:40 | 메타데이터 업데이트: ['tool_used']
+2025-11-06 15:06:16 | 평가 결과 저장: evaluation_20251106_150616.json
+2025-11-06 15:06:16 | 대화 저장: conversation_easy_20251106_150415.json (4개 메시지)
+2025-11-06 15:06:16 | ==========
+2025-11-06 15:07:20 | 메타데이터 업데이트: ['user_query']
+2025-11-06 15:07:20 | 메타데이터 업데이트: ['difficulty']
+2025-11-06 15:07:20 | 라우터 노드 실행: 전체 내용 저장해줘
+2025-11-06 15:07:20 | 패턴 매칭 조건 체크:
+2025-11-06 15:07:20 | has_contextual_ref: False
+2025-11-06 15:07:20 | has_multi_request_indicator: True
+2025-11-06 15:07:20 | messages 개수: 5
+2025-11-06 15:07:20 | skip_pattern_matching: False
+2025-11-06 15:07:20 | 패턴 매칭 시작: 총 20개 패턴 체크
+2025-11-06 15:07:20 | ✅ 다중 요청 감지: 키워드: ['전체', '저장'] → ['save_file']
+2025-11-06 15:07:20 | 패턴 설명: 전체 대화 내용 저장
+2025-11-06 15:07:20 | 단일 도구 실행: save_file
+2025-11-06 15:07:20 | 파일 저장 노드 실행: 전체 내용 저장해줘
+2025-11-06 15:07:20 | 저장 모드: 전체 대화 저장
+2025-11-06 15:07:20 | 저장할 내용 길이: 3960 글자
+2025-11-06 15:07:20 | 파일명: 20251106_150720_response_1.md
+2025-11-06 15:07:20 | 결과물 저장: 20251106_150720_response_1.md
+2025-11-06 15:07:20 | 파일 저장 완료: experiments/20251106/20251106_150255_session_007/outputs/save_data/20251106_150720_response_1.md
+2025-11-06 15:07:20 | 도구 실행 성공: save_file
+2025-11-06 15:07:20 | 메타데이터 업데이트: ['success', 'response_time_ms']
+2025-11-06 15:07:20 | 메타데이터 업데이트: ['tool_used']
+2025-11-06 15:07:41 | 평가 결과 저장: evaluation_20251106_150741.json
+2025-11-06 15:07:43 | 메타데이터 업데이트: ['user_query']
+2025-11-06 15:07:43 | 메타데이터 업데이트: ['difficulty']
+2025-11-06 15:07:43 | 라우터 노드 실행: Multimodal Learning 최신 연구 논문 검색해줘
+2025-11-06 15:07:43 | 패턴 매칭 조건 체크:
+2025-11-06 15:07:43 | has_contextual_ref: False
+2025-11-06 15:07:43 | has_multi_request_indicator: False
+2025-11-06 15:07:43 | messages 개수: 6
+2025-11-06 15:07:43 | skip_pattern_matching: False
+2025-11-06 15:07:43 | 패턴 매칭 시작: 총 20개 패턴 체크
+2025-11-06 15:07:43 | ⚠️ 패턴 매칭 실패: 어떤 패턴도 매칭되지 않음 → LLM 라우팅 사용
+2025-11-06 15:07:43 | 난이도별 LLM 선택: difficulty=easy, provider=solar, model=solar-pro2
+2025-11-06 15:07:43 | LLM 초기화: provider=solar, model=solar-pro2
+2025-11-06 15:07:46 | 정제된 응답 (파싱 전): {
+  "tools": [
+    {
+      "name": "학술 논문 검색 도구",
+      "query": "Multimodal Learning survey:arXiv OR 'multimodal AI' OR 'multimodal machine learning' publishedDate:[2023-01-01 TO 2024-12-31]",
+      ...
+2025-11-06 15:07:46 | JSON 파싱 실패: Extra data: line 13 column 1 (char 397)
+2025-11-06 15:07:46 | 재작성된 질문 (regex 추출): Multimodal Learning survey:arXiv OR 'multimodal AI' OR 'multimodal machine learning' publishedDate:[2023-01-01 TO 2024-12-31]
+2025-11-06 15:07:46 | 키워드 기반 폴백 매칭 결과: search_paper
+2025-11-06 15:07:46 | LLM 라우팅 결정 (원본): ```json
+{
+  "tools": [
+    {
+      "name": "학술 논문 검색 도구",
+      "query": "Multimodal Learning survey...
+2025-11-06 15:07:46 | LLM 라우팅 결정 (파싱): search_paper
+2025-11-06 15:07:46 | 최종 선택 도구: search_paper
+2025-11-06 15:07:49 | 메타데이터 업데이트: ['user_query']
+2025-11-06 15:07:49 | 메타데이터 업데이트: ['difficulty']
+2025-11-06 15:07:49 | 라우터 노드 실행: Multimodal Learning 최신 연구 논문 검색해줘
+2025-11-06 15:07:49 | 패턴 매칭 조건 체크:
+2025-11-06 15:07:49 | has_contextual_ref: False
+2025-11-06 15:07:49 | has_multi_request_indicator: False
+2025-11-06 15:07:49 | messages 개수: 1
+2025-11-06 15:07:49 | skip_pattern_matching: False
+2025-11-06 15:07:49 | 패턴 매칭 시작: 총 20개 패턴 체크
+2025-11-06 15:07:49 | ⚠️ 패턴 매칭 실패: 어떤 패턴도 매칭되지 않음 → LLM 라우팅 사용
+2025-11-06 15:07:49 | 난이도별 LLM 선택: difficulty=hard, provider=openai, model=gpt-5
+2025-11-06 15:07:49 | LLM 초기화: provider=openai, model=gpt-5
+2025-11-06 15:08:24 | 정제된 응답 (파싱 전): {
+  "tools": [
+    {
+      "name": "arXiv",
+      "query": "((ti:multimodal OR abs:multimodal) AND (ti:learning OR abs:\"large language model\" OR abs:VLM OR abs:MLLM OR abs:\"vision-language\")) AND ...
+2025-11-06 15:08:24 | 재작성된 질문: ((ti:multimodal OR abs:multimodal) AND (ti:learning OR abs:"large language model" OR abs:VLM OR abs:MLLM OR abs:"vision-language")) AND (cat:cs.LG OR cat:cs.CV OR cat:cs.CL OR cat:cs.AI) AND submittedDate:[20240101 TO 20251231] sortBy:submittedDate desc
+2025-11-06 15:08:24 | LLM 라우팅 결정 (원본): {
+  "tools": [
+    {
+      "name": "arXiv",
+      "query": "((ti:multimodal OR abs:multimodal) AND (...
+2025-11-06 15:08:24 | LLM 라우팅 결정 (파싱): search_paper
+2025-11-06 15:08:24 | 최종 선택 도구: search_paper
+2025-11-06 15:08:33 | pgvector 검색 기록: search_paper
+2025-11-06 15:08:33 | 난이도별 LLM 선택: difficulty=hard, provider=openai, model=gpt-5
+2025-11-06 15:08:33 | LLM 초기화: provider=openai, model=gpt-5
+2025-11-06 15:08:33 | 시스템 프롬프트 저장 완료
+2025-11-06 15:08:33 | 최종 프롬프트 저장 완료
+2025-11-06 15:09:52 | 시스템 프롬프트 저장 완료
+2025-11-06 15:09:52 | 최종 프롬프트 저장 완료
+2025-11-06 15:11:27 | 도구 실행 실패 감지: search_paper
+2025-11-06 15:11:27 | 실패 사유: 정규식 패턴 매치: .*에러.*
+2025-11-06 15:11:27 | ============================================================
+2025-11-06 15:11:27 | Fallback Router 실행
+2025-11-06 15:11:27 | 실패한 도구: search_paper
+2025-11-06 15:11:27 | 실패 사유: 정규식 패턴 매치: .*에러.*
+2025-11-06 15:11:27 | 재시도 횟수: 0/3
+2025-11-06 15:11:27 | 모든 도구 시도 완료
+2025-11-06 15:11:27 | 최종 Fallback: general 도구 선택
+2025-11-06 15:11:27 | 다음 도구로 전환: general
+2025-11-06 15:11:27 | 전환 이유: search_paper 도구가 실패했기 때문
+2025-11-06 15:11:27 | Fallback Chain:
+2025-11-06 15:11:27 | ============================================================
+2025-11-06 15:11:27 | 일반 답변 노드 실행: Multimodal Learning 최신 연구 논문 검색해줘
+2025-11-06 15:11:27 | 난이도: hard
+2025-11-06 15:11:27 | 난이도별 LLM 선택: difficulty=hard, provider=openai, model=gpt-5
+2025-11-06 15:11:27 | LLM 초기화: provider=openai, model=gpt-5
+2025-11-06 15:11:27 | 수준 'intermediate' 답변 생성 시작
+2025-11-06 15:11:27 | 시스템 프롬프트 저장 완료
+2025-11-06 15:11:27 | 최종 프롬프트 저장 완료
+2025-11-06 15:14:38 | 수준 'intermediate' 답변 생성 완료: 12697 글자
+2025-11-06 15:14:38 | ================================================================================
+2025-11-06 15:14:38 | [intermediate 답변 전체 내용]
+2025-11-06 15:14:38 | 아래는 2023–2024를 중심으로 한 Multimodal Learning(특히 Vision–Language 중심, 일부 Audio/Video 포함) 최신 논문·리소스 큐레이션과, 핵심 알고리즘 개요, 실무 적용 팁, 그리고 바로 써볼 수 있는 PyTorch/Transformers 예제 코드입니다. 제 지식은 2024-10까지 업데이트되어 있습니다. 더 최신(2025) 논문을 추적하는 방법도 끝에 정리했습니다.
+
+1) 최근 트렌드 한눈에 보기 (2024 중심)
+- MLLM 표준화: 이미지/텍스트를 넘어 문서(OCR), 차트, UI, 비디오까지 확장. 고해상도(UHD), 다중 이미지, 긴 컨텍스트, 레이아웃 인식이 중요 포인트.
+- 비지도 사전학습 + 지시튜닝: 대규모 이미지–텍스트 대비학습(CLIP계열)로 정렬 → BLIP-2/LLaVA 식 프로젝트/어댑터로 LLM 연결 → 멀티모달 지시튜닝(SFT) → 선택적 RLHF.
+- Early-fusion과 Token-unified 시도: Chameleon, Janus, Emu3 등은 모달리티를 단일 토큰 공간으로 통합하려는 경향.
+- 멀티모달 RAG/Tool-Use: 검색/코드/검출기/수식해석기/테이블파서 등 외부 도구를 조합한 복합 추론.
+- 벤치마크 다양화: MMMU/MathVista/MM-Vet/DocVQA/ChartBench/SEED-Bench2 등 도메인 특화·고난도 평가 확산.
+- 안전성/환각: 시각 환각(Object/Attribute Hallucination), 이미지 기반 Jailbreak, 문서 개인정보 노출 등 대응 연구 증가.
+
+2) 카테고리별 최신 주요 논문/모델 (대표작 위주)
+Vision–Language/MLLM
+- LLaVA-1.5 (2023), LLaVA-Next (2024): GPT 계열 LLM + CLIP/ViT 시각 인코더, 대규모 비전 지시튜닝 레시피 정립, 오픈소스 생태계 표준.
+- BLIP-2 (2023): Q-Former(경량 Cross-Attn 쿼리)로 이미지→LLM 브릿지, 효율적 프리징 학습의 대표.
+- Qwen2-VL (2024): 이미지/문서/차트/비디오 지원, OCR/레이아웃 강함. 다양한 사이즈(2B~72B)와 실용적 성능.
+- InternVL 2 (2024): 고해상도(Region 선택/타일링)와 OCR·도표에 특화, 중국어/영어 강점.
+- IDEFICS2 (2024): 오픈소스 멀티이미지·문서 이해, 연구 친화 베이스라인.
+- Chameleon (Meta, 2024): Mixed-modality early-fusion 파라다임, 단일 토큰 공간으로 합성/이해 겸비.
+- Llama 3.2 Vision (Meta, 2024): Meta 생태계에서 경량 비전 지시모델. 모바일/온디바이스 변형과 호환.
+- Emu3 (Meta, 2024): 통합 토큰 공간에서 이해·생성이 모두 가능한 유니파이드 프레임워크.
+- LLaVA-OneVision (2024): 고해상도/문서/차트/수식 등 다양한 태스크 유니파이드 튜닝.
+- Kosmos-2 (2023): OCR/그라운딩 결합(grounding text in image).
+- MiniCPM-V, MobileVLM (2023–2024): 경량/온디바이스 최적화.
+
+Contrastive Pretraining/Embedding
+- CLIP (2021), OpenCLIP(지속), ALIGN/LiT (2021): 이미지–텍스트 대비학습 표준.
+- SigLIP (2023), SigLIP 2 (2024): 시그모이드 기반 contrastive의 SOTA 라인.
+- EVA-CLIP (2023): ViT 대형 백본으로 CLIP 상향.
+- DataComp (2023): 대규모 노이즈 데이터 vs 정제 데이터 트레이드오프 재조명, 오픈 평가셋·프로토콜.
+- ImageBind (2023): 비시각 모달리티까지 임베딩 결합(오디오, IMU 등).
+
+Video–Language
+- Video-LLaMA 2 (2024): 영상 프레임 샘플링·선택적 어텐션으로 효율적 비디오 이해.
+- LLaMA-VID (2024): 영상 토큰 효율화(프레임/패치 축약)로 긴 비디오 처리.
+- InternVideo2 (2024): 강력한 비디오 인코더, 다운스트림 태스크 전이 성능 상향.
+- VILA (2023): 비디오 지시튜닝 초기 대형 베이스라인.
+
+Audio–Language/Multimodal Audio
+- Qwen2-Audio (2024): 음악·화자·효과음까지 커버하는 멀티오디오-텍스트.
+- SALMONN (2023), AudioGPT (2023): 오디오–LLM 브릿지, 지시튜닝.
+
+Documents/Charts/UI/Reasoning 특화
+- mPLUG-DocOwl 2 (2024), UReader (2023), TextMonkey (2024): OCR+레이아웃+도표.
+- Pix2Struct (2022), Donut (2021), DocLLM (2023): 문서 직렬화/시각토큰화 접근.
+
+Tool-use / Program-of-Thought / RAG
+- MM-ReAct (2023): 멀티모달 ReAct 프레임워크(Reason+Act).
+- VisProg (2022), ViperGPT (2023): 시각 도구 호출·프로그램 합성 기반 추론.
+- Multimodal RAG (2024, 다양한 저자): 이미지/문서 인덱싱+LLM 생성 결합한 파이프라인 정립.
+
+Benchmarks/평가
+- MMBench (2023), MM-Vet (2023), SEED-Bench/2 (2023/2024), LLaVA-Bench (2023)
+- MMMU (2023): 대학 수준 멀티모달 지식/추론.
+- MathVista (2023): 수학+도형 시각추론.
+- ChartBench (2024), DocVQA/InfographicVQA/TextCaps(문자·문서 중심)
+
+Survey
+- Multimodal Large Language Models: A Survey (2023→2024 업데이트판 다수)
+- Multimodal RAG: A Survey (2024)
+- Video-LLMs: A Survey (2024)
+- Hallucinations in Multimodal LLMs (2024)
+
+3) 핵심 알고리즘 개요
+- 정렬(Objective)
+  - 대조학습(InfoNCE/CLIP): 이미지 임베딩 vi, 텍스트 임베딩 tj에 대해
+    L = (CE(sim(vi,tj)/τ, j) + CE(sim(ti,vj)/τ, j))/2
+    sim은 cosine, τ는 learnable temperature.
+  - 생성(Captioning/ITM/MLM): Cross-Entropy로 텍스트를 생성. ITM(매칭 여부 이진 분류)로 정합성 보조.
+  - 지시튜닝(SFT): 대화 포맷([U: <image> 질의][A: 답])로 슈퍼바이즈드. CoT나 Rationales는 안전/평가 영향 주의.
+  - RLHF/Prefernce: 멀티모달 피드백은 비용↑, 텍스트-only 대비 안정성 이슈.
+- 결합(Fusion)
+  - Late-fusion: 독립 인코더 후 합치기(간단/안정).
+  - Cross-attention/Q-Former: 쿼리 토큰이 비전 features에 어텐션(효율/표현력 균형, BLIP-2).
+  - Early-fusion(Unified tokens): 모달 공유 토큰 공간(Chameleon/Emu3). 강력하나 학습 난이도↑.
+- 고해상도/문서
+  - Tiling/RoI-선택, Deformable-Attn, 분할 인코딩 후 합성. 텍스트 박스/레이아웃 토큰 추가.
+- 비디오
+  - 프레임 샘플링(Uniform/Shot-aware), 시간 축 Pooling/Attention, 키프레임 선택, Token 압축.
+
+4) 빠르게 써보는 코드 예제
+
+4-1) CLIP 스타일 대비학습 미니멀 학습 루프 (PyTorch)
+주의: 연구용 스켈레톤. 실제 학습은 대규모 데이터·분산훈련·fp16/bf16·EMA·AUG 필요.
+```python
+import torch, torch.nn as nn, torch.nn.functional as F
+from torch.utils.data import DataLoader
+import timm
+from transformers import AutoTokenizer, AutoModel
+
+class ImageEncoder(nn.Module):
+    def __init__(self, model_name='vit_base_patch16_224', embed_dim=768, proj_dim=512):
+        super().__init__()
+        self.backbone = timm.create_model(model_name, pretrained=True, num_classes=0)
+        self.proj = nn.Linear(embed_dim, proj_dim)
+
+    def forward(self, x):
+        f = self.backbone(x)           # [B, embed_dim]
+        z = F.normalize(self.proj(f), dim=-1)
+        return z
+
+class TextEncoder(nn.Module):
+    def __init__(self, model_name='roberta-base', proj_dim=512):
+        super().__init__()
+        self.model = AutoModel.from_pretrained(model_name)
+        self.proj = nn.Linear(self.model.config.hidden_size, proj_dim)
+
+    def forward(self, input_ids, attention_mask):
+        out = self.model(input_ids=input_ids, attention_mask=attention_mask)
+        cls = out.last_hidden_state[:,0]    # [CLS]
+        z = F.normalize(self.proj(cls), dim=-1)
+        return z
+
+class CLIPLoss(nn.Module):
+    def __init__(self, temperature=0.07):
+        super().__init__()
+        self.t = nn.Parameter(torch.tensor(temperature))
+
+    def forward(self, z_img, z_txt):
+        logits = z_img @ z_txt.t() / self.t.exp()
+        labels = torch.arange(z_img.size(0), device=z_img.device)
+        loss_i = F.cross_entropy(logits, labels)
+        loss_t = F.cross_entropy(logits.t(), labels)
+        return (loss_i + loss_t) / 2
+
+# dataset: implement __getitem__ -> (image_tensor[3x224x224], text_str)
+tokenizer = AutoTokenizer.from_pretrained('roberta-base')
+img_enc = ImageEncoder().cuda()
+txt_enc = TextEncoder().cuda()
+optim = torch.optim.AdamW(list(img_enc.parameters())+list(txt_enc.parameters()), lr=3e-4, weight_decay=0.01)
+criterion = CLIPLoss()
+
+def collate(batch):
+    imgs, texts = zip(*batch)
+    enc = tokenizer(list(texts), padding=True, truncation=True, return_tensors='pt')
+    return torch.stack(imgs), enc
+
+for epoch in range(10):
+    for images, enc in DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=8, collate_fn=collate):
+        images = images.cuda(non_blocking=True)
+        enc = {k:v.cuda() for k,v in enc.items()}
+        z_img = img_enc(images)
+        z_txt = txt_enc(enc['input_ids'], enc['attention_mask'])
+        loss = criterion(z_img, z_txt)
+        optim.zero_grad()
+        loss.backward()
+        optim.step()
+```
+
+4-2) Qwen2-VL 지시튜닝(LoRA)로 VQA 파인튜닝
+주의: 실제로는 SFTTrainer/DeepSpeed/Flash-Attn, 이미지 전처리와 대화 템플릿이 중요합니다.
+```python
+import torch
+from datasets import load_dataset
+from transformers import AutoProcessor, AutoModelForCausalLM, TrainingArguments, Trainer
+from peft import LoraConfig, get_peft_model
+from PIL import Image
+
+model_id = "Qwen/Qwen2-VL-2B-Instruct"
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16, device_map="auto")
+processor = AutoProcessor.from_pretrained(model_id)
+
+lora = LoraConfig(
+    r=16, lora_alpha=32, target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"],
+    lora_dropout=0.05, bias="none", task_type="CAUSAL_LM"
+)
+model = get_peft_model(model, lora)
+
+# dataset: {'image_path':..., 'question':..., 'answer':...}
+ds = load_dataset("your_vqa_dataset")["train"]
+
+def format_example(ex):
+    image = Image.open(ex["image_path"]).convert("RGB")
+    messages = [
+        {"role": "user", "content": [{"type":"image","image":image}, {"type":"text","text": ex["question"]}]},
+        {"role": "assistant", "content": [{"type":"text","text": ex["answer"]}]},
+    ]
+    batch = processor.apply_chat_template(messages, add_generation_prompt=False, tokenize=False)
+    proc = processor(text=batch, images=[image], return_tensors="pt")
+    input_ids = proc["input_ids"][0]
+    pixel_values = proc["pixel_values"][0]
+    labels = input_ids.clone()
+    # 마스킹: 유저 프롬프트 토큰은 -100으로
+    # 실제 토크나이저별 오프셋 필요. 간단화:
+    # 여기서는 전체를 학습 대상으로 두되, advanced masking은 실서비스에서 필수.
+    return {"input_ids": input_ids, "pixel_values": pixel_values, "labels": labels}
+
+proc_ds = ds.map(format_example, remove_columns=ds.column_names)
+proc_ds.set_format(type="torch")
+
+args = TrainingArguments(
+    output_dir="qwen2vl_vqa_lora",
+    per_device_train_batch_size=2,
+    gradient_accumulation_steps=16,
+    learning_rate=2e-4,
+    num_train_epochs=2,
+    bf16=True,
+    logging_steps=20,
+    save_steps=1000,
+)
+
+def collate_fn(batch):
+    input_ids = torch.nn.utils.rnn.pad_sequence([b["input_ids"] for b in batch], batch_first=True, padding_value=processor.tokenizer.pad_token_id)
+    labels = torch.nn.utils.rnn.pad_sequence([b["labels"] for b in batch], batch_first=True, padding_value=-100)
+    pixel_values = torch.stack([b["pixel_values"] for b in batch])
+    attn_mask = (input_ids != processor.tokenizer.pad_token_id).long()
+    return {"input_ids": input_ids, "pixel_values": pixel_values, "labels": labels, "attention_mask": attn_mask}
+
+trainer = Trainer(model=model, args=args, train_dataset=proc_ds, data_collator=collate_fn)
+trainer.train()
+model.save_pretrained("qwen2vl_vqa_lora")
+```
+
+4-3) 멀티모달 RAG 파이프라인 스켈레톤 (이미지/문서 인덱싱 → 검색 → Qwen2-VL로 답변)
+```python
+import faiss, numpy as np, os
+from PIL import Image
+import torch
+from transformers import AutoProcessor, AutoModelForCausalLM, CLIPModel, CLIPProcessor
+
+# 1) 이미지 임베딩 인덱스 구축
+clip_id = "openai/clip-vit-base-patch32"
+clip_model = CLIPModel.from_pretrained(clip_id).cuda().eval()
+clip_proc = CLIPProcessor.from_pretrained(clip_id)
+
+image_paths = [os.path.join("corpus_images", f) for f in os.listdir("corpus_images")]
+embs = []
+for p in image_paths:
+    im = Image.open(p).convert("RGB")
+    inputs = clip_proc(images=im, return_tensors="pt").to("cuda")
+    with torch.no_grad():
+        z = clip_model.get_image_features(**inputs)
+        z = torch.nn.functional.normalize(z, dim=-1)
+    embs.append(z.cpu().numpy())
+embs = np.vstack(embs).astype('float32')
+index = faiss.IndexFlatIP(embs.shape[1]); index.add(embs)
+
+# 2) 쿼리 텍스트로 이미지 검색
+def retrieve_images(query, k=5):
+    q = clip_proc(text=query, return_tensors="pt").to("cuda")
+    with torch.no_grad():
+        zq = clip_model.get_text_features(**q)
+        zq = torch.nn.functional.normalize(zq, dim=-1).cpu().numpy()
+    D, I = index.search(zq, k)
+    return [image_paths[i] for i in I[0]]
+
+# 3) MLLM으로 최종 답변 생성(Qwen2-VL)
+vlm_id = "Qwen/Qwen2-VL-7B-Instruct"
+vlm = AutoModelForCausalLM.from_pretrained(vlm_id, torch_dtype=torch.bfloat16, device_map="auto").eval()
+vlm_proc = AutoProcessor.from_pretrained(vlm_id)
+
+def answer_with_rag(question):
+    imgs = [Image.open(p).convert("RGB") for p in retrieve_images(question, k=4)]
+    messages = [{"role":"user","content": [{"type":"text","text": question}]+[{"type":"image","image":im} for im in imgs]}]
+    inputs = vlm_proc.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
+    batch = vlm_proc(text=inputs, images=imgs, return_tensors="pt").to(vlm.device)
+    with torch.no_grad():
+        out = vlm.generate(**batch, max_new_tokens=256)
+    return vlm_proc.decode(out[0], skip_special_tokens=True)
+
+print(answer_with_rag("이 그래프에서 매출이 가장 높은 분기는 언제야?"))
+```
+
+5) 실무 적용시 고려사항
+- 데이터
+  - 노이즈 캡션/웹 크롤 데이터 정제(Filtering, CLIP score, Perceptual Hashing dedup).
+  - 문서/차트: OCR 품질(Tesseract/TrOCR/Donut), 수식/테이블 구조 복원, 레이아웃 토큰화.
+  - 라이선스/PII: 문서·사진의 개인정보/저작권 준수.
+- 모델/토큰 비용
+  - 고해상도 → 시각 토큰 폭증. 타일/ROI/선택적 어텐션으로 절약.
+  - 비디오 → 프레임·패치 샘플링 전략, 시간 축 압축(Perceiver, pooling).
+- 학습
+  - 프리징+어댑터(Q-Former/LoRA)로 안정성·코스트 절감. 전면 파인튜닝은 과적합·메모리↑.
+  - 혼합정밀(bf16/fp16), Flash-Attn v2, Gradient Checkpointing, ZeRO/DeepSpeed.
+  - Instruction 포맷 일관성, 마스킹 규칙, 이미지-텍스트 정렬 품질이 결정적.
+- 평가
+  - 일반 벤치+도메인 벤치 동시 사용. 객관식/주관식 모두 측정.
+  - 환각 검출: Object/Attribute Hallucination 메트릭, 캘리브레이션(temperature, logit bias).
+  - 레퍼런스 기반(BLEU/CIDEr)만 의존 금지. 인적 평가/진단 베치 필수.
+- 배포
+  - 안전필터(비주얼 NSFW, OCR-PII 마스킹), Prompt Injection/Jailbreak 이미지 방어.
+  - 온디바이스/엣지: MobileVLM/MiniCPM-V 등 경량화, int8/4bit, distillation.
+
+6) 최신 논문 계속 추적하는 방법(자동화 추천)
+- arXiv 쿼리 예시
+  - (ti:multimodal OR ti:"vision language" OR ti:"multimodal large language model" OR abs:multimodal) AND (cat:cs.CV OR cat:cs.CL) AND submittedDate:[20240101 TO 21000101]
+  - (ti:"retrieval-augmented" AND abs:multimodal) AND (cat:cs.CL OR cat:cs.IR)
+- 알림/피드
+  - arXiv Alerts + arXiv Sanity Preserver(키워드: LLaVA, Qwen-VL, InternVL, Chameleon, Video-LLaMA)
+  - OpenReview: ICLR/NeurIPS/CVPR/ACL/ECCV 트랙 필터링
+  - Papers with Code: Tasks → Vision-Language, Document Understanding, Chart QA, Video QA
+  - Hugging Face Spaces/Models: 최근 MLLM 태그, orgs(Qwen, InternVL, LLaVA)
+  - VLMEvalKit, OpenCompass-MM: 정기 벤치마크 대시보드 확인
+
+원하시면 위 리스트를 BibTeX로 정리해 드리거나, 특정 서브도메인(예: 문서·차트, 비디오, 멀티모달 RAG, 온디바이스 경량화)만 골라 더 깊게 파고들 리스트와 실험 레시피를 제공해 드리겠습니다. 어떤 영역부터 보시겠어요?
+2025-11-06 15:14:38 | ================================================================================
+2025-11-06 15:14:38 | 수준 'advanced' 답변 생성 시작
+2025-11-06 15:14:38 | 시스템 프롬프트 저장 완료
+2025-11-06 15:14:38 | 최종 프롬프트 저장 완료
+2025-11-06 15:17:50 | 수준 'advanced' 답변 생성 완료: 7178 글자
+2025-11-06 15:17:50 | ================================================================================
+2025-11-06 15:17:50 | [advanced 답변 전체 내용]
+2025-11-06 15:17:50 | 업데이트 한계 안내: 제 지식은 2024-10까지의 공개 논문에 기반합니다. 2025 이후 “최신”까지는 직접 검색을 수행할 수 없으니, 아래 큐레이션(2023–2024 중심)과 함께 끝부분의 검색 팁/키워드로 후속 업데이트를 확인하시길 권합니다.
+
+핵심(2023–2024) 멀티모달 러닝 논문 큐레이션
+
+A. 범용 Multimodal LLM (VLM/MLLM)
+- MM1: Methods, Analysis & Insights from Multimodal LLMs (Jain et al., 2024, Apple)
+  기여: 데이터 혼합, 레시피, 해상도/토크나이저/패킹 전략의 체계적 분석. LLaMA-계열 백본과 강력한 CLIP/SigLIP 비전 인코더 조합이 다양한 벤치마크에서 강력함을 보임.
+- IDEFICS2: An Open Model for In-Context Vision-Language Learning (Laurençon et al., 2024, HuggingFace M4)
+  기여: 오픈모델로 in-context V+L 학습 역량 강화, 지침튜닝과 합성 데이터 생성 전략 공개.
+- LLaVA-Next (Liu et al., 2024)
+  기여: 대규모 시각 지침 튜닝 레시피, 고해상도 이미지 처리와 단계적 정렬(alignment) 개선. 오픈소스 생태계 표준.
+- Qwen2-VL (Wang et al., 2024, Alibaba)
+  기여: 더 효율적인 시각 인지 모듈, OCR/도큐먼트/차트에서 강점. 멀티해상도·멀티윈도우 전략.
+- InternVL 2 (Chen et al., 2024, Shanghai AI Lab)
+  기여: 대규모 고해상도 학습, 촘촘한 비주얼 토큰 사용과 성능-효율 밸런스 개선. 다양한 VQA/MMBench/MMMU에서 강력.
+- LLaVA-OneVision (LLaVA Team, 2024)
+  기여: 하나의 파이프라인으로 일반 이미지, 문서/OCR, 차트 등 도메인 전이를 수월하게 하는 설계.
+
+B. 비디오 멀티모달
+- Video-LLaVA (Lin et al., 2024)
+  기여: 비디오 프레임 시퀀스와 언어의 효과적 결합, 시공간 압축과 지침튜닝으로 Video-QA/이해 향상.
+- Video-MME: Benchmarking (Fu et al., 2024)
+  기여: 비디오 LLM의 광범위 평가 벤치마크. 시간적 추론/상황 이해/메모리 등 측면에서 한계 진단.
+
+C. 문서·차트·OCR 특화
+- mPLUG-DocOwl 1.5 (Ye et al., 2024)
+  기여: 문서 이미지의 구조적 이해와 질문응답 고도화. 레이아웃·텍스트 읽기·도표 해석에 강점.
+- UReader (Yang et al., 2023)
+  기여: OCR-free 접근(픽셀→언어)으로 문서 이해의 루팅오류 감소.
+
+D. 기초 기여(목표함수·아키텍처)
+- CLIP (Radford et al., 2021), ALIGN (Jia et al., 2021)
+  기여: 대규모 이미지-텍스트 대조학습(contrastive) 패러다임 정립.
+- Flamingo (Alayrac et al., 2022)
+  기여: LLM 위에 Perceiver Resampler로 비전 토큰을 요약해 크로스어텐션. 저비용-고효율 멀티모달 컨텍스트 융합.
+- BLIP-2 (Li et al., 2023), InstructBLIP (Dai et al., 2023)
+  기여: Q-Former로 비전-LLM 브리지 구축, 지도/지침 신호로 정렬 강화.
+- SigLIP (Zhai et al., 2023), EVA-CLIP (Sun et al., 2023)
+  기여: 강력한 대비학습 비전 인코더 계열로 최신 MLLM의 시각 백본으로 널리 채택.
+
+E. 오디오·다감각
+- ImageBind (Girdhar et al., 2023)
+  기여: 오디오, IMU, 텍스트, 깊이 등 다중 감각 임베딩을 단일 공유공간에 정렬하는 큰 흐름 제시.
+
+F. 생성·조기 융합 계열
+- Chameleon: Mixed-Modal Early-Fusion Foundation Models (Meta AI, 2024)
+  기여: 디코더-온리 조기 융합으로 텍스트·이미지 입력/출력을 혼합 처리. 멀티모달 생성의 일관된 토큰 공간 설계.
+
+수학적 공식화(대표 목표함수)
+
+1) 대조학습(예: CLIP)의 InfoNCE
+- 미니배치 {(x_i, y_i)}_{i=1}^B, 임베딩 f(x)=z^x∈R^d, g(y)=z^y∈R^d, 유사도 s(i,j)=⟨z^x_i, z^y_j⟩/τ.
+- 이미지→텍스트 손실:
+  L_ITC = (1/B) ∑_{i=1}^B [ - log exp s(i,i) / ∑_{j=1}^B exp s(i,j) ].
+- 텍스트→이미지 대칭 포함 시 총 L_CLIP = (L_ITC + L_TIC)/2.
+- InfoNCE의 MI 하한(간단 스케치; van den Oord et al., 2018):
+  I(X;Y) ≥ log B − L_InfoNCE, 따라서 L_InfoNCE 최소화는 상호정보량 최대화의 하한을 끌어올림.
+
+2) 크로스-모달 생성/지침튜닝(LLM 디코더)
+- 시각 컨텍스트 V는 비전 인코더 h(V)∈R^{N_v×d}를 통해 토큰화. 텍스트 시퀀스 T=(t_1…t_L).
+- 크로스어텐션 기반 확률:
+  p(T|V)=∏_{ℓ=1}^L p(t_ℓ | t_{<ℓ}, h(V); Θ),
+  L_LM = −∑_{ℓ=1}^L log p(t_ℓ | t_{<ℓ}, h(V)).
+- 실전에서는 다목적 합성:
+  L_total = λ_con L_CLIP + λ_cap L_LM(cap) + λ_itm L_ITM + λ_ins L_LM(instr),
+  여기서 ITM은 이미지-텍스트 매칭, instr는 지침튜닝 손실.
+
+3) CCA/InfoMax 관점
+- z_x=W_x^T x, z_y=W_y^T y에 대해 최대공분산 정렬(Deep CCA류):
+  max_{W_x,W_y} corr(z_x,z_y) s.t. Var(z_x)=Var(z_y)=I.
+- 비선형 딥 네트워크로 근사하거나 InfoNCE로 MI 하한을 직접 최대화.
+
+이론적·계산 복잡도
+
+- 배치 대비학습(CLIP류)
+  - 유사도 행렬 계산 O(B^2 d), 메모리 O(B^2). 대규모 B(>16k)일 때 통신/메모리 병목이 지배.
+- 트랜스포머 크로스어텐션
+  - 입력 길이 L=L_v+L_t, 히든 d, 헤드 수 H.
+  - 시간 O(H L^2 d), 메모리 O(L^2). 고해상도 이미지(큰 L_v)나 긴 비디오(프레임 T, 프레임당 토큰 N→ L_v≈TN)에서 급증.
+- Perceiver Resampler(Flamingo)
+  - 비전 토큰 N_v를 r개의 요약 토큰으로 축약. 어텐션 비용을 O(N_v r d)+O(r^2 d)로 감소(r≪N_v). 전체 L을 크게 줄여 실용화.
+- Q-Former(BLIP-2)
+  - 학습된 질의 q∈R^{r×d}가 비전 토큰에 주의를 주어 r개의 멀티모달 토큰 생성. 비용 O(N_v r d).
+- 비디오
+  - 단순 풀 어텐션: O((TN+L_t)^2 d). 프레임 샘플링, 시간적 압축(Pooling/State-Space/Mamba), 윈도우/저랭크/선형 어텐션으로 완화.
+- 훈련 FLOPs 근사
+  - 트랜스포머 1층당 O(L d^2 + H L^2 d). LLM(수십억 파라미터) + 비전 인코더(ViT-L/14, ViT-g 등) 동시 학습 시, 데이터 크기×스텝×층수에 비례. 최신 MLLM 학습은 수×10^22 FLOPs 규모도 보고됨(대형 산업 모델 기준).
+
+평가 벤치마크(대표, 2023–2024)와 동향 요약
+- MMBench (Liu et al., 2023), SEED-Bench (Li et al., 2023), MME (Fu et al., 2023)
+  - 일반 멀티모달 이해. InternVL2, Qwen2-VL, MM1, LLaVA-Next 등이 강력한 성능 보고.
+- MMMU (Yue et al., 2024)
+  - 대학/전문 과목 범주의 고난도 지식 추론. 폐쇄모델(GPT-4V류)이 선도, 최고 오픈모델은 빠르게 추격 중.
+- MathVista (Lu et al., 2023)
+  - 수학·도형·시각 추론. 시각-수학 융합에서 여전히 난제.
+- DocVQA/ChartQA/InfographicVQA
+  - 고해상도·레이아웃 민감. Qwen2-VL, DocOwl 계열이 선전. 타일링/윈도우+문자 인식 정렬이 핵심.
+- Video-MME (Fu et al., 2024), NExT-QA 등
+  - 장기 시간 이해와 메모리 한계가 주요 병목. 샘플링·요약·메모리 모듈이 성능 좌우.
+- 환각 평가: POPE (Li et al., 2023)
+  - 객체 수준 환각 측정. 고해상도, OCR, 외부 지식 접속, 캘리브레이션이 환각 저감에 기여.
+
+최근 연구 트렌드 비교
+- 고해상도 처리: 슬라이딩 윈도우/타일링 + 선택적 집중(resampler/Q-Former/region pooling)으로 계산 비용과 성능 균형.
+- 엔드투엔드 vs 동결 백본: 동결 CLIP+지침튜닝(저비용)에서 엔드투엔드(고비용·고성능)로 전환하는 흐름. 미세수정 범위와 데이터 레시피가 성패를 좌우(MM1).
+- 조기 융합(decoder-only)과 통합 토큰화: Chameleon류가 이미지·텍스트를 단일 토큰 공간에서 처리. 시각 토크나이저(VQ-VAE/VQGAN 계열) 품질이 핵심 병목.
+- 장기 비디오: 프레임 압축, State-Space(Mamba)·메모리 토큰·하이브리드 어텐션으로 L^2 병목 완화.
+- 멀티모달 RLHF/선호학습: 시각 지시추종(Visual Instruction Tuning)에서 선호신호 결합으로 안전성·유용성 개선 시도 증가.
+- 툴·에이전트화: 캡셔닝/검출/OCR/검색/코드 실행과의 도구 연결로 정확도·근거성 강화.
+
+미해결 과제와 향후 방향
+- 환각/근거성: 소스 증거에 근거한 해답 생성과 신뢰도 보정. 체계적 캘리브레이션·불확실성 추정 연구 필요.
+- 장기 비디오·멀티페이지 문서: 수만~수십만 토큰 맥락에서 선형 혹은 아키텍처적 서브쿼드릭 솔루션의 정확성 유지.
+- 다감각 통합(오디오·3D·촉각): ImageBind류의 공유 임베딩을 MLLM 디코딩과 결합해 진정한 임의-모달(any-to-any) 상호운용.
+- 데이터 거버넌스: 저작권/품질/편향 제어, 합성 데이터와 필터링 레시피의 정량적 영향 분석(MM1류의 메타 연구 확대).
+- 효율성: 훈련/추론 비용을 줄이면서 고해상도·장문맥을 유지하는 토큰화/압축/라이트웨이트 어텐션.
+
+빠른 실무 지침(어디서 어떻게 최신을 찾을까)
+- arXiv 카테고리/키워드
+  - cs.CV, cs.CL, cs.LG에서 “multimodal large language model”, “vision language model”, “visual instruction tuning”, “video-llm”, “document understanding”, “OCR-free”, “resampler”, “Perceiver”, “Q-Former”, “InfoNCE”.
+- Papers with Code SOTA
+  - 태스크별: MMBench, MMMU, SEED-Bench, DocVQA, ChartQA, TextVQA, Video-QA, MathVista.
+- 오픈소스 조직/리포
+  - LLaVA, HuggingFace M4/IDEFICS, Shanghai AI Lab(InternVL), Alibaba Qwen, Apple ML(“MM1”), THU/PKU의 Video-LLM 라인.
+- 주간 큐레이션
+  - “awesome-multimodal”, “multimodal-llm-survey” 리포, arXiv Sanity/Scholar Alerts로 키워드 알림.
+
+참고 문헌(선정)
+- Radford et al., 2021. Learning Transferable Visual Models From Natural Language Supervision (CLIP).
+- Jia et al., 2021. Scaling Up Visual and Vision-Language Representation Learning With Noisy Text Supervision (ALIGN).
+- Alayrac et al., 2022. Flamingo: a Visual Language Model for Few-Shot Learning.
+- Jaegle et al., 2021. Perceiver IO: A General Architecture for Structured Inputs & Outputs.
+- Li et al., 2023. BLIP-2: Bootstrapping Language-Image Pre-training.
+- Dai et al., 2023. InstructBLIP: Towards General-purpose Vision-Language Models with Instruction Tuning.
+- Zhai et al., 2023. SigLIP: CLIP Without Contrastive Pairs.
+- Sun et al., 2023. EVA-CLIP: Improved Training Techniques for CLIP at Scale.
+- Liu et al., 2023. Visual Instruction Tuning (LLaVA).
+- Jain et al., 2024. MM1: Methods, Analysis & Insights from Multimodal LLMs.
+- Laurençon et al., 2024. IDEFICS2: An Open Model for In-Context Vision-Language Learning.
+- Wang et al., 2024. Qwen2-VL.
+- Chen et al., 2024. InternVL 2.
+- Lin et al., 2024. Video-LLaVA.
+- Fu et al., 2024. MME / Video-MME Benchmarks.
+- Yue et al., 2024. MMMU: Massive Multi-discipline Multimodal Understanding.
+- Lu et al., 2023. MathVista: Evaluating Math Reasoning in Vision-Language Models.
+- Li et al., 2023. POPE: Evaluating Object Hallucination in VQA.
+
+필요시, 관심 영역(예: 비디오, 문서/OCR, 의료, 로보틱스 등)과 모델 크기/오픈소스 여부를 알려주시면, 더 좁혀서 최신(2024–2025) 전용 목록과 비교표, 목표함수/비용 분석을 맞춤 제작해 드리겠습니다.
+2025-11-06 15:17:50 | ================================================================================
+2025-11-06 15:17:50 | 도구 실행 성공: general (fallback 도구)
+2025-11-06 15:17:50 | 메타데이터 업데이트: ['success', 'response_time_ms']
+2025-11-06 15:17:50 | 메타데이터 업데이트: ['tool_used']
+2025-11-06 15:17:50 | 용어 추출 시작 (범위: 1-5개)
+2025-11-06 15:17:50 | 난이도별 LLM 선택: difficulty=hard, provider=openai, model=gpt-5
+2025-11-06 15:17:50 | LLM 초기화: provider=openai, model=gpt-5
+2025-11-06 15:18:50 | LLM 응답: {
+  "terms": [
+    {
+      "term": "멀티모달 대형 언어 모델 (MLLM, Vision–Language Model)",
+      "definition": "이미지·비디오·오디오 같은 비전 신호와 텍스트를 함께 입력·이해·생성할 수 있도록 설계된 대형 언어 모델 계열이다. 비전 인코더와 LLM을 결합해 멀티모달 추론과 질의응답을 ...
+2025-11-06 15:18:50 | 추출된 용어 수: 5
+2025-11-06 15:18:50 | 용어 검증 완료: 5개 → 5개 (IT 필터링) → 5개 (최대 개수 제한)
+2025-11-06 15:18:50 | glossary 테이블에 5개 용어 저장 시작
+2025-11-06 15:18:50 | 용어 저장 성공: 멀티모달 대형 언어 모델 (MLLM, Vision–Language Model)
+2025-11-06 15:18:50 | 용어 저장 성공: 대조학습 (Contrastive Learning, InfoNCE/CLIP)
+2025-11-06 15:18:50 | 용어 저장 성공: 크로스 어텐션 (Cross-Attention)
+2025-11-06 15:18:50 | 용어 저장 성공: 검색증강생성 (Retrieval-Augmented Generation, RAG)
+2025-11-06 15:18:50 | 용어 저장 성공: 인간 피드백 강화학습 (RLHF)
+2025-11-06 15:18:50 | 용어 저장 완료: 5/5개
+2025-11-06 15:19:22 | 평가 결과 저장: evaluation_20251106_151922.json
+2025-11-06 15:19:22 | 대화 저장: conversation_hard_20251106_151922.json (2개 메시지)
+2025-11-06 15:19:22 | ==========
+2025-11-06 15:23:19 | 메타데이터 업데이트: ['user_query']
+2025-11-06 15:23:19 | 메타데이터 업데이트: ['difficulty']
+2025-11-06 15:23:19 | 라우터 노드 실행: 전체 저장해줘
+2025-11-06 15:23:19 | 패턴 매칭 조건 체크:
+2025-11-06 15:23:19 | has_contextual_ref: False
+2025-11-06 15:23:19 | has_multi_request_indicator: True
+2025-11-06 15:23:19 | messages 개수: 3
+2025-11-06 15:23:19 | skip_pattern_matching: False
+2025-11-06 15:23:19 | 패턴 매칭 시작: 총 20개 패턴 체크
+2025-11-06 15:23:19 | ✅ 다중 요청 감지: 키워드: ['전체', '저장'] → ['save_file']
+2025-11-06 15:23:19 | 패턴 설명: 전체 대화 내용 저장
+2025-11-06 15:23:19 | 단일 도구 실행: save_file
+2025-11-06 15:23:19 | 파일 저장 노드 실행: 전체 저장해줘
+2025-11-06 15:23:19 | 저장 모드: 전체 대화 저장
+2025-11-06 15:23:19 | 저장할 내용 길이: 20020 글자
+2025-11-06 15:23:19 | 파일명: 20251106_152319_response_1.md
+2025-11-06 15:23:19 | 결과물 저장: 20251106_152319_response_1.md
+2025-11-06 15:23:19 | 파일 저장 완료: experiments/20251106/20251106_150255_session_007/outputs/save_data/20251106_152319_response_1.md
+2025-11-06 15:23:19 | 도구 실행 성공: save_file
+2025-11-06 15:23:19 | 메타데이터 업데이트: ['success', 'response_time_ms']
+2025-11-06 15:23:19 | 메타데이터 업데이트: ['tool_used']
+2025-11-06 15:23:45 | 평가 결과 저장: evaluation_20251106_152345.json
+2025-11-06 15:23:45 | 대화 저장: conversation_hard_20251106_151922.json (4개 메시지)
+2025-11-06 15:23:45 | ==========

@@ -1,0 +1,42 @@
+[
+  {
+    "tool": "glossary",
+    "collection": "glossary_embeddings",
+    "query_text": "CNN에서 필터가 하는 일이 뭐야?",
+    "search_mode": "hybrid",
+    "top_k": 3,
+    "with_scores": true,
+    "result_length": 17,
+    "timestamp": "2025-11-06T15:03:30.802735"
+  },
+  {
+    "tool": "glossary",
+    "collection": "glossary_embeddings",
+    "query_text": "RAG(검색 증강 생성) 개념 설명 및 주요 논문 요약 2023년 기준",
+    "search_mode": "hybrid",
+    "top_k": 3,
+    "with_scores": true,
+    "result_length": 17,
+    "timestamp": "2025-11-06T15:05:05.346441"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "RAG(검색 증강 생성) 개념 설명 및 주요 논문 요약 2023년 기준",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4438,
+    "timestamp": "2025-11-06T15:05:21.731043"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "((ti:multimodal OR abs:multimodal) AND (ti:learning OR abs:\"large language model\" OR abs:VLM OR abs:MLLM OR abs:\"vision-language\")) AND (cat:cs.LG OR cat:cs.CV OR cat:cs.CL OR cat:cs.AI) AND submittedDate:[20240101 TO 20251231] sortBy:submittedDate desc",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4504,
+    "timestamp": "2025-11-06T15:08:33.959109"
+  }
+]
