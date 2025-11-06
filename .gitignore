@@ -157,6 +157,7 @@ nosetests.xml # Test results
 *.envrc
 docs/*.md
 docs/PPT/
+docs/references/
 
 # Git 추적되도록 예외 처리
 !experiments/**/*.log
