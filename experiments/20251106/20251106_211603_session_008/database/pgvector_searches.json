@@ -1,0 +1,32 @@
+[
+  {
+    "tool": "glossary",
+    "collection": "glossary_embeddings",
+    "query_text": "RAG (Retrieval-Augmented Generation) tutorial for beginners, survey papers on RAG",
+    "search_mode": "hybrid",
+    "top_k": 3,
+    "with_scores": true,
+    "result_length": 17,
+    "timestamp": "2025-11-06T21:18:16.198162"
+  },
+  {
+    "tool": "glossary",
+    "collection": "glossary_embeddings",
+    "query_text": "RAG Retrieval-Augmented Generation survey OR tutorial OR overview",
+    "search_mode": "hybrid",
+    "top_k": 3,
+    "with_scores": true,
+    "result_length": 17,
+    "timestamp": "2025-11-06T21:18:30.901816"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "RAG Retrieval-Augmented Generation survey OR tutorial OR overview",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4459,
+    "timestamp": "2025-11-06T21:18:42.062262"
+  }
+]
