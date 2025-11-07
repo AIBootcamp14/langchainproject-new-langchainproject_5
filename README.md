@@ -73,12 +73,12 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 - **프로젝트 기간**: 2025.10.28 ~ 2025.11.06
 - **GitHub**: [Team Repository](https://github.com/AIBootcamp14/langchainproject-new-langchainproject_5)
 
-| 이름 | 역할 | 담당 업무 |
-|------|------|-----------|
-| **[최현화](https://github.com/iejob/langchain-project)** | Project Lead | **기술 구현**: AI Agent 시스템(LangGraph), 로깅 & 실험 모니터링, 평가 시스템(LLM-as-a-Judge), Web 논문 검색, 논문 요약, 파일 저장, Streamlit UI / **프로젝트 관리**: 팀 리드, 개발 규칙 정립, 회의록/PRD/PPT/README 작성, Github Issue & Project & Branch 관리 |
-| **[박재홍](https://github.com/woghd8503/langchainproject-new-langchainproject_5)** | Database & Data Pipeline | **기술 구현**: 데이터베이스 설계, 데이터 수집/저장(로컬/RDBMS), 임베딩 & Vector DB 적재, Streamlit UI / **프로젝트 관리**: PRD 자료조사, 데이터 파이프라인 기술 보고서, Github Issue 작성 |
-| **[신준엽](https://github.com/Shin-junyeob/langchainproject_5)** | RAG & Query Systems | **기술 구현**: RAG 시스템, RAG 논문 검색 도구, RAG 용어집 검색 도구, Text2SQL 도구 / **프로젝트 관리**: PRD 자료조사, Github Issue 작성, PPT |
-| **[임예슬](https://github.com/joy007fun/langchainproject_team5)** | Prompt Engineering & QA | **기술 구현**: 프롬프트 엔지니어링, 프롬프트 최적화, 실행 테스트 & 검증(QA) / **프로젝트 관리**: PRD 자료조사, Github Issue 작성, PPT |
+| 이름 | 역할 | 기술 개발 및 구현 | 프로젝트 운영 및 문서화 |
+|------|------|------------------|----------------------|
+| **[최현화](https://github.com/iejob/langchain-project)** | Project Lead & Tech Lead | 프로젝트 총괄 및 시스템 아키텍처 설계, AI Agent 시스템(LangGraph), 단일/다중 요청에 따른 Fallback 도구 자동 전환 시스템, 멀티턴 대화 기능, 로깅 & 실험 모니터링 시스템, 평가 시스템(LLM-as-a-Judge), Web 논문 검색 도구, 논문 요약 도구, 파일 저장 도구, Streamlit UI (멀티 세션 관리 및 ChatGPT 스타일 UI) | 팀 리드 및 역할 배분, 개발 규칙 및 컨벤션 정립, 회의록(팀/멘토링) 작성 및 관리, PRD 및 기술 명세 문서 총괄, PPT 및 README 작성 및 관리, Github Issue 관리, Github Project 관리, Git 브랜치 관리 & 병합 |
+| **[박재홍](https://github.com/woghd8503/langchainproject-new-langchainproject_5)** | Database & Data Pipeline | 데이터베이스 설계, 데이터 수집, 데이터 저장(로컬/RDBMS), 임베딩 및 Vector DB 적재, Streamlit UI | PRD 자료조사, 데이터파이프라인 기술 보고서 작성, Github Issue 작성 |
+| **[신준엽](https://github.com/Shin-junyeob/langchainproject_5)** | RAG & Query Systems | RAG 시스템, RAG 논문 검색 도구, RAG 용어집 검색 도구, Text2SQL 도구 | PRD 자료조사, Github Issue 작성, PPT |
+| **[임예슬](https://github.com/joy007fun/langchainproject_team5)** | Prompt Engineering & QA | 프롬프트 엔지니어링, 프롬프트 최적화, 실행 테스트 및 검증(QA) | PRD 자료조사, Github Issue 작성, PPT |
 
 ---
 
@@ -137,8 +137,8 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 | 기술 | 버전 | 용도 |
 |------|------|------|
-| **OpenAI API** | gpt-4o | Hard 모드 답변 생성 (전문가 수준 질문) |
-| **Upstage Solar API** | solar-pro | Easy 모드 답변 생성 (초심자 수준 질문) |
+| **OpenAI API** | gpt-5 | Hard 모드 답변 생성 (전문가 수준 질문) |
+| **Upstage Solar API** | solar-pro2 | Easy 모드 답변 생성 (초심자 수준 질문) |
 | **LangChain** | ≥0.1.0 | LLM 체이닝 및 프롬프트 관리 |
 | **LangChain Community** | ≥0.0.20 | 커뮤니티 통합 도구 |
 | **LangChain OpenAI** | ≥0.1.0 | OpenAI 모델 통합 |
@@ -194,7 +194,7 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 ---
 
-## ✅ 구현 완료 기능
+## 🔧 핵심 기술 구현
 
 ### 1. 로깅 & 실험 관리 시스템
 
@@ -207,10 +207,66 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 - **위치**: `src/utils/experiment_manager.py`
 - **주요 기능**:
   - Session ID 자동 부여 (session_001, 002...)
-  - 7개 서브 폴더 자동 생성 (tools, database, prompts, ui, outputs, evaluation, debug)
+  - 7개 서브 폴더 자동 생성 (tools, database, prompts, ui, outputs, evaluation, configs)
   - metadata.json 자동 관리
   - LLM 응답 전체 내용 로깅
   - 평가 결과/전체 대화/SQL 쿼리/프롬프트 자동 저장
+
+#### 자동 생성 디렉토리 구조
+
+```
+experiments/
+└── YYYYMMDD/
+    └── YYYYMMDD_HHMMSS_session_XXX/
+        ├── configs/                                           # 설정 파일
+        │   ├── db_config.yaml                                 # 데이터베이스 설정
+        │   ├── model_config.yaml                              # LLM 모델 설정
+        │   └── multi_request_patterns.yaml                    # 다중 요청 패턴 정의
+        │
+        ├── database/                                          # 데이터베이스 관련 로그
+        │   └── pgvector_searches.json                         # 벡터 검색 기록
+        │
+        ├── evaluation/                                        # 평가 결과
+        │   ├── evaluation_YYYYMMDD_HHMMSS.json                # 평가 결과 (복수 생성 가능)
+        │   └── evaluation_YYYYMMDD_HHMMSS.json
+        |
+        ├── outputs/                                           # 출력 파일
+        │   ├── save_data/                                     # 사용자 저장 데이터
+        │   │   ├── YYYYMMDD_HHMMSS_response_N_beginner.md     # Easy 모드 단일 답변
+        │   │   ├── YYYYMMDD_HHMMSS_response_N_elementary.md   # Easy 모드 단일 답변 (대체 표현)
+        │   │   └── YYYYMMDD_HHMMSS_response_N.md              # 전체 대화 기록
+        │   ├── conversation_easy_YYYYMMDD_HHMMSS.json         # Easy 모드 대화 세션
+        │   └── conversation_hard_YYYYMMDD_HHMMSS.json         # Hard 모드 대화 세션
+        |
+        ├── prompts/                                           # 프롬프트 기록
+        │   ├── system_prompt.txt                              # 사용된 시스템 프롬프트
+        │   ├── user_prompt.txt                                # 사용자 질문 + 컨텍스트
+        │   ├── final_prompt.txt                               # LLM에 전달된 최종 프롬프트
+        │   └── prompt_template.yaml                           # 프롬프트 템플릿 정보
+        |
+        ├── tools/                                             # 도구 실행 로그
+        │   ├── evaluator.log                                  # 평가 도구 로그
+        │   ├── rag_glossary.log                               # RAG 용어집 로그
+        │   ├── rag_paper.log                                  # RAG 논문 검색 로그
+        │   ├── summarize.log                                  # 요약 도구 로그
+        │   ├── web_search.log                                 # Web 검색 도구 로그
+        │   ├── text2sql.log                                   # Text2SQL 도구 로그
+        │   ├── file_save.log                                  # 파일 저장 도구 로그
+        │   └── general.log                                    # 일반 답변 도구 로그
+        |
+        ├── ui/                                                # UI 인터랙션 로그
+        │   ├── errors.log                                     # UI 에러 로그
+        │   └── user_interactions.log                          # 사용자 상호작용 로그
+        |
+        ├── chatbot.log                                        # 메인 챗봇 로그
+        └── metadata.json                                      # 세션 메타데이터
+```
+
+#### 주요 특징
+- **날짜별 폴더 구분**: 실험 관리의 용이성
+- **세션별 독립 관리**: 각 대화 세션마다 고유 ID 부여
+- **타임스탬프 기반 파일명**: 시간순 추적 가능
+- **계층적 로그 구조**: 도구별/기능별 로그 분리로 디버깅 효율성 극대화
 
 **상세**: [실험_관리_시스템.md](docs/modularization/03_실험_관리_시스템.md)
 
