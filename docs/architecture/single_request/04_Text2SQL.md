@@ -598,9 +598,7 @@ graph TB
 
 ---
 
-## 📝 동작 설명
-
-### Text2SQL 변환 과정 상세 설명
+### 전체 흐름 요약 표
 
 | 단계 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | DB 사용 |
 |------|--------|----------|-----------|------|------|---------|
@@ -626,6 +624,10 @@ graph TB
 | 20 | `src/prompts/loader.py` | `load_tool_prompts()` | JSON 프롬프트 로드 | - | tool_prompts dict | 없음 |
 | 21 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 최종 답변 생성 | messages | response.content | 없음 |
 | 22 | `src/tools/text2sql.py` | `_log_query()` | 쿼리 로깅 | user_query, generated_sql, ... | - | query_logs (INSERT) |
+
+---
+
+## 📝 동작 설명
 
 ### DB 스키마 정보
 
