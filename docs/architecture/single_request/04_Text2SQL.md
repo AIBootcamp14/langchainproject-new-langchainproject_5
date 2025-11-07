@@ -774,58 +774,60 @@ LIMIT 3;
 
 #### 오류 예시 1: 금지 패턴 감지
 
-```python
-# 사용자 질문: "papers 테이블 삭제해줘"
-# LLM 생성 SQL:
-DROP TABLE papers;
+**사용자 질문**: "papers 테이블 삭제해줘"
 
-# _sanitize() 검증:
-for pat in _FORBIDDEN_PATTERNS:
-    if re.search(pat, low):  # "\bdrop\b" 매칭
-        raise ValueError("금지된 SQL 패턴이 감지되었습니다.")
-
-# 출력:
-**질문**: papers 테이블 삭제해줘
-
-**생성된 SQL(검증 전)**:
+**LLM 생성 SQL**:
 ```sql
 DROP TABLE papers;
 ```
 
+**_sanitize() 검증 과정**:
+```python
+for pat in _FORBIDDEN_PATTERNS:
+    if re.search(pat, low):  # "\bdrop\b" 매칭
+        raise ValueError("금지된 SQL 패턴이 감지되었습니다.")
+```
+
+**출력 결과**:
+```
+**질문**: papers 테이블 삭제해줘
+
+**생성된 SQL(검증 전)**:
+DROP TABLE papers;
+
 요청을 처리하는 중 오류가 발생했습니다:
-```
 ValueError: 금지된 SQL 패턴이 감지되었습니다.
-```
 
 [Fallback: search_paper 도구로 자동 전환됨]
 ```
 
 #### 오류 예시 2: 테이블 접근 거부
 
-```python
-# 사용자 질문: "users 테이블에서 데이터 조회해줘"
-# LLM 생성 SQL:
-SELECT * FROM users LIMIT 100;
+**사용자 질문**: "users 테이블에서 데이터 조회해줘"
 
-# _sanitize() 검증:
+**LLM 생성 SQL**:
+```sql
+SELECT * FROM users LIMIT 100;
+```
+
+**_sanitize() 검증 과정**:
+```python
 flat_tbls = _find_tables_outside_parens(low)  # {"users"}
 for t in flat_tbls:
     tname = t.split(".")[-1]
     if tname not in ALLOWED_TABLES:  # "users" not in {"papers"}
         raise ValueError(f"허용되지 않은 테이블 참조: {tname}")
+```
 
-# 출력:
+**출력 결과**:
+```
 **질문**: users 테이블에서 데이터 조회해줘
 
 **생성된 SQL(검증 전)**:
-```sql
 SELECT * FROM users LIMIT 100;
-```
 
 요청을 처리하는 중 오류가 발생했습니다:
-```
 ValueError: 허용되지 않은 테이블 참조: users
-```
 
 [Fallback: search_paper 도구로 자동 전환됨]
 ```
@@ -850,19 +852,19 @@ ValueError: 허용되지 않은 테이블 참조: users
    ```
 3. **실행 결과**: `paper_count: 1234`
 4. **LLM 답변 생성** (easy 난이도: beginner):
-   ```
-   **질문**: 저장된 논문 개수 알려줘
 
-   **생성된 SQL**:
-   ```sql
-   SELECT COUNT(*) AS paper_count FROM papers;
-   ```
+**출력**:
+```
+**질문**: 저장된 논문 개수 알려줘
 
-   **분석 결과**:
+**생성된 SQL**:
+SELECT COUNT(*) AS paper_count FROM papers;
 
-   데이터베이스에 저장된 논문은 총 1,234편입니다.
-   SQL의 COUNT 함수를 사용하여 papers 테이블의 전체 행 개수를 집계했습니다.
-   ```
+**분석 결과**:
+
+데이터베이스에 저장된 논문은 총 1,234편입니다.
+SQL의 COUNT 함수를 사용하여 papers 테이블의 전체 행 개수를 집계했습니다.
+```
 
 ### 예시 2: 그룹별 집계 조회
 
@@ -892,31 +894,31 @@ ValueError: 허용되지 않은 테이블 참조: users
    | cs.NE | 145 |
 
 4. **LLM 답변 생성** (hard 난이도: intermediate):
-   ```
-   **질문**: 가장 많이 검색된 키워드는?
 
-   **생성된 SQL**:
-   ```sql
-   SELECT category, COUNT(*) AS paper_count
-   FROM papers
-   GROUP BY category
-   ORDER BY paper_count DESC
-   LIMIT 5;
-   ```
+**출력**:
+```
+**질문**: 가장 많이 검색된 키워드는?
 
-   **분석 결과**:
+**생성된 SQL**:
+SELECT category, COUNT(*) AS paper_count
+FROM papers
+GROUP BY category
+ORDER BY paper_count DESC
+LIMIT 5;
 
-   카테고리별 논문 수를 조회한 결과, 가장 많은 논문이 속한 상위 5개 카테고리는 다음과 같습니다:
+**분석 결과**:
 
-   1. **cs.AI (인공지능)**: 456편
-   2. **cs.LG (머신러닝)**: 389편
-   3. **cs.CV (컴퓨터 비전)**: 234편
-   4. **cs.CL (자연어 처리)**: 198편
-   5. **cs.NE (신경망 및 진화 계산)**: 145편
+카테고리별 논문 수를 조회한 결과, 가장 많은 논문이 속한 상위 5개 카테고리는 다음과 같습니다:
 
-   SQL의 GROUP BY로 카테고리별로 그룹핑하고, COUNT(*)로 각 그룹의 논문 개수를 집계한 후,
-   ORDER BY와 LIMIT으로 상위 5개 카테고리를 조회했습니다.
-   ```
+1. **cs.AI (인공지능)**: 456편
+2. **cs.LG (머신러닝)**: 389편
+3. **cs.CV (컴퓨터 비전)**: 234편
+4. **cs.CL (자연어 처리)**: 198편
+5. **cs.NE (신경망 및 진화 계산)**: 145편
+
+SQL의 GROUP BY로 카테고리별로 그룹핑하고, COUNT(*)로 각 그룹의 논문 개수를 집계한 후,
+ORDER BY와 LIMIT으로 상위 5개 카테고리를 조회했습니다.
+```
 
 ### 예시 3: 에러 시나리오 (Fallback 발생)
 
@@ -938,20 +940,22 @@ ValueError: 허용되지 않은 테이블 참조: users
    ```
 4. **Fallback 트리거**: search_paper → web_search → general
 5. **최종 답변** (general 도구):
-   ```
-   papers 테이블은 논문 메타데이터를 저장하는 테이블입니다. 주요 컬럼은 다음과 같습니다:
 
-   - paper_id: 논문 고유 ID
-   - title: 논문 제목
-   - authors: 저자 목록
-   - publish_date: 발행일
-   - category: 카테고리
-   - citation_count: 인용 횟수
-   - abstract: 초록
-   - url: 논문 URL
+**출력**:
+```
+papers 테이블은 논문 메타데이터를 저장하는 테이블입니다. 주요 컬럼은 다음과 같습니다:
 
-   더 자세한 스키마 정보는 데이터베이스 관리자에게 문의하시기 바랍니다.
-   ```
+- paper_id: 논문 고유 ID
+- title: 논문 제목
+- authors: 저자 목록
+- publish_date: 발행일
+- category: 카테고리
+- citation_count: 인용 횟수
+- abstract: 초록
+- url: 논문 URL
+
+더 자세한 스키마 정보는 데이터베이스 관리자에게 문의하시기 바랍니다.
+```
 
 **Fallback 타임라인:**
 ```python
