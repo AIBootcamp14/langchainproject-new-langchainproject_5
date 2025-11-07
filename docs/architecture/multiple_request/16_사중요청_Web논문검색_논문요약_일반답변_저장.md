@@ -679,7 +679,7 @@ graph TB
     style Y fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
     style EndNode fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
-    %% 연결선 스타일 (초기화 - 청록 0~7)
+    %% 연결선 스타일 (초기화 - 청록 0~6)
     linkStyle 0 stroke:#006064,stroke-width:2px
     linkStyle 1 stroke:#006064,stroke-width:2px
     linkStyle 2 stroke:#006064,stroke-width:2px
@@ -687,39 +687,38 @@ graph TB
     linkStyle 4 stroke:#006064,stroke-width:2px
     linkStyle 5 stroke:#006064,stroke-width:2px
     linkStyle 6 stroke:#006064,stroke-width:2px
-    linkStyle 7 stroke:#006064,stroke-width:2px
 
-    %% 연결선 스타일 (1단계 - 보라 8~11)
+    %% 연결선 스타일 (1단계 - 보라 7~10)
+    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
     linkStyle 8 stroke:#7b1fa2,stroke-width:2px
     linkStyle 9 stroke:#7b1fa2,stroke-width:2px
     linkStyle 10 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 11 stroke:#7b1fa2,stroke-width:2px
 
-    %% 연결선 스타일 (2단계 - 주황 12~15)
+    %% 연결선 스타일 (2단계 - 주황 11~14)
+    linkStyle 11 stroke:#e65100,stroke-width:2px
     linkStyle 12 stroke:#e65100,stroke-width:2px
     linkStyle 13 stroke:#e65100,stroke-width:2px
     linkStyle 14 stroke:#e65100,stroke-width:2px
-    linkStyle 15 stroke:#e65100,stroke-width:2px
 
-    %% 연결선 스타일 (3단계 - 빨강 16)
-    linkStyle 16 stroke:#c62828,stroke-width:2px
+    %% 연결선 스타일 (3단계 - 빨강 15)
+    linkStyle 15 stroke:#c62828,stroke-width:2px
 
-    %% 연결선 스타일 (4단계 - 녹색 17~20)
+    %% 연결선 스타일 (4단계 - 녹색 16~19)
+    linkStyle 16 stroke:#2e7d32,stroke-width:2px
     linkStyle 17 stroke:#2e7d32,stroke-width:2px
     linkStyle 18 stroke:#2e7d32,stroke-width:2px
     linkStyle 19 stroke:#2e7d32,stroke-width:2px
-    linkStyle 20 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (출력 - 파랑 21~22)
+    %% 연결선 스타일 (출력 - 파랑 20~21)
+    linkStyle 20 stroke:#1565c0,stroke-width:2px
     linkStyle 21 stroke:#1565c0,stroke-width:2px
-    linkStyle 22 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 23~27)
+    %% 단계 간 연결 (회색 22~26)
+    linkStyle 22 stroke:#616161,stroke-width:3px
     linkStyle 23 stroke:#616161,stroke-width:3px
     linkStyle 24 stroke:#616161,stroke-width:3px
     linkStyle 25 stroke:#616161,stroke-width:3px
     linkStyle 26 stroke:#616161,stroke-width:3px
-    linkStyle 27 stroke:#616161,stroke-width:3px
 ```
 
 ### 다이어그램 분석
@@ -727,8 +726,8 @@ graph TB
 #### 구조
 - **MainFlow**: 전체 파이프라인 래퍼 (노란색)
 - **6개 subgraph**: 초기화 → Web검색 → 요약 → 분석 → 저장 → 출력
-- **총 노드 수**: 26개 (Start ~ End)
-- **총 연결선 수**: 28개 (linkStyle 0~27)
+- **총 노드 수**: 26개 (Start ~ EndNode)
+- **총 연결선 수**: 27개 (linkStyle 0~26)
 
 #### 색상 구분
 - 🔸 **청록색 (초기화)**: 사용자 질문 입력, 라우팅, **시간 키워드 감지**
