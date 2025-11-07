@@ -618,7 +618,7 @@ graph TB
         subgraph Output["💡 5단계: 최종 출력"]
             direction LR
             X[UI 표시] --> Y[저장 완료 메시지<br/>파일 경로 포함]
-            Y --> End([✅ 완료])
+            Y --> EndNode([✅ 완료])
         end
 
         %% 단계 간 연결
@@ -677,7 +677,7 @@ graph TB
     %% 노드 스타일 (출력 - 파랑 계열)
     style X fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
     style Y fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
-    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style EndNode fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
     %% 연결선 스타일 (초기화 - 청록 0~7)
     linkStyle 0 stroke:#006064,stroke-width:2px
