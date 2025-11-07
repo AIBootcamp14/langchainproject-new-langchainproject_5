@@ -417,7 +417,7 @@ graph TB
     linkStyle 20 stroke:#1565c0,stroke-width:2px
     linkStyle 21 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 22~32)
+    %% 단계 간 연결 (회색 22~30)
     linkStyle 22 stroke:#616161,stroke-width:3px
     linkStyle 23 stroke:#616161,stroke-width:3px
     linkStyle 24 stroke:#616161,stroke-width:3px
@@ -427,8 +427,6 @@ graph TB
     linkStyle 28 stroke:#616161,stroke-width:3px
     linkStyle 29 stroke:#616161,stroke-width:3px
     linkStyle 30 stroke:#616161,stroke-width:3px
-    linkStyle 31 stroke:#616161,stroke-width:3px
-    linkStyle 32 stroke:#616161,stroke-width:3px
 ```
 
 ---
