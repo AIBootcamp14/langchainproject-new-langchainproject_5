@@ -213,107 +213,100 @@ outputs/                          # 저장 위치
 
 ```mermaid
 graph TB
-    subgraph MainFlow["📋 이중 요청: RAG 논문 검색 → 저장"]
+    subgraph MainFlow["📋 RAG 논문 검색 → 저장 파이프라인"]
         direction TB
 
-        subgraph Input["🔸 입력 & 라우팅"]
+        subgraph Init["🔸 초기화 & 라우팅"]
             direction LR
-            User["사용자 질문<br/>Transformer 논문<br/>찾아서 저장해줘"] --> Router["Router 노드<br/>패턴 매칭"]
-            Router --> PipelineSet["Pipeline 설정<br/>2단계 파이프라인"]
+            Start([▶️ 시작]) --> A[사용자 질문:<br/>Transformer 논문 찾아서 저장해줘]
+            A --> B[router_node<br/>패턴 매칭]
+            B --> C[Pipeline 설정<br/>2단계 파이프라인]
         end
 
-        subgraph Step1["🔹 1단계: RAG 검색"]
+        subgraph Step1["🔹 1단계: RAG 논문 검색"]
             direction LR
-            SearchPaper["search_paper 실행<br/>PostgreSQL +<br/>pgvector"] --> SearchCheck{"검색 성공?<br/>(유사도 < 0.5)"}
+            D[search_paper 실행<br/>PostgreSQL + pgvector] --> E{유사도 검증<br/>score < 0.5?}
+            E -->|Yes| F[논문 본문 획득<br/>💾 tool_result]
+            E -->|No| G[검색 실패<br/>찾을 수 없습니다]
         end
 
         subgraph Step2["🔺 2단계: 파일 저장"]
             direction LR
-            SaveFile["save_file 실행<br/>타임스탬프 기반<br/>파일명 생성"] --> CheckContent{"저장 내용<br/>우선순위 확인"}
-            CheckContent -->|"final_answers<br/>있음"| MultiFile["난이도별 4개 파일"]
-            CheckContent -->|"tool_result<br/>있음"| SingleFile["단일 파일"]
-            CheckContent -->|"내용 없음"| EmptyFile["빈 파일"]
+            H[save_file 실행<br/>타임스탬프 기반 파일명] --> I{저장 내용<br/>우선순위 확인}
+            I -->|final_answers| J[난이도별 4개 파일<br/>💾 저장 완료]
+            I -->|tool_result| K[단일 파일<br/>💾 저장 완료]
+            I -->|messages| L[메시지 내용<br/>💾 저장 완료]
         end
 
-        subgraph FileSystem["🔶 파일 시스템 & 출력"]
+        subgraph Output["💡 3단계: 최종 출력"]
             direction LR
-            SaveLocation["저장 위치<br/>experiments/날짜/<br/>세션_ID/outputs/"] --> FileCreated["파일 생성<br/>날짜_시간_<br/>response_번호.md"]
-            FileCreated --> FinalAnswer["최종 답변<br/>파일 저장 완료<br/>메시지 + 경로"]
+            M[파일 저장 경로<br/>experiments/날짜/세션_ID] --> N[최종 답변<br/>저장 완료 메시지]
+            N --> End([✅ 완료])
         end
 
         %% 단계 간 연결
-        Input --> Step1
+        Init --> Step1
         Step1 --> Step2
-        Step2 --> FileSystem
+        Step2 --> Output
     end
-
-    %% 세부 연결
-    PipelineSet --> SearchPaper
-    SearchCheck -->|"✅ 성공"| SaveFile
-    SearchCheck -->|"❌ 실패"| SaveFile
-    MultiFile --> SaveLocation
-    SingleFile --> SaveLocation
-    EmptyFile --> SaveLocation
 
     %% 메인 워크플로우 배경
     style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
 
     %% Subgraph 스타일
-    style Input fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
     style Step1 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
     style Step2 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style FileSystem fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Output fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
 
-    %% 노드 스타일 (입력 & 라우팅 - 청록 계열)
-    style User fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style Router fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style PipelineSet fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    %% 노드 스타일 (초기화 - 청록 계열)
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (1단계: RAG 검색 - 보라 계열)
-    style SearchPaper fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style SearchCheck fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    %% 노드 스타일 (1단계 - 보라 계열)
+    style D fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style E fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style F fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style G fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (2단계: 파일 저장 - 녹색 계열)
-    style SaveFile fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style CheckContent fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style MultiFile fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style SingleFile fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style EmptyFile fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    %% 노드 스타일 (2단계 - 녹색 계열)
+    style H fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style K fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style L fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (파일 시스템 & 출력 - 주황 계열)
-    style SaveLocation fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style FileCreated fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style FinalAnswer fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    %% 노드 스타일 (출력 - 파랑 계열)
+    style M fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style N fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
-    %% 연결선 스타일 (입력 & 라우팅 - 청록 0~1)
+    %% 연결선 스타일 (초기화 - 청록 0~2)
     linkStyle 0 stroke:#006064,stroke-width:2px
     linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
 
-    %% 연결선 스타일 (1단계: RAG 검색 - 보라 2)
-    linkStyle 2 stroke:#7b1fa2,stroke-width:2px
+    %% 연결선 스타일 (1단계 - 보라 3~5)
+    linkStyle 3 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
 
-    %% 연결선 스타일 (2단계: 파일 저장 - 녹색 3~5)
-    linkStyle 3 stroke:#2e7d32,stroke-width:2px
-    linkStyle 4 stroke:#2e7d32,stroke-width:2px
-    linkStyle 5 stroke:#2e7d32,stroke-width:2px
+    %% 연결선 스타일 (2단계 - 녹색 6~9)
     linkStyle 6 stroke:#2e7d32,stroke-width:2px
+    linkStyle 7 stroke:#2e7d32,stroke-width:2px
+    linkStyle 8 stroke:#2e7d32,stroke-width:2px
+    linkStyle 9 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (파일 시스템 - 주황 7~8)
-    linkStyle 7 stroke:#e65100,stroke-width:2px
-    linkStyle 8 stroke:#e65100,stroke-width:2px
+    %% 연결선 스타일 (출력 - 파랑 10~11)
+    linkStyle 10 stroke:#1565c0,stroke-width:2px
+    linkStyle 11 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 9~11)
-    linkStyle 9 stroke:#616161,stroke-width:3px
-    linkStyle 10 stroke:#616161,stroke-width:3px
-    linkStyle 11 stroke:#616161,stroke-width:3px
-
-    %% 세부 연결 (12~16)
-    linkStyle 12 stroke:#006064,stroke-width:2px
-    linkStyle 13 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 14 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 15 stroke:#2e7d32,stroke-width:2px
-    linkStyle 16 stroke:#2e7d32,stroke-width:2px
-    linkStyle 17 stroke:#2e7d32,stroke-width:2px
+    %% 단계 간 연결 (회색 12~14)
+    linkStyle 12 stroke:#616161,stroke-width:3px
+    linkStyle 13 stroke:#616161,stroke-width:3px
+    linkStyle 14 stroke:#616161,stroke-width:3px
 ```
 
 ---
@@ -322,185 +315,171 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph MainFlow["📋 상세 기능 동작 흐름 (RAG 논문 검색 → 저장)"]
+    subgraph MainFlow["📋 RAG 논문 검색 → 저장 상세 흐름"]
         direction TB
 
-        subgraph Init["🔸 초기화 & 패턴 매칭"]
+        subgraph Init["🔸 초기화"]
             direction LR
-            Start["실행 시작<br/>chat_interface.py"] --> InitState["AgentState 초기화<br/>기본 상태 설정"]
-            InitState --> LoadPatterns["패턴 로드<br/>multi_request_<br/>patterns.yaml"]
-            LoadPatterns --> PatternMatch["패턴 매칭<br/>keywords:<br/>논문, 찾, 저장"]
-            PatternMatch --> SetPipeline["Pipeline 설정<br/>tool_pipeline:<br/>2단계 파이프라인"]
+            A[main.py] --> B[chat_interface.py]
+            B --> C[AgentState 초기화]
+            C --> D[router_node 호출]
         end
 
-        subgraph Routing["🔹 라우팅 & 도구 선택"]
+        subgraph Pattern["🔹 패턴 매칭"]
             direction LR
-            RouteToTool["route_to_tool()<br/>tool_choice 반환"] --> CheckPipeline["check_pipeline_<br/>or_fallback()<br/>tool_status 확인"]
-            CheckPipeline --> PipelineRouter["pipeline_router()<br/>다음 도구 선택"]
+            E[multi_request_patterns.yaml] --> F{키워드 매칭<br/>논문 + 찾 + 저장?}
+            F -->|Yes| G[tool_pipeline 설정<br/>2단계 파이프라인]
+            F -->|No| H[LLM 라우팅]
+            H --> G
         end
 
-        subgraph SearchPaper["🔺 RAG 논문 검색 실행"]
+        subgraph Search["🔺 RAG 검색 도구"]
             direction LR
-            InitRetriever["RAGRetriever<br/>초기화<br/>OpenAI<br/>Embeddings"] --> VectorSearch["벡터 검색<br/>similarity/MMR"]
-            VectorSearch --> KeywordSearch["키워드 검색<br/>PostgreSQL FTS"]
-            KeywordSearch --> HybridMerge["하이브리드 병합<br/>70% 벡터 +<br/>30% 키워드"]
-            HybridMerge --> FetchMeta["메타데이터 조회<br/>papers 테이블"]
-            FetchMeta --> CheckSimilarity{"유사도 검증<br/>score < 0.5?"}
-            CheckSimilarity --> FormatResult["결과 포매팅<br/>Markdown 형식"]
+            I[search_paper_node] --> J[RAGRetriever 초기화]
+            J --> K[벡터 검색<br/>pgvector]
+            K --> L[키워드 검색<br/>PostgreSQL FTS]
+            L --> M[하이브리드 병합<br/>70% + 30%]
+            M --> N{유사도<br/>< 0.5?}
+            N -->|Yes| O[💾 tool_result<br/>논문 본문]
+            N -->|No| P[tool_status: failed]
         end
 
-        subgraph SaveFile["🔶 파일 저장 실행"]
+        subgraph Router["🔷 Pipeline Router"]
             direction LR
-            CheckSaveMode{"저장 모드?<br/>전체 대화 vs<br/>단일 답변"} --> CheckFinalAnswers{"final_answers<br/>존재?"}
-            CheckFinalAnswers -->|"Yes"| SaveMultiple["난이도별 저장<br/>4개 파일"]
-            CheckFinalAnswers -->|"No"| CheckToolResult{"tool_result<br/>존재?"}
-            CheckToolResult -->|"Yes"| GenerateFilename["파일명 생성<br/>timestamp +<br/>save_counter"]
-            CheckToolResult -->|"No"| CheckFinalAnswer{"final_answer<br/>존재?"}
-            CheckFinalAnswer -->|"Yes"| GenerateFilename
-            CheckFinalAnswer -->|"No"| CheckMessages{"messages<br/>존재?"}
-            CheckMessages -->|"Yes"| GenerateFilename
-            CheckMessages -->|"No"| SaveEmpty["빈 내용 저장"]
-            SaveMultiple --> GenerateFilename
-            SaveEmpty --> GenerateFilename
-            GenerateFilename --> WriteFile["파일 쓰기<br/>experiments/<br/>outputs/"]
+            Q[check_pipeline] --> R{tool_status?}
+            R -->|success| S[pipeline_router<br/>다음 도구: save_file]
+            R -->|failed| T[save_file로 진행<br/>빈 내용 저장]
         end
 
-        subgraph State["💡 상태 관리 & 출력"]
+        subgraph Save["✨ 파일 저장 도구"]
             direction LR
-            StateFields["AgentState<br/>상태 필드 저장"] --> OutputDir["outputs 디렉토리<br/>실험 세션별 분리"]
-            OutputDir --> SavedFile["저장된 파일<br/>날짜_시간_<br/>response_번호.md"]
-            SavedFile --> DisplayResult["UI 표시<br/>chat_interface.py<br/>파일 경로 표시"]
+            U[save_file_node] --> V{저장 우선순위<br/>확인}
+            V -->|1순위| W[💾 final_answers<br/>4개 파일]
+            V -->|2순위| X[💾 tool_result<br/>1개 파일]
+            V -->|3순위| Y[💾 final_answer<br/>1개 파일]
+            V -->|4순위| Z[💾 messages<br/>1개 파일]
+            W --> AA[파일명 생성<br/>timestamp + counter]
+            X --> AA
+            Y --> AA
+            Z --> AA
+            AA --> AB[파일 쓰기<br/>experiments/outputs/]
         end
 
-        subgraph Database["🔷 PostgreSQL + pgvector"]
+        subgraph Output["💡 최종 출력"]
             direction LR
-            PapersTable["papers 테이블<br/>메타데이터"] --> ChunksTable["paper_chunks<br/>임베딩 벡터"]
+            AC[chat_interface.py] --> AD[파일 경로 표시<br/>저장 완료 메시지]
+            AD --> AE([✅ 완료])
         end
 
         %% 단계 간 연결
-        Init --> Routing
-        Routing --> SearchPaper
-        SearchPaper --> SaveFile
-        SaveFile --> State
+        Init --> Pattern
+        Pattern --> Search
+        Search --> Router
+        Router --> Save
+        Save --> Output
     end
-
-    %% 세부 연결
-    SetPipeline --> RouteToTool
-    RouteToTool --> InitRetriever
-    FormatResult --> StateFields
-    StateFields --> CheckPipeline
-    PipelineRouter --> CheckSaveMode
-    WriteFile --> OutputDir
-    FetchMeta -.->|"SQL SELECT"| PapersTable
-    VectorSearch -.->|"pgvector<br/>cosine"| ChunksTable
 
     %% 메인 워크플로우 배경
     style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
 
     %% Subgraph 스타일
     style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Routing fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style SearchPaper fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style SaveFile fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style State fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
-    style Database fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    style Pattern fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Search fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Router fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000
+    style Save fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Output fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
 
-    %% 노드 스타일 (초기화 & 패턴 매칭 - 청록 계열)
-    style Start fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style InitState fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style LoadPatterns fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style PatternMatch fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style SetPipeline fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    %% 노드 스타일 (초기화 - 청록 계열)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style D fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (라우팅 & 도구 선택 - 보라 계열)
-    style RouteToTool fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style CheckPipeline fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style PipelineRouter fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    %% 노드 스타일 (패턴 - 파랑 계열)
+    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style F fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style G fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style H fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (RAG 논문 검색 실행 - 녹색 계열)
-    style InitRetriever fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style VectorSearch fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style KeywordSearch fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style HybridMerge fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style FetchMeta fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style CheckSimilarity fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style FormatResult fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    %% 노드 스타일 (RAG 검색 - 보라 계열)
+    style I fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style K fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style L fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style M fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style N fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style O fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style P fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (파일 저장 실행 - 주황 계열)
-    style CheckSaveMode fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style CheckFinalAnswers fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style CheckToolResult fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style CheckFinalAnswer fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style CheckMessages fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style SaveMultiple fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style SaveEmpty fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style GenerateFilename fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style WriteFile fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    %% 노드 스타일 (Router - 핑크 계열)
+    style Q fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style R fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style S fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
+    style T fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (상태 관리 & 출력 - 빨강 계열)
-    style StateFields fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style OutputDir fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style SavedFile fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style DisplayResult fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
+    %% 노드 스타일 (저장 - 녹색 계열)
+    style U fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style V fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style W fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style X fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style Y fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style Z fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style AA fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AB fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (PostgreSQL + pgvector - 파랑 계열)
-    style PapersTable fill:#90caf9,stroke:#0d47a1,stroke-width:2px,color:#000
-    style ChunksTable fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
+    %% 노드 스타일 (출력 - 파랑 계열)
+    style AC fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style AD fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style AE fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
-    %% 연결선 스타일 (초기화 - 청록 0~3)
+    %% 연결선 스타일 (초기화 0~2)
     linkStyle 0 stroke:#006064,stroke-width:2px
     linkStyle 1 stroke:#006064,stroke-width:2px
     linkStyle 2 stroke:#006064,stroke-width:2px
-    linkStyle 3 stroke:#006064,stroke-width:2px
 
-    %% 연결선 스타일 (라우팅 - 보라 4~5)
-    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
+    %% 연결선 스타일 (패턴 3~6)
+    linkStyle 3 stroke:#01579b,stroke-width:2px
+    linkStyle 4 stroke:#01579b,stroke-width:2px
+    linkStyle 5 stroke:#01579b,stroke-width:2px
+    linkStyle 6 stroke:#01579b,stroke-width:2px
 
-    %% 연결선 스타일 (RAG 검색 - 녹색 6~10)
-    linkStyle 6 stroke:#2e7d32,stroke-width:2px
-    linkStyle 7 stroke:#2e7d32,stroke-width:2px
-    linkStyle 8 stroke:#2e7d32,stroke-width:2px
-    linkStyle 9 stroke:#2e7d32,stroke-width:2px
-    linkStyle 10 stroke:#2e7d32,stroke-width:2px
-    linkStyle 11 stroke:#2e7d32,stroke-width:2px
+    %% 연결선 스타일 (RAG 검색 7~13)
+    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 9 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 10 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 11 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 12 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 13 stroke:#7b1fa2,stroke-width:2px
 
-    %% 연결선 스타일 (파일 저장 - 주황 12~22)
-    linkStyle 12 stroke:#e65100,stroke-width:2px
-    linkStyle 13 stroke:#e65100,stroke-width:2px
-    linkStyle 14 stroke:#e65100,stroke-width:2px
-    linkStyle 15 stroke:#e65100,stroke-width:2px
-    linkStyle 16 stroke:#e65100,stroke-width:2px
-    linkStyle 17 stroke:#e65100,stroke-width:2px
-    linkStyle 18 stroke:#e65100,stroke-width:2px
-    linkStyle 19 stroke:#e65100,stroke-width:2px
-    linkStyle 20 stroke:#e65100,stroke-width:2px
-    linkStyle 21 stroke:#e65100,stroke-width:2px
-    linkStyle 22 stroke:#e65100,stroke-width:2px
+    %% 연결선 스타일 (Router 14~16)
+    linkStyle 14 stroke:#880e4f,stroke-width:2px
+    linkStyle 15 stroke:#880e4f,stroke-width:2px
+    linkStyle 16 stroke:#880e4f,stroke-width:2px
 
-    %% 연결선 스타일 (상태 관리 - 빨강 23~25)
-    linkStyle 23 stroke:#c62828,stroke-width:2px
-    linkStyle 24 stroke:#c62828,stroke-width:2px
-    linkStyle 25 stroke:#c62828,stroke-width:2px
+    %% 연결선 스타일 (저장 17~26)
+    linkStyle 17 stroke:#2e7d32,stroke-width:2px
+    linkStyle 18 stroke:#2e7d32,stroke-width:2px
+    linkStyle 19 stroke:#2e7d32,stroke-width:2px
+    linkStyle 20 stroke:#2e7d32,stroke-width:2px
+    linkStyle 21 stroke:#2e7d32,stroke-width:2px
+    linkStyle 22 stroke:#2e7d32,stroke-width:2px
+    linkStyle 23 stroke:#2e7d32,stroke-width:2px
+    linkStyle 24 stroke:#2e7d32,stroke-width:2px
+    linkStyle 25 stroke:#2e7d32,stroke-width:2px
+    linkStyle 26 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (Database - 파랑 26)
-    linkStyle 26 stroke:#1565c0,stroke-width:2px
+    %% 연결선 스타일 (출력 27~28)
+    linkStyle 27 stroke:#1565c0,stroke-width:2px
+    linkStyle 28 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 27~30)
-    linkStyle 27 stroke:#616161,stroke-width:3px
-    linkStyle 28 stroke:#616161,stroke-width:3px
+    %% 단계 간 연결 (회색 29~33)
     linkStyle 29 stroke:#616161,stroke-width:3px
     linkStyle 30 stroke:#616161,stroke-width:3px
-
-    %% 세부 연결 (31~37)
-    linkStyle 31 stroke:#006064,stroke-width:2px
-    linkStyle 32 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 33 stroke:#2e7d32,stroke-width:2px
-    linkStyle 34 stroke:#c62828,stroke-width:2px
-    linkStyle 35 stroke:#e65100,stroke-width:2px
-    linkStyle 36 stroke:#e65100,stroke-width:2px
-    linkStyle 37 stroke:#2e7d32,stroke-width:2px
-    linkStyle 38 stroke:#1565c0,stroke-width:2px
+    linkStyle 31 stroke:#616161,stroke-width:3px
+    linkStyle 32 stroke:#616161,stroke-width:3px
+    linkStyle 33 stroke:#616161,stroke-width:3px
 ```
 
 ---
