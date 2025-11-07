@@ -176,49 +176,232 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 ## ✅ 구현 완료 기능
 
-### 1. 로깅 시스템 (Logger) & 실험 폴더 관리 시스템 (ExperimentManager)
+### 1. 로깅 & 실험 관리 시스템
 
+#### Logger 시스템
+- **위치**: `src/utils/logger.py`
+- **기능**: 실험 폴더 내 로그 파일 자동 생성 및 관리
+- **특징**: 타임스탬프 자동 추가, 메인 로그 + 도구별 독립 로그, with 문 지원
 
-```
+#### ExperimentManager 시스템
+- **위치**: `src/utils/experiment_manager.py`
+- **주요 기능**:
+  - Session ID 자동 부여 (session_001, 002...)
+  - 7개 서브 폴더 자동 생성 (tools, database, prompts, ui, outputs, evaluation, debug)
+  - metadata.json 자동 관리
+  - LLM 응답 전체 내용 로깅
+  - 평가 결과/전체 대화/SQL 쿼리/프롬프트 자동 저장
 
+**상세**: [실험_관리_시스템.md](docs/modularization/03_실험_관리_시스템.md)
 
 ---
 
 ### 2. 데이터베이스 시스템 (PostgreSQL + pgvector)
 
+#### 구성
+- **RDBMS**: PostgreSQL 15+
+- **벡터 검색**: pgvector 0.3.6 (IVFFlat 인덱스)
+- **Connection Pool**: 최소 1개, 최대 10개 연결
 
+#### 주요 테이블
+- `papers`: 논문 메타데이터 (title, authors, abstract, url)
+- `glossary`: 용어집 (term, definition, easy/hard_explanation)
+- `query_logs`: 사용자 질의 로그
+- `evaluation_results`: 평가 결과
+
+#### pgvector 컬렉션
+- `paper_chunks`: 논문 본문 임베딩 (1536차원)
+- `glossary_embeddings`: 용어집 임베딩
+
+**구현**: `src/database/`, `database/schema.sql`
 
 ---
 
 ### 3. AI Agent 시스템 (LangGraph)
 
+#### 구조
+- **프레임워크**: LangGraph StateGraph
+- **구성**: 1개 Router + 7개 Tool 노드
+- **Fallback Chain**: 도구 실패 시 자동 전환
+  - RAG 용어집 → 일반 답변
+  - RAG 논문 → Web 논문 → 일반 답변
+  - Text2SQL → 일반 답변
 
+#### 7가지 도구
+| 도구 | 설명 | 파일 |
+|------|------|------|
+| 일반 답변 | LLM 직접 호출 | `tools/general_answer.py` |
+| RAG 논문 검색 | pgvector 유사도 검색 | `tools/search_paper.py` |
+| Web 논문 검색 | Tavily API 검색 | `tools/web_search.py` |
+| RAG 용어집 | 용어 정의 제공 | `tools/glossary.py` |
+| 논문 요약 | 검색 결과 요약 | `tools/summarize.py` |
+| Text2SQL | 자연어→SQL 변환 | `tools/text2sql.py` |
+| 파일 저장 | 대화 저장 | `tools/save_file.py` |
 
----
-
-### 4. 도구 시스템 (7가지 Tools)
-
-
-
----
-
-### 5. RAG 시스템
-
-
-
----
-
-### 6. Streamlit UI 시스템
-
-
-
----
-
-### 7. 평가 시스템 (LLM-as-a-Judge)
+**구현**: `src/agent/graph.py`, `src/agent/nodes.py`
 
 ---
 
-### 8. 프롬프트 엔지니어링
+### 4. RAG 시스템
+
+#### 파이프라인
+1. 임베딩 생성 (text-embedding-3-small, 1536차원)
+2. 벡터 검색 (pgvector similarity_search)
+3. 메타데이터 조회 (PostgreSQL)
+4. 컨텍스트 구성
+5. LLM 답변 생성
+
+#### 최적화
+- IVFFlat 인덱스로 고속 검색
+- MMR Search로 다양성 확보
+- MultiQueryRetriever로 쿼리 확장
+- Connection Pooling으로 성능 향상
+
+**구현**: `src/rag/retriever.py`
+
+---
+
+### 5. Streamlit UI 시스템
+
+#### 주요 기능
+- ChatGPT 스타일 채팅 인터페이스
+- 멀티 세션 관리
+- 난이도 선택 (Easy/Hard)
+- 실시간 스트리밍 답변
+- 도구 배지 & 출처 표시
+- 평가 결과 표시
+- LocalStorage 연동
+- 사용자 인증
+
+**구현**: `ui/app.py`, `ui/components/`
+
+---
+
+### 6. 평가 시스템 (LLM-as-a-Judge)
+
+#### 평가 항목 (40점)
+- 정확도 (10점): 사실적 정확성
+- 관련성 (10점): 질문 연관성
+- 난이도 적합성 (10점): Easy/Hard 적합성
+- 출처 명시 (10점): 참고 문서 명확성
+
+#### 자동화
+- 답변 생성 후 자동 평가
+- evaluation 폴더 JSON 저장
+- UI 실시간 표시
+- 데이터베이스 저장
+
+**구현**: `src/evaluation/evaluator.py`
+
+---
+
+### 7. 프롬프트 엔지니어링
+
+#### 난이도별 프롬프트
+- **Easy**: 초등학생 수준, 비유/예시 활용
+- **Hard**: 전문가 수준, 기술 용어 사용
+
+#### 관리
+- `prompts/` 폴더 JSON 형식
+- 실험 폴더 자동 저장
+- 버전 관리
+
+**구현**: `src/prompts/loader.py`, `prompts/`
+
+---
+
+## 📦 설치 및 실행
+
+### 1. 저장소 클론 및 환경 설정
+
+```bash
+# 저장소 클론
+git clone https://github.com/AIBootcamp14/langchainproject-new-langchainproject_5.git
+cd langchainproject-new-langchainproject_5
+
+# 가상환경 활성화
+pyenv activate langchain_py3_11_9
+
+# 의존성 설치
+pip install -r requirements.txt
+```
+
+### 2. 환경 변수 설정 (`.env` 파일)
+
+```bash
+# OpenAI API
+OPENAI_API_KEY=sk-...
+
+# Upstage Solar API
+UPSTAGE_API_KEY=up_...
+
+# Tavily API (웹 검색)
+TAVILY_API_KEY=tvly-...
+
+# PostgreSQL
+POSTGRES_USER=langchain
+POSTGRES_PASSWORD=your_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=papers
+```
+
+### 3. 데이터베이스 설정
+
+데이터베이스 설치 및 설정은 [데이터베이스_설치_및_설정_가이드.md](docs/usage/데이터베이스_설치_및_설정_가이드.md) 문서를 참조하여 단계별로 진행합니다:
+
+```bash
+# 1. PostgreSQL 사용자 생성
+sudo -u postgres psql
+CREATE USER langchain WITH PASSWORD 'dusrufdmlalswhr';
+ALTER USER langchain CREATEDB;
+ALTER USER langchain WITH SUPERUSER;
+\q
+
+# 2. ~/.pgpass 파일 설정 (비밀번호 자동 인증)
+cat > ~/.pgpass << 'EOF'
+localhost:5432:*:langchain:dusrufdmlalswhr
+EOF
+chmod 600 ~/.pgpass
+
+# 3. pgvector Extension 설치
+cd /tmp
+git clone https://github.com/pgvector/pgvector.git
+cd pgvector
+make
+sudo make install
+sudo systemctl restart postgresql
+
+# 4. Extension 활성화
+sudo -u postgres psql
+CREATE EXTENSION vector;
+\dx
+\q
+
+# 5. papers 데이터베이스 생성
+psql -U langchain -d postgres -h localhost
+CREATE DATABASE papers;
+\c papers
+CREATE EXTENSION vector;
+\q
+
+# 6. 스키마 생성
+psql -U langchain -d papers -h localhost -f database/schema.sql
+
+# 7. 테이블 생성 확인
+psql -U langchain -d papers -h localhost
+\dt
+\q
+
+# 8. 데이터베이스 연결 테스트
+python scripts/tests/unit/test_db_connection.py
+```
+
+### 4. 논문 리뷰 챗봇 실행
+
+```bash
+python main.py
+```
 
 ---
 
