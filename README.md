@@ -1006,37 +1006,92 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 #### Agent 아키텍처
 
 ```mermaid
-graph LR
-    RouterNode[라우터<br/>최종 도구 확정] --> SelectTool{도구<br/>선택}
-    SelectTool -->|일반| GeneralNode[일반 답변]
-    SelectTool -->|RAG 논문| SearchNode[RAG 논문 검색]
-    SelectTool -->|Web 논문| WebNode[Web 논문 검색]
-    SelectTool -->|RAG 용어| GlossaryNode[RAG 용어집 검색]
-    SelectTool -->|요약| SummarizeNode[논문 요약]
-    SelectTool -->|통계| Text2SQLNode[Text2SQL 통계]
-    SelectTool -->|저장| SaveNode[파일 저장]
+graph TB
+    subgraph Routing["🔍 2단계 라우팅 시스템"]
+        direction TB
+        Start([사용자 질문]) --> PatternMatch{패턴 매칭<br/>1순위}
+        PatternMatch -->|매칭 성공| SetPipeline[tool_pipeline 설정<br/>다중 요청 감지]
+        PatternMatch -->|매칭 실패| LLMRoute[LLM 라우팅<br/>2순위 Fallback]
+        LLMRoute --> SetPipeline
+        SetPipeline --> FirstTool[첫 번째 도구 선택<br/>tool_choice 설정]
+    end
 
-    %% 노드 스타일
-    style RouterNode fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
-    style SelectTool fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
+    subgraph Tools["🛠️ 7가지 도구 실행"]
+        direction LR
+        FirstTool --> ToolSelect{도구<br/>선택}
+        ToolSelect -->|일반| General[일반 답변<br/>LLM 직접]
+        ToolSelect -->|RAG 논문| SearchPaper[RAG 논문 검색<br/>pgvector]
+        ToolSelect -->|RAG 용어| Glossary[RAG 용어집<br/>DB 조회]
+        ToolSelect -->|Web 논문| WebSearch[Web 논문 검색<br/>Tavily API]
+        ToolSelect -->|요약| Summarize[논문 요약<br/>난이도별]
+        ToolSelect -->|통계| Text2SQL[Text2SQL<br/>통계 조회]
+        ToolSelect -->|저장| SaveFile[파일 저장<br/>다운로드]
+    end
 
-    style GeneralNode fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
-    style SearchNode fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style WebNode fill:#66bb6a,stroke:#2e7d32,stroke-width:2px,color:#fff
-    style GlossaryNode fill:#4caf50,stroke:#1b5e20,stroke-width:2px,color:#fff
-    style SummarizeNode fill:#43a047,stroke:#1b5e20,stroke-width:2px,color:#fff
-    style Text2SQLNode fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
-    style SaveNode fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#fff
+    subgraph FallbackSystem["🔄 Fallback Chain (도구 실패 시)"]
+        direction TB
+        SearchPaper -.->|실패| FBSearchToWeb[Fallback:<br/>Web 검색]
+        FBSearchToWeb -.->|실패| FBWebToGeneral[Fallback:<br/>일반 답변]
+        Glossary -.->|실패| FBGlossaryToGeneral[Fallback:<br/>일반 답변]
+        Text2SQL -.->|실패| FBSQLToGeneral[Fallback:<br/>일반 답변]
+        WebSearch -.->|실패| FBWebToGeneral
+    end
 
-    %% 연결선 스타일
-    linkStyle 0 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 1 stroke:#388e3c,stroke-width:2px
-    linkStyle 2 stroke:#2e7d32,stroke-width:2px
-    linkStyle 3 stroke:#2e7d32,stroke-width:2px
-    linkStyle 4 stroke:#1b5e20,stroke-width:2px
-    linkStyle 5 stroke:#1b5e20,stroke-width:2px
-    linkStyle 6 stroke:#1b5e20,stroke-width:2px
-    linkStyle 7 stroke:#1b5e20,stroke-width:2px
+    subgraph PipelineControl["⚙️ Pipeline Router (다중 요청 처리)"]
+        direction LR
+        General --> CheckPipeline{tool_pipeline<br/>남음?}
+        SearchPaper --> CheckPipeline
+        Glossary --> CheckPipeline
+        WebSearch --> CheckPipeline
+        Summarize --> CheckPipeline
+        Text2SQL --> CheckPipeline
+        SaveFile --> CheckPipeline
+
+        FBSearchToWeb -.-> CheckPipeline
+        FBWebToGeneral -.-> CheckPipeline
+        FBGlossaryToGeneral -.-> CheckPipeline
+        FBSQLToGeneral -.-> CheckPipeline
+
+        CheckPipeline -->|있음| NextTool[다음 도구 실행<br/>pipeline_index++]
+        CheckPipeline -->|없음| FinalAnswer([최종 답변 생성])
+        NextTool --> ToolSelect
+    end
+
+    %% Subgraph 스타일
+    style Routing fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Tools fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    style FallbackSystem fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style PipelineControl fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+
+    %% 라우팅 노드 스타일
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:2px,color:#000
+    style PatternMatch fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style LLMRoute fill:#66bb6a,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style SetPipeline fill:#4caf50,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style FirstTool fill:#43a047,stroke:#1b5e20,stroke-width:2px,color:#fff
+
+    %% 도구 선택 스타일
+    style ToolSelect fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
+
+    %% 도구 노드 스타일 (파랑 계열)
+    style General fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style SearchPaper fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style Glossary fill:#42a5f5,stroke:#1565c0,stroke-width:2px,color:#000
+    style WebSearch fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#fff
+    style Summarize fill:#1e88e5,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style Text2SQL fill:#1976d2,stroke:#0d47a1,stroke-width:2px,color:#fff
+    style SaveFile fill:#1565c0,stroke:#0d47a1,stroke-width:2px,color:#fff
+
+    %% Fallback 노드 스타일 (주황)
+    style FBSearchToWeb fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style FBWebToGeneral fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style FBGlossaryToGeneral fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style FBSQLToGeneral fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% Pipeline Control 스타일
+    style CheckPipeline fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style NextTool fill:#ba68c8,stroke:#6a1b9a,stroke-width:2px,color:#fff
+    style FinalAnswer fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 ```
 
 #### 시스템 구성
