@@ -222,80 +222,140 @@ if fallback_tool:
 
 ```mermaid
 graph TB
-    %% 스타일 정의
-    classDef userStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
-    classDef routerStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
-    classDef toolStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#000
-    classDef fallbackStyle fill:#FFF9C4,stroke:#F9A825,stroke-width:2px,color:#000
-    classDef finalStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
-    classDef decisionStyle fill:#FFE0B2,stroke:#E65100,stroke-width:2px,color:#000
+    subgraph MainFlow["📋 RAG 논문 검색 → 논문 요약 파이프라인"]
+        direction TB
 
-    subgraph Input["📥 입력"]
-        direction LR
-        User["사용자 질문<br/>Transformer 논문 요약해줘"]
+        subgraph Init["🔸 초기화 & 라우팅"]
+            direction LR
+            Start([▶️ 시작]) --> A[사용자 질문<br/>Transformer 논문 요약해줘]
+            A --> B[router_node<br/>패턴 매칭]
+            B --> C[Pipeline 설정<br/>search_paper → web_search<br/>→ general → summarize]
+        end
+
+        subgraph Step1["🔹 1단계: RAG 논문 검색"]
+            direction LR
+            D[search_paper 실행<br/>PostgreSQL + pgvector] --> E{유사도 검증<br/>score < 0.5?}
+            E -->|Yes| F[논문 본문 획득<br/>💾 tool_result]
+            E -->|No| G[검색 실패<br/>찾을 수 없습니다]
+        end
+
+        subgraph Step2["🔺 2단계: 웹 검색 (Fallback)"]
+            direction LR
+            H[web_search 실행<br/>Tavily API] --> I{검색 결과<br/>100자 이상?}
+            I -->|Yes| J[웹 결과 획득<br/>💾 tool_result]
+            I -->|No| K[검색 실패<br/>결과 부족]
+        end
+
+        subgraph Step3["🔶 3단계: 일반 답변 (Fallback)"]
+            direction LR
+            L[general 실행<br/>LLM 지식 기반] --> M[Solar-pro2 (easy)<br/>GPT-5 (hard)]
+            M --> N[논문 설명 생성<br/>💾 tool_result]
+        end
+
+        subgraph Step4["✨ 4단계: 논문 요약"]
+            direction LR
+            O[summarize 실행<br/>파이프라인 모드] --> P[이전 tool_result 사용<br/>난이도별 프롬프트]
+            P --> Q[LLM 호출<br/>요약 생성]
+            Q --> R[💾 final_answers<br/>elementary + beginner<br/>또는 intermediate + advanced]
+        end
+
+        subgraph Output["💡 5단계: 최종 출력"]
+            direction LR
+            S[UI 표시] --> T[난이도별 답변 렌더링]
+            T --> End([✅ 완료])
+        end
+
+        %% 단계 간 연결
+        Init --> Step1
+        Step1 --> Step2
+        Step1 --> Step4
+        Step2 --> Step3
+        Step2 --> Step4
+        Step3 --> Step4
+        Step4 --> Output
     end
 
-    subgraph Routing["🔀 라우팅"]
-        direction LR
-        Router["Router 노드<br/>패턴 매칭"]
-        Router -->|"tool_pipeline 설정"| PipelineSet["Pipeline 설정<br/>[search_paper, web_search,<br/>general, summarize]"]
-    end
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
 
-    subgraph Step1["🔍 1단계: RAG 검색"]
-        direction LR
-        SearchPaper["search_paper 실행<br/>PostgreSQL + pgvector"]
-        SearchCheck{"검색 성공?<br/>(유사도 < 0.5)"}
-        SearchPaper --> SearchCheck
-    end
+    %% Subgraph 스타일
+    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Step1 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Step2 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Step3 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Step4 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Output fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
 
-    subgraph Step2["🌐 2단계: 웹 검색 (Fallback)"]
-        direction LR
-        WebSearch["web_search 실행<br/>Tavily API"]
-        WebCheck{"검색 성공?<br/>(100자 이상)"}
-        WebSearch --> WebCheck
-    end
+    %% 노드 스타일 (초기화 - 청록 계열)
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    subgraph Step3["💡 3단계: 일반 답변 (Fallback)"]
-        direction LR
-        General["general 실행<br/>LLM 지식 기반"]
-        GeneralCheck{"답변 생성?"}
-        General --> GeneralCheck
-    end
+    %% 노드 스타일 (1단계 - 보라 계열)
+    style D fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style E fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style F fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style G fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
 
-    subgraph Step4["📝 4단계: 요약"]
-        direction LR
-        Summarize["summarize 실행<br/>난이도별 요약"]
-        SumCheck{"요약 성공?"}
-        Summarize --> SumCheck
-    end
+    %% 노드 스타일 (2단계 - 주황 계열)
+    style H fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style K fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
 
-    subgraph Output["📤 출력"]
-        direction LR
-        FinalAnswer["최종 답변<br/>난이도별 요약 결과"]
-    end
+    %% 노드 스타일 (3단계 - 빨강 계열)
+    style L fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style M fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
+    style N fill:#ef5350,stroke:#b71c1c,stroke-width:2px,color:#000
 
-    %% 연결
-    User --> Router
-    PipelineSet --> SearchPaper
+    %% 노드 스타일 (4단계 - 녹색 계열)
+    style O fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style P fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Q fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style R fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
 
-    SearchCheck -->|"✅ 성공"| Summarize
-    SearchCheck -->|"❌ 실패"| WebSearch
+    %% 노드 스타일 (출력 - 파랑 계열)
+    style S fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style T fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
-    WebCheck -->|"✅ 성공"| Summarize
-    WebCheck -->|"❌ 실패"| General
+    %% 연결선 스타일 (초기화 - 청록 0~2)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
 
-    GeneralCheck -->|"✅ 성공"| Summarize
+    %% 연결선 스타일 (1단계 - 보라 3~5)
+    linkStyle 3 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
 
-    SumCheck -->|"✅ 성공"| FinalAnswer
-    SumCheck -->|"❌ 실패"| GeneralFallback["general (Fallback)<br/>요약 불가 메시지"]
-    GeneralFallback --> FinalAnswer
+    %% 연결선 스타일 (2단계 - 주황 6~8)
+    linkStyle 6 stroke:#e65100,stroke-width:2px
+    linkStyle 7 stroke:#e65100,stroke-width:2px
+    linkStyle 8 stroke:#e65100,stroke-width:2px
 
-    %% 스타일 적용
-    class User userStyle
-    class Router,PipelineSet routerStyle
-    class SearchPaper,WebSearch,General,Summarize toolStyle
-    class SearchCheck,WebCheck,GeneralCheck,SumCheck decisionStyle
-    class FinalAnswer,GeneralFallback finalStyle
+    %% 연결선 스타일 (3단계 - 빨강 9~10)
+    linkStyle 9 stroke:#c62828,stroke-width:2px
+    linkStyle 10 stroke:#c62828,stroke-width:2px
+
+    %% 연결선 스타일 (4단계 - 녹색 11~13)
+    linkStyle 11 stroke:#2e7d32,stroke-width:2px
+    linkStyle 12 stroke:#2e7d32,stroke-width:2px
+    linkStyle 13 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (출력 - 파랑 14~15)
+    linkStyle 14 stroke:#1565c0,stroke-width:2px
+    linkStyle 15 stroke:#1565c0,stroke-width:2px
+
+    %% 단계 간 연결 (회색 16~22)
+    linkStyle 16 stroke:#616161,stroke-width:3px
+    linkStyle 17 stroke:#616161,stroke-width:3px
+    linkStyle 18 stroke:#616161,stroke-width:3px
+    linkStyle 19 stroke:#616161,stroke-width:3px
+    linkStyle 20 stroke:#616161,stroke-width:3px
+    linkStyle 21 stroke:#616161,stroke-width:3px
+    linkStyle 22 stroke:#616161,stroke-width:3px
 ```
 
 ---
@@ -304,144 +364,227 @@ graph TB
 
 ```mermaid
 graph TB
-    %% 스타일 정의
-    classDef userStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
-    classDef routerStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
-    classDef toolStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#000
-    classDef fallbackStyle fill:#FFF9C4,stroke:#F9A825,stroke-width:2px,color:#000
-    classDef finalStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
-    classDef decisionStyle fill:#FFE0B2,stroke:#E65100,stroke-width:2px,color:#000
-    classDef dbStyle fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#000
+    subgraph MainFlow["📋 RAG 논문 검색 → 논문 요약 상세 흐름"]
+        direction TB
 
-    subgraph MainPy["main.py"]
-        direction LR
-        Start["실행 시작<br/>chat_interface.py"]
-        InitState["AgentState 초기화<br/>question, difficulty,<br/>messages"]
+        subgraph Init["🔸 초기화"]
+            direction LR
+            A[main.py] --> B[chat_interface.py]
+            B --> C[AgentState 초기화]
+            C --> D[router_node 호출]
+        end
+
+        subgraph Pattern["🔹 패턴 매칭"]
+            direction LR
+            E[multi_request_patterns.yaml] --> F{키워드 매칭<br/>논문 + 요약?}
+            F -->|Yes| G[tool_pipeline 설정<br/>[search_paper, web_search,<br/>general, summarize]]
+            F -->|No| H[LLM 라우팅]
+            H --> G
+        end
+
+        subgraph Search1["🔺 RAG 검색 도구"]
+            direction LR
+            I[search_paper_node] --> J[RAGRetriever 초기화]
+            J --> K[벡터 검색<br/>pgvector]
+            K --> L[키워드 검색<br/>PostgreSQL FTS]
+            L --> M[하이브리드 병합<br/>70% + 30%]
+            M --> N{유사도<br/>< 0.5?}
+            N -->|Yes| O[💾 tool_result<br/>논문 본문]
+            N -->|No| P[tool_status: failed]
+        end
+
+        subgraph Search2["🔶 웹 검색 도구 (Fallback)"]
+            direction LR
+            Q[web_search_node] --> R[Tavily API<br/>호출]
+            R --> S[결과 포매팅]
+            S --> T{결과<br/>> 100자?}
+            T -->|Yes| U[💾 tool_result<br/>웹 결과]
+            T -->|No| V[tool_status: failed]
+        end
+
+        subgraph Search3["✨ 일반 답변 도구 (Fallback)"]
+            direction LR
+            W[general_answer_node] --> X[난이도 매핑<br/>easy/hard]
+            X --> Y[LLM 호출 (2회)<br/>Solar-pro2 / GPT-5]
+            Y --> Z[💾 tool_result<br/>LLM 답변]
+        end
+
+        subgraph Router["🔷 Pipeline Router"]
+            direction LR
+            AA[check_pipeline] --> AB{tool_status?}
+            AB -->|success| AC[pipeline_router]
+            AB -->|failed| AD[fallback_router]
+            AC --> AE{스킵 로직}
+            AE -->|검색 성공| AF[→ summarize<br/>직행]
+            AE -->|검색 실패| AG[→ 다음 도구]
+            AD --> AH[TOOL_FALLBACKS<br/>search_paper → web_search<br/>web_search → general]
+        end
+
+        subgraph Summarize["💾 논문 요약 도구"]
+            direction LR
+            AI[summarize_node] --> AJ{파이프라인<br/>모드?}
+            AJ -->|Yes| AK[이전 tool_result 사용]
+            AJ -->|No| AL[논문 제목 추출<br/>DB 검색]
+            AK --> AM[난이도별 프롬프트]
+            AL --> AM
+            AM --> AN[LLM 호출]
+            AN --> AO[💾 final_answers<br/>2-level]
+        end
+
+        subgraph Output["💡 최종 출력"]
+            direction LR
+            AP[chat_interface.py] --> AQ[난이도별 표시<br/>elementary/beginner<br/>intermediate/advanced]
+            AQ --> AR([✅ 완료])
+        end
+
+        %% 단계 간 연결
+        Init --> Pattern
+        Pattern --> Search1
+        Search1 --> Router
+        Router --> Search2
+        Router --> Search3
+        Router --> Summarize
+        Search2 --> Router
+        Search3 --> Router
+        Summarize --> Output
     end
 
-    subgraph RouterNode["src/agent/nodes.py:40-200<br/>router_node()"]
-        direction LR
-        LoadPatterns["패턴 로드<br/>multi_request_patterns.yaml"]
-        PatternMatch["패턴 매칭<br/>keywords: [논문, 요약]<br/>exclude: [저장]"]
-        SetPipeline["Pipeline 설정<br/>tool_pipeline:<br/>[search_paper, web_search,<br/>general, summarize]<br/>pipeline_index: 1<br/>tool_choice: search_paper"]
-    end
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
 
-    subgraph GraphPy["src/agent/graph.py:47-428"]
-        direction LR
-        RouteToTool["route_to_tool()<br/>tool_choice 반환"]
-        CheckPipeline["check_pipeline_or_fallback()<br/>tool_status 확인<br/>pipeline 계속 판단"]
-        PipelineRouter["pipeline_router()<br/>다음 도구 선택<br/>스킵 로직 적용"]
-        FallbackRouter["fallback_router_node()<br/>실패 시 도구 교체"]
-    end
+    %% Subgraph 스타일
+    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Pattern fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Search1 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Search2 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Search3 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Router fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000
+    style Summarize fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Output fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
 
-    subgraph SearchPaperTool["src/tools/search_paper.py:150-250<br/>search_paper_node()"]
-        direction LR
-        InitRetriever["RAGRetriever 초기화<br/>OpenAI Embeddings<br/>PGVector"]
-        VectorSearch["벡터 검색<br/>similarity/MMR<br/>MultiQueryRetriever"]
-        KeywordSearch["키워드 검색<br/>PostgreSQL FTS<br/>title, abstract"]
-        HybridMerge["하이브리드 병합<br/>70% 벡터 + 30% 키워드"]
-        FetchMeta["메타데이터 조회<br/>papers 테이블<br/>paper_id 기반"]
-        CheckSimilarity["유사도 검증<br/>score < 0.5?"]
-    end
+    %% 노드 스타일 (초기화 - 청록 계열)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style D fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    subgraph WebSearchTool["src/tools/web_search.py:20-80<br/>web_search_node()"]
-        direction LR
-        TavilyAPI["Tavily API 호출<br/>search_depth: advanced<br/>max_results: 5"]
-        FormatWeb["결과 포매팅<br/>제목, URL, 내용"]
-        CheckLength["길이 검증<br/>len(result) > 100?"]
-    end
+    %% 노드 스타일 (패턴 - 파랑 계열)
+    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style F fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style G fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style H fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
 
-    subgraph GeneralTool["src/tools/general_answer.py:25-106<br/>general_answer_node()"]
-        direction LR
-        DifficultyMap["난이도 매핑<br/>easy: [elementary, beginner]<br/>hard: [intermediate, advanced]"]
-        LoadPrompt["프롬프트 로드<br/>tool_prompts.json<br/>general_prompts"]
-        LLMCall["LLM 호출 (2회)<br/>Solar-pro2 (easy)<br/>GPT-5 (hard)"]
-    end
+    %% 노드 스타일 (RAG 검색 - 보라 계열)
+    style I fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style K fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style L fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style M fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style N fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style O fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style P fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
 
-    subgraph SummarizeTool["src/tools/summarize.py:24-200<br/>summarize_node()"]
-        direction LR
-        CheckPipelineMode{"파이프라인 모드?<br/>pipeline_index > 1<br/>tool_result 존재"}
-        UsePrevResult["이전 결과 사용<br/>tool_result"]
-        ExtractTitle["제목 추출<br/>LLM 호출<br/>제목 파싱"]
-        SearchDB["논문 DB 검색<br/>papers 테이블<br/>title LIKE 검색"]
-        FetchChunks["청크 조회<br/>paper_chunks<br/>paper_id 기반"]
-        SummarizeChain["요약 체인<br/>load_summarize_chain<br/>난이도별 프롬프트"]
-        StoreResult["결과 저장<br/>tool_result<br/>final_answers"]
-    end
+    %% 노드 스타일 (웹 검색 - 주황 계열)
+    style Q fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style R fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style S fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style T fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style U fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style V fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
 
-    subgraph Database["PostgreSQL + pgvector"]
-        direction LR
-        PapersTable["papers 테이블<br/>paper_id, title,<br/>authors, publish_date,<br/>url, category,<br/>citation_count"]
-        ChunksTable["paper_chunks<br/>chunk_id, paper_id,<br/>content, embedding<br/>(vector 1536)"]
-    end
+    %% 노드 스타일 (일반 답변 - 빨강 계열)
+    style W fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style X fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
+    style Y fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Z fill:#ef5350,stroke:#b71c1c,stroke-width:2px,color:#000
 
-    subgraph SessionState["src/agent/state.py:18-87<br/>AgentState"]
-        direction LR
-        StateFields["상태 필드<br/>tool_pipeline: List[str]<br/>pipeline_index: int<br/>tool_result: str<br/>tool_status: str<br/>final_answers: Dict"]
-    end
+    %% 노드 스타일 (Router - 핑크 계열)
+    style AA fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style AB fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style AC fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style AD fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
+    style AE fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style AF fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
+    style AG fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
+    style AH fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
 
-    subgraph FinalOutput["최종 출력"]
-        direction LR
-        DisplayResult["UI 표시<br/>chat_interface.py<br/>난이도별 답변 렌더링"]
-    end
+    %% 노드 스타일 (요약 - 녹색 계열)
+    style AI fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AJ fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style AK fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AL fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AM fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AN fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AO fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
 
-    %% 연결
-    Start --> InitState
-    InitState --> LoadPatterns
-    LoadPatterns --> PatternMatch
-    PatternMatch -->|"매칭 성공"| SetPipeline
-    SetPipeline --> RouteToTool
+    %% 노드 스타일 (출력 - 파랑 계열)
+    style AP fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style AQ fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style AR fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
-    RouteToTool -->|"tool_choice:<br/>search_paper"| InitRetriever
-    InitRetriever --> VectorSearch
-    VectorSearch --> KeywordSearch
-    KeywordSearch --> HybridMerge
-    HybridMerge --> FetchMeta
-    FetchMeta --> CheckSimilarity
+    %% 연결선 스타일 (초기화 0~2)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
 
-    CheckSimilarity -->|"✅ 성공<br/>(score < 0.5)"| StateFields
-    StateFields -->|"tool_status:<br/>success"| CheckPipeline
-    CheckPipeline -->|"pipeline<br/>계속"| PipelineRouter
-    PipelineRouter -->|"스킵 로직<br/>→ summarize"| CheckPipelineMode
+    %% 연결선 스타일 (패턴 3~6)
+    linkStyle 3 stroke:#01579b,stroke-width:2px
+    linkStyle 4 stroke:#01579b,stroke-width:2px
+    linkStyle 5 stroke:#01579b,stroke-width:2px
+    linkStyle 6 stroke:#01579b,stroke-width:2px
 
-    CheckSimilarity -->|"❌ 실패<br/>(score >= 0.5)"| FallbackRouter
-    FallbackRouter -->|"tool_choice:<br/>web_search"| TavilyAPI
-    TavilyAPI --> FormatWeb
-    FormatWeb --> CheckLength
+    %% 연결선 스타일 (RAG 검색 7~13)
+    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 9 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 10 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 11 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 12 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 13 stroke:#7b1fa2,stroke-width:2px
 
-    CheckLength -->|"✅ 성공<br/>(> 100자)"| StateFields
-    CheckLength -->|"❌ 실패"| FallbackRouter
-    FallbackRouter -->|"tool_choice:<br/>general"| DifficultyMap
-    DifficultyMap --> LoadPrompt
-    LoadPrompt --> LLMCall
-    LLMCall --> StateFields
+    %% 연결선 스타일 (웹 검색 14~18)
+    linkStyle 14 stroke:#e65100,stroke-width:2px
+    linkStyle 15 stroke:#e65100,stroke-width:2px
+    linkStyle 16 stroke:#e65100,stroke-width:2px
+    linkStyle 17 stroke:#e65100,stroke-width:2px
+    linkStyle 18 stroke:#e65100,stroke-width:2px
 
-    CheckPipelineMode -->|"✅ Yes"| UsePrevResult
-    CheckPipelineMode -->|"❌ No"| ExtractTitle
-    ExtractTitle --> SearchDB
-    SearchDB --> FetchChunks
-    FetchChunks --> SummarizeChain
-    UsePrevResult --> SummarizeChain
-    SummarizeChain --> StoreResult
-    StoreResult --> DisplayResult
+    %% 연결선 스타일 (일반 답변 19~21)
+    linkStyle 19 stroke:#c62828,stroke-width:2px
+    linkStyle 20 stroke:#c62828,stroke-width:2px
+    linkStyle 21 stroke:#c62828,stroke-width:2px
 
-    %% DB 연결
-    FetchMeta -.->|"SQL SELECT"| PapersTable
-    VectorSearch -.->|"pgvector<br/>cosine distance"| ChunksTable
-    SearchDB -.->|"SQL SELECT<br/>LIKE"| PapersTable
-    FetchChunks -.->|"SQL SELECT"| ChunksTable
+    %% 연결선 스타일 (Router 22~28)
+    linkStyle 22 stroke:#880e4f,stroke-width:2px
+    linkStyle 23 stroke:#880e4f,stroke-width:2px
+    linkStyle 24 stroke:#880e4f,stroke-width:2px
+    linkStyle 25 stroke:#880e4f,stroke-width:2px
+    linkStyle 26 stroke:#880e4f,stroke-width:2px
+    linkStyle 27 stroke:#880e4f,stroke-width:2px
+    linkStyle 28 stroke:#880e4f,stroke-width:2px
 
-    %% 스타일 적용
-    class Start,InitState userStyle
-    class LoadPatterns,PatternMatch,SetPipeline routerStyle
-    class RouteToTool,CheckPipeline,PipelineRouter,FallbackRouter routerStyle
-    class InitRetriever,VectorSearch,KeywordSearch,HybridMerge,FetchMeta toolStyle
-    class TavilyAPI,FormatWeb toolStyle
-    class DifficultyMap,LoadPrompt,LLMCall toolStyle
-    class ExtractTitle,SearchDB,FetchChunks,SummarizeChain,StoreResult toolStyle
-    class CheckSimilarity,CheckLength,CheckPipelineMode decisionStyle
-    class StateFields,DisplayResult finalStyle
-    class PapersTable,ChunksTable dbStyle
+    %% 연결선 스타일 (요약 29~35)
+    linkStyle 29 stroke:#2e7d32,stroke-width:2px
+    linkStyle 30 stroke:#2e7d32,stroke-width:2px
+    linkStyle 31 stroke:#2e7d32,stroke-width:2px
+    linkStyle 32 stroke:#2e7d32,stroke-width:2px
+    linkStyle 33 stroke:#2e7d32,stroke-width:2px
+    linkStyle 34 stroke:#2e7d32,stroke-width:2px
+    linkStyle 35 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (출력 36~37)
+    linkStyle 36 stroke:#1565c0,stroke-width:2px
+    linkStyle 37 stroke:#1565c0,stroke-width:2px
+
+    %% 단계 간 연결 (회색 38~44)
+    linkStyle 38 stroke:#616161,stroke-width:3px
+    linkStyle 39 stroke:#616161,stroke-width:3px
+    linkStyle 40 stroke:#616161,stroke-width:3px
+    linkStyle 41 stroke:#616161,stroke-width:3px
+    linkStyle 42 stroke:#616161,stroke-width:3px
+    linkStyle 43 stroke:#616161,stroke-width:3px
+    linkStyle 44 stroke:#616161,stroke-width:3px
+    linkStyle 45 stroke:#616161,stroke-width:3px
 ```
 
 ---
