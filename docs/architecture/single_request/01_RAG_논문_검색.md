@@ -156,7 +156,7 @@ graph TB
         Search --> CheckResult
         CheckResult -->|성공| Generation
         Generation --> End1([✅ 완료])
-        CheckResult -.->|실패 감지| Fallback
+        CheckResult -->|실패 감지| Fallback
     end
 
     %% 메인 워크플로우 배경
@@ -196,36 +196,6 @@ graph TB
     style End1 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
     style End2 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
     style End3 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-
-    %% 연결선 스타일 (입력 - 청록)
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-    linkStyle 2 stroke:#006064,stroke-width:2px
-    linkStyle 3 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (검색 - 보라)
-    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 6 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (생성 - 녹색)
-    linkStyle 8 stroke:#2e7d32,stroke-width:2px
-    linkStyle 9 stroke:#2e7d32,stroke-width:2px
-    linkStyle 10 stroke:#2e7d32,stroke-width:2px
-
-    %% 연결선 스타일 (Fallback - 주황)
-    linkStyle 11 stroke:#e65100,stroke-width:2px
-    linkStyle 12 stroke:#e65100,stroke-width:2px
-    linkStyle 13 stroke:#e65100,stroke-width:2px
-    linkStyle 14 stroke:#e65100,stroke-width:2px
-    linkStyle 15 stroke:#e65100,stroke-width:2px
-
-    %% 단계 간 연결 (회색)
-    linkStyle 16 stroke:#616161,stroke-width:3px
-    linkStyle 17 stroke:#616161,stroke-width:3px
-    linkStyle 18 stroke:#616161,stroke-width:3px
-    linkStyle 19 stroke:#616161,stroke-width:3px,stroke-dasharray:5
 ```
 
 ---
