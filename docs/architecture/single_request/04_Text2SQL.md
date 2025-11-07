@@ -756,7 +756,7 @@ LIMIT 3;
 **실행 결과**:
 | title | authors | citation_count |
 |-------|---------|----------------|
-| GPT-4 Technical Report | OpenAI | 5234 |
+| GPT-5 Technical Report | OpenAI | 5234 |
 | LLaMA: Open... | Touvron, H. | 3892 |
 | Gemini: A Family... | Google | 2456 |
 
