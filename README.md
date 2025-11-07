@@ -18,6 +18,26 @@
 
 ## 📋 목차
 
+- [🎯 프로젝트 개요](#-프로젝트-개요)
+- [👥 팀 소개](#-팀-소개)
+- [🏗️ 시스템 아키텍처](#️-시스템-아키텍처)
+- [🚀 주요 기능](#-주요-기능)
+- [🛠️ 기술 스택](#️-기술-스택)
+- [✅ 구현 완료 기능](#-구현-완료-기능)
+  - [1. 로깅 & 실험 관리 시스템](#1-로깅--실험-관리-시스템)
+  - [2. 데이터베이스 시스템 (PostgreSQL + pgvector)](#2-데이터베이스-시스템-postgresql--pgvector)
+  - [3. AI Agent 시스템 (LangGraph)](#3-ai-agent-시스템-langgraph)
+  - [4. RAG 시스템](#4-rag-시스템)
+  - [5. Streamlit UI 시스템](#5-streamlit-ui-시스템)
+  - [6. 평가 시스템 (LLM-as-a-Judge)](#6-평가-시스템-llm-as-a-judge)
+  - [7. 프롬프트 엔지니어링](#7-프롬프트-엔지니어링)
+- [📦 설치 및 실행](#-설치-및-실행)
+- [📁 프로젝트 구조](#-프로젝트-구조)
+- [🗄️ 데이터베이스 설계](#️-데이터베이스-설계)
+- [⚡ 성능 최적화](#-성능-최적화)
+- [📊 주요 성과](#-주요-성과)
+- [📚 참고 자료](#-참고-자료)
+
 
 
 ---
@@ -404,58 +424,6 @@ python main.py
 ```
 
 ---
-
-## 2. 실행 방법
-
-
-### 1. 환경 변수 설정
-
-`.env` 파일 생성:
-```bash
-# OpenAI API
-OPENAI_API_KEY=sk-...
-
-# Upstage API (Solar Pro2)
-UPSTAGE_API_KEY=up_...
-
-# Tavily API (웹 검색)
-TAVILY_API_KEY=tvly-...
-
-# PostgreSQL
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=paper_chatbot
-DB_USER=postgres
-DB_PASSWORD=your_password
-
-# Streamlit
-STREAMLIT_SERVER_PORT=8501
-```
-
-`configs/db_config.yaml` 설정:
-```yaml
-postgresql:
-  host: localhost
-  port: 5432
-  database: paper_chatbot
-  user: postgres
-  password: your_password
-
-connection_pool:
-  min_connections: 1
-  max_connections: 10
-
-vector_store:
-  embedding_model: text-embedding-3-small
-  embedding_dimensions: 1536
-  collection_prefix: chatbot
-```
-
----
-
-### 2. 실행 방법
-
-
 
 ## 📁 프로젝트 구조
 ```
