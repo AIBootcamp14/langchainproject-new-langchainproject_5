@@ -1006,94 +1006,37 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 #### Agent 아키텍처
 
 ```mermaid
-graph TB
-    subgraph MainFlow["📋 AI Agent 시스템 (LangGraph)"]
-        direction TB
+graph LR
+    RouterNode[라우터<br/>최종 도구 확정] --> SelectTool{도구<br/>선택}
+    SelectTool -->|일반| GeneralNode[일반 답변]
+    SelectTool -->|RAG 논문| SearchNode[RAG 논문 검색]
+    SelectTool -->|Web 논문| WebNode[Web 논문 검색]
+    SelectTool -->|RAG 용어| GlossaryNode[RAG 용어집 검색]
+    SelectTool -->|요약| SummarizeNode[논문 요약]
+    SelectTool -->|통계| Text2SQLNode[Text2SQL 통계]
+    SelectTool -->|저장| SaveNode[파일 저장]
 
-        subgraph Stage1["🔸 질문 분석 단계"]
-            direction LR
-            A1[질문 입력] --> A2[Multi-turn<br/>맥락 감지]
-            A2 --> A3[패턴 매칭<br/>키워드 분석]
-            A3 --> A4[Router 노드<br/>도구 선택]
-        end
+    %% 노드 스타일
+    style RouterNode fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
+    style SelectTool fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
 
-        subgraph Stage2["🔹 도구 실행 단계"]
-            direction LR
-            B1[general<br/>일반 답변]
-            B2[search_paper<br/>논문 검색]
-            B3[glossary<br/>용어집]
-            B4[web_search<br/>웹 검색]
-            B5[summarize<br/>논문 요약]
-            B6[text2sql<br/>SQL 변환]
-            B7[save_file<br/>파일 저장]
-        end
-
-        subgraph Stage3["🔺 파이프라인 처리"]
-            direction LR
-            C1[Pipeline<br/>Router] --> C2[다음 도구<br/>존재?]
-            C2 -->|Yes| C3[다음 도구<br/>실행]
-            C2 -->|No| C4[파이프라인<br/>완료]
-        end
-
-        subgraph Stage4["🔻 결과 반환"]
-            direction LR
-            D1[도구 결과<br/>수집] --> D2[최종 답변<br/>생성]
-            D2 --> D3[✅ 사용자에게<br/>전달]
-        end
-
-        %% 단계 간 연결
-        Stage1 --> Stage2
-        Stage2 --> Stage3
-        Stage3 --> Stage4
-    end
-
-    %% MainFlow 스타일
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Stage2 fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
-    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Stage4 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-
-    %% Stage1 노드 스타일 (청록 계열)
-    style A1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style A2 fill:#26c6da,stroke:#006064,stroke-width:2px,color:#000
-    style A3 fill:#00bcd4,stroke:#006064,stroke-width:2px,color:#000
-    style A4 fill:#00acc1,stroke:#006064,stroke-width:2px,color:#000
-
-    %% Stage2 노드 스타일 (파랑 계열)
-    style B1 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style B2 fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
-    style B3 fill:#42a5f5,stroke:#1976d2,stroke-width:2px,color:#000
-    style B4 fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#000
-    style B5 fill:#1e88e5,stroke:#1565c0,stroke-width:2px,color:#fff
-    style B6 fill:#1976d2,stroke:#1565c0,stroke-width:2px,color:#fff
-    style B7 fill:#1565c0,stroke:#0d47a1,stroke-width:2px,color:#fff
-
-    %% Stage3 노드 스타일 (보라 계열)
-    style C1 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C2 fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C3 fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
-    style C4 fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
-
-    %% Stage4 노드 스타일 (녹색 계열)
-    style D1 fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
-    style D2 fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style D3 fill:#66bb6a,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style GeneralNode fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
+    style SearchNode fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style WebNode fill:#66bb6a,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style GlossaryNode fill:#4caf50,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style SummarizeNode fill:#43a047,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style Text2SQLNode fill:#388e3c,stroke:#1b5e20,stroke-width:2px,color:#fff
+    style SaveNode fill:#2e7d32,stroke:#1b5e20,stroke-width:2px,color:#fff
 
     %% 연결선 스타일
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-    linkStyle 2 stroke:#006064,stroke-width:2px
-    linkStyle 3 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 6 stroke:#2e7d32,stroke-width:2px
-    linkStyle 7 stroke:#2e7d32,stroke-width:2px
-    linkStyle 8 stroke:#616161,stroke-width:3px
-    linkStyle 9 stroke:#616161,stroke-width:3px
-    linkStyle 10 stroke:#616161,stroke-width:3px
+    linkStyle 0 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 1 stroke:#388e3c,stroke-width:2px
+    linkStyle 2 stroke:#2e7d32,stroke-width:2px
+    linkStyle 3 stroke:#2e7d32,stroke-width:2px
+    linkStyle 4 stroke:#1b5e20,stroke-width:2px
+    linkStyle 5 stroke:#1b5e20,stroke-width:2px
+    linkStyle 6 stroke:#1b5e20,stroke-width:2px
+    linkStyle 7 stroke:#1b5e20,stroke-width:2px
 ```
 
 #### 시스템 구성
