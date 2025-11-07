@@ -1026,18 +1026,19 @@ graph TB
             direction LR
             C --> J[🤖 LLM<br/>직접 호출]
             D --> K[(💾 PGVector<br/>논문 임베딩)]
-            F --> L[(💾 PostgreSQL<br/>glossary 테이블)]
-            H --> M[(💾 PostgreSQL<br/>papers 테이블)]
             E --> N[🔍 Tavily API<br/>웹 검색]
+            F --> L[(💾 PostgreSQL<br/>glossary 테이블)]
             G --> O[(💾 PGVector<br/>논문 청크)]
+            H --> M[(💾 PostgreSQL<br/>papers 테이블)]
+            I --> P[💾 파일 생성<br/>다운로드]
         end
 
         subgraph Stage3["🔺 3단계: 도구 자동 전환 (Fallback)"]
             direction LR
-            P[RAG 용어집 검색<br/>실패] -.-> Q[일반 답변<br/>전환]
-            R[RAG 논문 검색<br/>실패] -.-> S[Web 논문 검색<br/>전환]
-            S -.-> T[일반 답변<br/>전환]
-            U[Text2SQL 통계<br/>실패] -.-> V[일반 답변<br/>전환]
+            F -.->|실패| Q[Fallback:<br/>일반 답변]
+            D -.->|실패| R[Fallback:<br/>Web 논문 검색]
+            R -.->|실패| S[Fallback:<br/>일반 답변]
+            H -.->|실패| T[Fallback:<br/>일반 답변]
         end
 
         subgraph Stage4["🔶 4단계: 최종 답변 생성"]
@@ -1081,15 +1082,13 @@ graph TB
     style M fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
     style N fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
     style O fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style P fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
 
     %% 노드 스타일 (3단계 - 주황)
-    style P fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
     style Q fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
-    style R fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style S fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style R fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style S fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
     style T fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
-    style U fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style V fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
 
     %% 노드 스타일 (4단계 - 보라)
     style W fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
@@ -1107,32 +1106,30 @@ graph TB
     linkStyle 6 stroke:#006064,stroke-width:2px
     linkStyle 7 stroke:#006064,stroke-width:2px
 
-    %% 연결선 스타일 (2단계 내부 8~13)
+    %% 연결선 스타일 (2단계 내부 8~14)
     linkStyle 8 stroke:#1976d2,stroke-width:2px
     linkStyle 9 stroke:#1976d2,stroke-width:2px
     linkStyle 10 stroke:#1976d2,stroke-width:2px
     linkStyle 11 stroke:#1976d2,stroke-width:2px
     linkStyle 12 stroke:#1976d2,stroke-width:2px
     linkStyle 13 stroke:#1976d2,stroke-width:2px
+    linkStyle 14 stroke:#1976d2,stroke-width:2px
 
-    %% 연결선 스타일 (3단계 Fallback 14~19)
-    linkStyle 14 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
+    %% 연결선 스타일 (3단계 Fallback 15~18)
     linkStyle 15 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
     linkStyle 16 stroke:#ef6c00,stroke-width:2px,stroke-dasharray:5
     linkStyle 17 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
-    linkStyle 18 stroke:#e65100,stroke-width:2px,stroke-dasharray:5
-    linkStyle 19 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
+    linkStyle 18 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
 
-    %% 연결선 스타일 (4단계 내부 20~23)
+    %% 연결선 스타일 (4단계 내부 19~21)
+    linkStyle 19 stroke:#7b1fa2,stroke-width:2px
     linkStyle 20 stroke:#7b1fa2,stroke-width:2px
     linkStyle 21 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 22 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 23 stroke:#7b1fa2,stroke-width:2px
 
-    %% 단계 간 연결 (24~26)
+    %% 단계 간 연결 (22~24)
+    linkStyle 22 stroke:#616161,stroke-width:3px
+    linkStyle 23 stroke:#616161,stroke-width:3px
     linkStyle 24 stroke:#616161,stroke-width:3px
-    linkStyle 25 stroke:#616161,stroke-width:3px
-    linkStyle 26 stroke:#616161,stroke-width:3px
 ```
 
 #### 시스템 구성
