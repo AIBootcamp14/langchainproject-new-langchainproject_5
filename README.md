@@ -194,23 +194,204 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 ---
 
+## 📁 프로젝트 구조
+```
+langchain-project/
+├── .env                              # 환경 변수 (실제 값)
+├── .env.example                      # 환경 변수 템플릿
+├── .envrc                            # direnv 설정
+├── .gitignore                        # Git 제외 파일 목록
+├── README.md                         # 프로젝트 소개 문서
+├── main.py                           # 애플리케이션 진입점
+├── requirements.txt                  # Python 의존성 패키지
+│
+├── configs/                          # 설정 파일
+│   └── collect/                      # 데이터 수집 설정
+│
+├── data/                             # 데이터 저장소
+│   ├── processed/                    # 전처리된 데이터
+│   ├── raw/                          # 원본 데이터
+│   │   └── pdfs/                     # PDF 논문 파일
+│   ├── rdbms/                        # 관계형 DB 데이터
+│   └── vectordb/                     # 벡터 DB 데이터
+│       └── papers_faiss/             # FAISS 인덱스
+│
+├── database/                         # DB 스키마 및 마이그레이션
+│
+├── docs/                             # 프로젝트 문서
+│   ├── PPT/                          # 발표 자료
+│   ├── PRD/                          # 제품 요구사항 명세서
+│   ├── QnA/                          # 질의응답 문서
+│   ├── architecture/                 # 아키텍처 문서
+│   │   ├── claude_prompts/           # Claude 프롬프트
+│   │   ├── mermaid/                  # Mermaid 다이어그램
+│   │   ├── multiple_request/         # 다중 요청 문서
+│   │   └── single_request/           # 단일 요청 문서
+│   ├── errors/                       # 에러 로그
+│   ├── images/                       # 문서 이미지
+│   ├── issues/                       # 이슈 트래킹
+│   ├── minutes/                      # 회의록
+│   ├── modularization/               # 모듈화 문서
+│   ├── roles/                        # 역할 정의
+│   ├── rules/                        # 규칙 및 가이드
+│   ├── scenarios/                    # 사용 시나리오
+│   └── usage/                        # 사용법 문서
+│
+├── notebooks/                        # Jupyter 노트북
+│   ├── base/                         # 기본 실험 노트북
+│   └── team/                         # 팀별 노트북
+│
+├── prompts/                          # 프롬프트 템플릿
+│
+├── scripts/                          # 유틸리티 스크립트
+│   ├── analysis/                     # 분석 스크립트
+│   ├── data/                         # 데이터 처리
+│   ├── debug/                        # 디버깅 도구
+│   ├── system/                       # 시스템 관리
+│   └── tests/                        # 테스트 스크립트
+│       ├── integration/              # 통합 테스트
+│       └── unit/                     # 단위 테스트
+│
+├── src/                              # 소스 코드
+│   ├── agent/                        # AI Agent (LangGraph)
+│   ├── data/                         # 데이터 처리
+│   ├── database/                     # DB 연결 및 쿼리
+│   ├── evaluation/                   # 성능 평가
+│   ├── llm/                          # LLM 클라이언트
+│   ├── memory/                       # 대화 메모리
+│   ├── papers/                       # 논문 처리
+│   │   ├── domain/                   # 도메인 모델
+│   │   └── infra/                    # 인프라 계층
+│   ├── prompts/                      # 프롬프트 관리
+│   ├── rag/                          # RAG 검색
+│   ├── text2sql/                     # Text-to-SQL
+│   ├── tools/                        # Agent 도구
+│   └── utils/                        # 유틸리티 함수
+│
+└── ui/                               # Streamlit UI
+    ├── assets/                       # 정적 자산
+    ├── components/                   # UI 컴포넌트
+    ├── pages/                        # 페이지
+    └── test/                         # UI 테스트
+```
+
+---
+
 ## 🔧 핵심 기술 구현
 
 ### 1. 로깅 & 실험 관리 시스템
 
-#### Logger 시스템
-- **위치**: `src/utils/logger.py`
-- **기능**: 실험 폴더 내 로그 파일 자동 생성 및 관리
-- **특징**: 타임스탬프 자동 추가, 메인 로그 + 도구별 독립 로그, with 문 지원
+#### [Logger 시스템]
 
-#### ExperimentManager 시스템
-- **위치**: `src/utils/experiment_manager.py`
-- **주요 기능**:
-  - Session ID 자동 부여 (session_001, 002...)
-  - 7개 서브 폴더 자동 생성 (tools, database, prompts, ui, outputs, evaluation, configs)
-  - metadata.json 자동 관리
-  - LLM 응답 전체 내용 로깅
-  - 평가 결과/전체 대화/SQL 쿼리/프롬프트 자동 저장
+**위치**: `src/utils/logger.py`
+
+논문 리뷰 챗봇 프로젝트 전체에서 사용하는 통합 로깅 기반 시스템으로, 개발 과정에서 발생하는 모든 이벤트를 체계적으로 기록합니다.
+
+| 구분 | 내용 |
+|------|------|
+| **핵심 역할** | 이벤트 기록, 실험 추적, 디버깅 지원, 성능 분석, 문서화 |
+| **의존성** | 모든 상위 시스템(Agent, RAG, LLM Client, Tools)의 기반 |
+| **로그 정책** | print() 사용 금지, logger.write() 필수 사용 |
+| **파일 위치** | `experiments/날짜/날짜_시간_session_XXX/chatbot.log` |
+
+**주요 기능**:
+
+| 기능 | 설명 | 사용 방법 |
+|------|------|-----------|
+| **타임스탬프 자동 추가** | 모든 로그에 `YYYY-MM-DD HH:MM:SS` 형식 시간 기록 | 자동 적용 |
+| **파일 및 콘솔 동시 출력** | 파일 저장 + 콘솔 실시간 확인 | `print_also=True` (기본값) |
+| **표준 출력 리디렉션** | print()를 로그로 자동 저장 | `start_redirect()` / `stop_redirect()` |
+| **tqdm 진행률 지원** | 콘솔: 실시간 표시, 로그: 10% 단위만 기록 | `logger.tqdm()` |
+| **에러 메시지 색상 구분** | 콘솔에 빨간색으로 표시 | `print_error=True` |
+| **with 문 지원** | 자동 리소스 정리 | `with Logger(...) as logger:` |
+
+**로깅 흐름**:
+1. 개발자가 코드 실행 → Logger 초기화 → 로그 파일 자동 생성
+2. 코드 실행 중 `logger.write()` 호출 → 타임스탬프 추가 → 파일과 콘솔에 동시 출력
+3. 작업 완료 후 `logger.close()` → 파일 닫기 → 개발자가 로그 확인 및 분석
+
+**성능 최적화**:
+- **즉시 플러시**: 모든 write() 호출 시 자동 flush로 프로그램 비정상 종료 시에도 로그 보존
+- **tqdm 최적화**: 콘솔(모든 진행률) vs 로그(10% 단위)로 파일 크기 절약
+
+**참조 문서**:
+- [실험 관리 시스템 구현 이슈](docs/issues/01-1_실험_관리_시스템_구현.md)
+- [Logger 사용법 가이드](docs/rules/logger_사용법.md)
+- [최현화 로깅&모니터링 역할](docs/roles/01-2_최현화_로깅_모니터링.md)
+- [로깅 시스템 PRD](docs/PRD/05_로깅_시스템.md)
+- [실험 관리 시스템 모듈화 문서](docs/modularization/03_실험_관리_시스템.md)
+
+
+#### [ExperimentManager 시스템]
+
+**위치**: `src/utils/experiment_manager.py`
+
+모든 챗봇 실행을 체계적으로 추적하고 관리하는 핵심 시스템으로, Session ID 자동 부여, 폴더 구조 자동 생성, Logger 통합, 메타데이터 관리를 제공합니다.
+
+| 구분 | 내용 |
+|------|------|
+| **핵심 역할** | Session ID 자동 부여, 폴더 구조 자동 생성, Logger 통합, 메타데이터 관리 |
+| **의존성** | Logger, DB Queries, Prompts, UI Events, Outputs, Evaluation |
+| **사용 방법** | with 문 필수 사용 (자동 리소스 정리) |
+| **Session ID 규칙** | 당일 기준 순차 증가 (session_001, 002...), 매일 001부터 재시작 |
+
+**자동 생성 폴더 구조 (7개)**:
+
+| 폴더 | 용도 | 주요 파일 |
+|------|------|-----------|
+| **tools/** | 도구 실행 로그 | rag_paper.log, web_search.log, text2sql.log, general.log 등 |
+| **database/** | DB 쿼리 및 검색 기록 | queries.sql, pgvector_searches.json |
+| **prompts/** | 프롬프트 기록 | system_prompt.txt, user_prompt.txt, final_prompt.txt |
+| **ui/** | UI 인터랙션 로그 | user_interactions.log, errors.log |
+| **outputs/** | 생성 결과물 | response.txt, conversation_easy/hard.json, save_data/ |
+| **evaluation/** | 평가 지표 | evaluation_YYYYMMDD_HHMMSS.json |
+| **configs/** | 설정 파일 | db_config.yaml, model_config.yaml, multi_request_patterns.yaml |
+
+**주요 메서드**:
+
+| 분류 | 메서드 | 설명 | 저장 위치 |
+|------|--------|------|-----------|
+| **도구** | `get_tool_logger(tool_name)` | 도구별 독립 Logger 생성 | tools/{tool_name}.log |
+| **DB** | `log_sql_query(...)` | SQL 쿼리 기록 | database/queries.sql |
+| **DB** | `log_pgvector_search(...)` | pgvector 검색 기록 | database/pgvector_searches.json |
+| **프롬프트** | `save_system_prompt(...)` | 시스템 프롬프트 저장 | prompts/system_prompt.txt |
+| **프롬프트** | `save_user_prompt(...)` | 사용자 프롬프트 저장 | prompts/user_prompt.txt |
+| **UI** | `log_ui_interaction(message)` | UI 인터랙션 로그 | ui/user_interactions.log |
+| **평가** | `save_evaluation_result(...)` | 평가 결과 저장 | evaluation/evaluation_*.json |
+| **출력** | `save_conversation(...)` | 전체 대화 저장 | outputs/conversation_*.json |
+| **메타** | `update_metadata(**kwargs)` | metadata.json 업데이트 | metadata.json |
+
+**실험 폴더 생성 흐름**:
+1. **초기화**: 챗봇 실행 시 Session ID 자동 부여 → 폴더 및 서브 폴더 7개 생성 → metadata.json과 Logger 초기화
+2. **실행**: 사용자 질문 입력 → AI Agent 도구 선택 → 실행 과정 각 폴더에 기록 → 평가 지표 수집
+3. **종료**: 최종 답변 생성 → outputs/response.txt 저장 → metadata.json 업데이트 → Logger 종료
+
+**완전 구현된 기능** (2025-11-04 기준):
+- ✅ 평가 시스템 완전 작동 (KeyError 해결)
+- ✅ LLM 응답 전체 내용 로깅 (6개 도구)
+- ✅ 평가 결과 자동 저장 (evaluation 폴더)
+- ✅ 전체 대화 자동 저장 (모드별 이어쓰기 방식)
+- ✅ SQL 쿼리 자동 저장 (close 시 자동 실행)
+- ✅ 프롬프트 자동 저장 (5개 주요 도구)
+
+**Session ID 예시**:
+```
+experiments/20251103/
+├── 20251103_103015_session_001/   # 오늘 첫 번째 실행
+├── 20251103_110234_session_002/   # 오늘 두 번째 실행
+└── 20251103_143520_session_003/   # 오늘 세 번째 실행
+
+experiments/20251104/
+└── 20251104_090012_session_001/   # 다음 날, 다시 001부터 시작
+```
+
+**참조 문서**:
+- [실험 관리 시스템 구현 이슈](docs/issues/01-1_실험_관리_시스템_구현.md)
+- [최현화 실험 관리 시스템 역할](docs/roles/01-1_최현화_실험_관리_시스템.md)
+- [실험 폴더 구조 규칙](docs/rules/실험_폴더_구조.md)
+- [실험 추적 관리 PRD](docs/PRD/06_실험_추적_관리.md)
+- [실험 관리 시스템 모듈화 문서](docs/modularization/03_실험_관리_시스템.md)
+- [Conversation 파일 관리](docs/modularization/03-1_Conversation_파일_관리.md)
 
 #### 자동 생성 디렉토리 구조
 
@@ -481,89 +662,6 @@ python main.py
 
 ---
 
-## 📁 프로젝트 구조
-```
-langchain-project/
-├── .env                              # 환경 변수 (실제 값)
-├── .env.example                      # 환경 변수 템플릿
-├── .envrc                            # direnv 설정
-├── .gitignore                        # Git 제외 파일 목록
-├── README.md                         # 프로젝트 소개 문서
-├── main.py                           # 애플리케이션 진입점
-├── requirements.txt                  # Python 의존성 패키지
-│
-├── configs/                          # 설정 파일
-│   └── collect/                      # 데이터 수집 설정
-│
-├── data/                             # 데이터 저장소
-│   ├── processed/                    # 전처리된 데이터
-│   ├── raw/                          # 원본 데이터
-│   │   └── pdfs/                     # PDF 논문 파일
-│   ├── rdbms/                        # 관계형 DB 데이터
-│   └── vectordb/                     # 벡터 DB 데이터
-│       └── papers_faiss/             # FAISS 인덱스
-│
-├── database/                         # DB 스키마 및 마이그레이션
-│
-├── docs/                             # 프로젝트 문서
-│   ├── PPT/                          # 발표 자료
-│   ├── PRD/                          # 제품 요구사항 명세서
-│   ├── QnA/                          # 질의응답 문서
-│   ├── architecture/                 # 아키텍처 문서
-│   │   ├── claude_prompts/           # Claude 프롬프트
-│   │   ├── mermaid/                  # Mermaid 다이어그램
-│   │   ├── multiple_request/         # 다중 요청 문서
-│   │   └── single_request/           # 단일 요청 문서
-│   ├── errors/                       # 에러 로그
-│   ├── images/                       # 문서 이미지
-│   ├── issues/                       # 이슈 트래킹
-│   ├── minutes/                      # 회의록
-│   ├── modularization/               # 모듈화 문서
-│   ├── roles/                        # 역할 정의
-│   ├── rules/                        # 규칙 및 가이드
-│   ├── scenarios/                    # 사용 시나리오
-│   └── usage/                        # 사용법 문서
-│
-├── notebooks/                        # Jupyter 노트북
-│   ├── base/                         # 기본 실험 노트북
-│   └── team/                         # 팀별 노트북
-│
-├── prompts/                          # 프롬프트 템플릿
-│
-├── scripts/                          # 유틸리티 스크립트
-│   ├── analysis/                     # 분석 스크립트
-│   ├── data/                         # 데이터 처리
-│   ├── debug/                        # 디버깅 도구
-│   ├── system/                       # 시스템 관리
-│   └── tests/                        # 테스트 스크립트
-│       ├── integration/              # 통합 테스트
-│       └── unit/                     # 단위 테스트
-│
-├── src/                              # 소스 코드
-│   ├── agent/                        # AI Agent (LangGraph)
-│   ├── data/                         # 데이터 처리
-│   ├── database/                     # DB 연결 및 쿼리
-│   ├── evaluation/                   # 성능 평가
-│   ├── llm/                          # LLM 클라이언트
-│   ├── memory/                       # 대화 메모리
-│   ├── papers/                       # 논문 처리
-│   │   ├── domain/                   # 도메인 모델
-│   │   └── infra/                    # 인프라 계층
-│   ├── prompts/                      # 프롬프트 관리
-│   ├── rag/                          # RAG 검색
-│   ├── text2sql/                     # Text-to-SQL
-│   ├── tools/                        # Agent 도구
-│   └── utils/                        # 유틸리티 함수
-│
-└── ui/                               # Streamlit UI
-    ├── assets/                       # 정적 자산
-    ├── components/                   # UI 컴포넌트
-    ├── pages/                        # 페이지
-    └── test/                         # UI 테스트
-```
-
----
-
 ## 🗄️ 데이터베이스 설계
 
 ### ERD (Entity Relationship Diagram)
@@ -758,8 +856,6 @@ graph LR
 - **버전 관리**: Git 브랜치 전략 (main/develop/feature)
 - **문서화**: PRD, 아키텍처, 기술 보고서 작성
 - **이슈 관리**: GitHub Issues & Projects로 진행 상황 추적
-
-
 
 ---
 
