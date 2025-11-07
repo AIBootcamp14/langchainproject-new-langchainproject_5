@@ -55,10 +55,10 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 | 이름 | 역할 | 담당 업무 |
 |------|------|-----------|
-| **최현화** | Project Lead | 프로젝트 총괄, 로깅 시스템, AI Agent 시스템, 평가 시스템, Web Search Tool, Summarize Tool, Save File Tool, Streamlit UI 개발 |
-| **박재홍** | Database & Data Pipeline | 데이터베이스 설계 및 구축, 데이터 수집/저장, Embedding 처리, Vector DB 구축, Streamlit UI 개발 |
-| **신준엽** | RAG & Query Systems | RAG 시스템 구현, 논문 검색 Tool, 용어 검색 Tool, Text-to-SQL Tool 개발 |
-| **임예슬** | Prompt Engineering & QA | 프롬프트 엔지니어링, 시스템 최적화, QA 테스트 수행 |
+| **[최현화](https://github.com/iejob/langchain-project)** | Project Lead | **기술 구현**: AI Agent 시스템(LangGraph), 로깅 & 실험 모니터링, 평가 시스템(LLM-as-a-Judge), Web 논문 검색, 논문 요약, 파일 저장, Streamlit UI / **프로젝트 관리**: 팀 리드, 개발 규칙 정립, 회의록/PRD/PPT/README 작성, Github Issue & Project & Branch 관리 |
+| **[박재홍](https://github.com/woghd8503/langchainproject-new-langchainproject_5)** | Database & Data Pipeline | **기술 구현**: 데이터베이스 설계, 데이터 수집/저장(로컬/RDBMS), 임베딩 & Vector DB 적재, Streamlit UI / **프로젝트 관리**: PRD 자료조사, 데이터 파이프라인 기술 보고서, Github Issue 작성 |
+| **[신준엽](https://github.com/Shin-junyeob/langchainproject_5)** | RAG & Query Systems | **기술 구현**: RAG 시스템, RAG 논문 검색 도구, RAG 용어집 검색 도구, Text2SQL 도구 / **프로젝트 관리**: PRD 자료조사, Github Issue 작성, PPT |
+| **[임예슬](https://github.com/joy007fun/langchainproject_team5)** | Prompt Engineering & QA | **기술 구현**: 프롬프트 엔지니어링, 프롬프트 최적화, 실행 테스트 & 검증(QA) / **프로젝트 관리**: PRD 자료조사, Github Issue 작성, PPT |
 
 ---
 
@@ -67,10 +67,10 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 ### 전체 워크플로우
 
 #### 전체 아키텍처 구조 (단순 흐름도)
-<img width="4295" height="6870" alt="Image" src="https://github.com/user-attachments/assets/64a80ba1-2b61-47c4-91c4-ba1806e5738b" />
+![전체 아키텍처 (단순 흐름도)](docs/images/architecture/01_전체%20아키텍처(단순%20흐름도).png)
 
 #### 전체 아키텍처 구조 (상세 흐름도)
-<img width="6764" height="13654" alt="Image" src="https://github.com/user-attachments/assets/b54da05c-48c4-4f43-b8ed-1b465100d457" />
+![전체 아키텍처 (상세 흐름도)](docs/images/architecture/02_전체%20아키텍처(상세%20흐름도).png)
 
 ---
 
@@ -117,85 +117,70 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 | 기술 | 버전 | 용도 |
 |------|------|------|
-| **OpenAI GPT-5** | gpt-4o | Hard 모드 답변 생성 (고난이도 질문) |
-| **Solar Pro2** | solar-pro-preview-240910 | Easy 모드 답변 생성 (일반 질문) |
-| **LangChain** | 0.3.13 | LLM 체이닝 및 프롬프트 관리 |
-| **LangGraph** | 0.2.59 | AI Agent StateGraph 구현 |
+| **OpenAI API** | gpt-4o | Hard 모드 답변 생성 (전문가 수준 질문) |
+| **Upstage Solar API** | solar-pro | Easy 모드 답변 생성 (초심자 수준 질문) |
+| **LangChain** | ≥0.1.0 | LLM 체이닝 및 프롬프트 관리 |
+| **LangChain Community** | ≥0.0.20 | 커뮤니티 통합 도구 |
+| **LangChain OpenAI** | ≥0.1.0 | OpenAI 모델 통합 |
+| **LangChain Upstage** | ≥0.7.4 | Upstage Solar 모델 통합 |
+| **LangGraph** | ≥1.0.1 | AI Agent StateGraph 구현 |
 | **OpenAI Embeddings** | text-embedding-3-small | 텍스트 임베딩 (1536 차원) |
 
 ### Database & Vector Store
 
 | 기술 | 버전 | 용도 |
 |------|------|------|
-| **PostgreSQL** | 16+ | RDBMS (논문, 용어, 로그 데이터) |
-| **pgvector** | 0.8.0 | 벡터 유사도 검색 (IVFFlat 인덱스) |
-| **psycopg2** | 2.9.10 | PostgreSQL 드라이버 |
+| **PostgreSQL** | 15+ | RDBMS (논문, 용어, 로그 데이터) |
+| **pgvector** | 0.3.6 | 벡터 유사도 검색 (IVFFlat 인덱스) |
+| **psycopg2-binary** | ≥2.9.11 | PostgreSQL 드라이버 |
+| **LangChain PostgreSQL** | ≥0.0.16 | Langchain PostgreSQL 통합 |
+| **SQLAlchemy** | ≥2.0.0 | ORM 및 DB 추상화 |
 
 ### Web Framework & UI
 
 | 기술 | 버전 | 용도 |
 |------|------|------|
-| **Streamlit** | 1.41.1 | 웹 UI 프레임워크 |
-| **streamlit-javascript** | 0.1.5 | JavaScript 연동 (LocalStorage) |
+| **Streamlit** | ≥1.29.0 | 웹 UI 프레임워크 |
+| **streamlit-authenticator** | ≥0.4.2 | 사용자 인증 시스템 |
 
 ### Data Processing
 
 | 기술 | 버전 | 용도 |
 |------|------|------|
-| **pandas** | 2.2.3 | 데이터 처리 |
-| **PyPDF** | 5.1.0 | PDF 텍스트 추출 |
-| **arxiv** | 2.1.3 | arXiv API 클라이언트 |
+| **sentence-transformers** | ≥2.2.0 | 문장 임베딩 모델 |
+| **arxiv** | ≥2.0.0 | arXiv API 클라이언트 |
+| **pymupdf** | ≥1.24.0 | PDF 처리 (MuPDF 기반) |
+| **pypdf** | ≥4.0.0 | PDF 텍스트 추출 |
+| **LangChain Text Splitters** | ≥0.0.1 | 문서 청킹 |
 
 ### External APIs
 
-| API | 용도 |
-|-----|------|
-| **Tavily Search API** | 웹 검색 기능 |
-| **arXiv API** | 논문 메타데이터 및 PDF 다운로드 |
+| API | 패키지 버전 | 용도 |
+|-----|------------|------|
+| **Tavily Search API** | tavily-python ≥0.5.0 | 실시간 웹 검색 |
+| **arXiv API** | arxiv ≥2.0.0 | 논문 메타데이터 및 PDF 다운로드 |
+| **DuckDuckGo Search** | duckduckgo-search ≥3.9.0 | 웹 검색 Fallback |
 
 ### Development Tools
 
-| 도구 | 용도 |
-|------|------|
-| **Python** | 3.11 |
-| **YAML** | 설정 파일 관리 |
-| **tqdm** | 진행 상황 표시 |
+| 도구 | 버전 | 용도 |
+|------|------|------|
+| **Python** | 3.11.9 | 프로그래밍 언어 |
+| **PyYAML** | ≥6.0.0 | 설정 파일 관리 |
+| **python-dotenv** | ≥1.0.0 | 환경 변수 관리 |
+| **tenacity** | ≥8.2.0 | 재시도 로직 |
+| **pytest** | ≥7.4.0 | 테스트 프레임워크 |
+| **uv** | 0.9.7 | 의존성 관리 최적화 |
 
 ---
 
 ## ✅ 구현 완료 기능
 
-### 1. 로깅 시스템 (Logger)
+### 1. 로깅 시스템 (Logger) & 실험 폴더 관리 시스템 (ExperimentManager)
 
-**파일 위치**: `src/utils/logger.py:1`
 
-**주요 기능**:
-- 📝 타임스탬프 자동 추가 로깅
-- 💾 파일 + 콘솔 이중 출력
-- 🔄 stdout/stderr 리다이렉션
-- 📊 tqdm 프로그레스 바 통합
-
-**디렉토리 구조**:
-```
-experiments/
-└── {날짜}/
-    └── {날짜}_{시간}_session_XXX/
-        ├── chatbot.log        # 메인 로그
-        ├── config.yaml        # 실험 설정
-        └── results/           # 실험 결과
 ```
 
-**구현 코드 예시**:
-```python
-class Logger:
-    def __init__(self, log_path: Path, print_also: bool = True)
-    def write(self, message: str, print_also: bool = True, print_error: bool = False)
-    def flush(self)
-    def close(self)
-    def start_redirect(self)  # stdout/stderr 리다이렉션 시작
-    def stop_redirect(self)   # 리다이렉션 종료
-    def tqdm(self, *args, **kwargs)  # tqdm 래퍼
-```
 
 ---
 
@@ -235,29 +220,12 @@ class Logger:
 
 ### 8. 프롬프트 엔지니어링
 
+---
 
-### 2. 설치
+## 2. 실행 방법
 
-```bash
-# 리포지토리 클론
-git clone https://github.com/AIBootcamp14/langchainproject-new-langchainproject_5.git
-cd langchainproject-new-langchainproject_5
 
-# 가상환경 생성 및 활성화
-pyenv activate langchain_py3_11_9
-
-# 의존성 설치
-pip install -r requirements.txt
-
-# PostgreSQL pgvector extension 설치 및 데이터 수집 파이프라인 실행
-# docs/usage/데이터베이스_설치_및_설정_가이드.md 순차적으로 1~8단계까지 실행
-
-# 논문 리뷰 챗봇 실행
-python main.py
-
-```
-
-### 3. 환경 설정
+### 1. 환경 변수 설정
 
 `.env` 파일 생성:
 ```bash
@@ -300,25 +268,91 @@ vector_store:
   collection_prefix: chatbot
 ```
 
-### 4. 실행
-
-**Streamlit UI 실행**:
-```bash
-streamlit run ui/app.py
-```
-
-브라우저에서 `http://localhost:8501` 접속
-
-**CLI 실행** (테스트용):
-```bash
-python main.py --question "Transformer 모델 설명해줘" --difficulty easy
-```
-
 ---
 
-## 📁 프로젝트 구조
+### 2. 실행 방법
 
+
+
+## 📁 프로젝트 구조
 ```
+langchain-project/
+├── .env                              # 환경 변수 (실제 값)
+├── .env.example                      # 환경 변수 템플릿
+├── .envrc                            # direnv 설정
+├── .gitignore                        # Git 제외 파일 목록
+├── README.md                         # 프로젝트 소개 문서
+├── main.py                           # 애플리케이션 진입점
+├── requirements.txt                  # Python 의존성 패키지
+│
+├── configs/                          # 설정 파일
+│   └── collect/                      # 데이터 수집 설정
+│
+├── data/                             # 데이터 저장소
+│   ├── processed/                    # 전처리된 데이터
+│   ├── raw/                          # 원본 데이터
+│   │   └── pdfs/                     # PDF 논문 파일
+│   ├── rdbms/                        # 관계형 DB 데이터
+│   └── vectordb/                     # 벡터 DB 데이터
+│       └── papers_faiss/             # FAISS 인덱스
+│
+├── database/                         # DB 스키마 및 마이그레이션
+│
+├── docs/                             # 프로젝트 문서
+│   ├── PPT/                          # 발표 자료
+│   ├── PRD/                          # 제품 요구사항 명세서
+│   ├── QnA/                          # 질의응답 문서
+│   ├── architecture/                 # 아키텍처 문서
+│   │   ├── claude_prompts/           # Claude 프롬프트
+│   │   ├── mermaid/                  # Mermaid 다이어그램
+│   │   ├── multiple_request/         # 다중 요청 문서
+│   │   └── single_request/           # 단일 요청 문서
+│   ├── errors/                       # 에러 로그
+│   ├── images/                       # 문서 이미지
+│   ├── issues/                       # 이슈 트래킹
+│   ├── minutes/                      # 회의록
+│   ├── modularization/               # 모듈화 문서
+│   ├── roles/                        # 역할 정의
+│   ├── rules/                        # 규칙 및 가이드
+│   ├── scenarios/                    # 사용 시나리오
+│   └── usage/                        # 사용법 문서
+│
+├── notebooks/                        # Jupyter 노트북
+│   ├── base/                         # 기본 실험 노트북
+│   └── team/                         # 팀별 노트북
+│
+├── prompts/                          # 프롬프트 템플릿
+│
+├── scripts/                          # 유틸리티 스크립트
+│   ├── analysis/                     # 분석 스크립트
+│   ├── data/                         # 데이터 처리
+│   ├── debug/                        # 디버깅 도구
+│   ├── system/                       # 시스템 관리
+│   └── tests/                        # 테스트 스크립트
+│       ├── integration/              # 통합 테스트
+│       └── unit/                     # 단위 테스트
+│
+├── src/                              # 소스 코드
+│   ├── agent/                        # AI Agent (LangGraph)
+│   ├── data/                         # 데이터 처리
+│   ├── database/                     # DB 연결 및 쿼리
+│   ├── evaluation/                   # 성능 평가
+│   ├── llm/                          # LLM 클라이언트
+│   ├── memory/                       # 대화 메모리
+│   ├── papers/                       # 논문 처리
+│   │   ├── domain/                   # 도메인 모델
+│   │   └── infra/                    # 인프라 계층
+│   ├── prompts/                      # 프롬프트 관리
+│   ├── rag/                          # RAG 검색
+│   ├── text2sql/                     # Text-to-SQL
+│   ├── tools/                        # Agent 도구
+│   └── utils/                        # 유틸리티 함수
+│
+└── ui/                               # Streamlit UI
+    ├── assets/                       # 정적 자산
+    ├── components/                   # UI 컴포넌트
+    ├── pages/                        # 페이지
+    └── test/                         # UI 테스트
 ```
 
 ---
@@ -337,16 +371,7 @@ python main.py --question "Transformer 모델 설명해줘" --difficulty easy
 
 ## 📊 주요 성과
 
-- ✅ **7가지 AI Agent 도구** 구현 완료
-- ✅ **LangGraph StateGraph** 기반 멀티 에이전트 시스템
-- ✅ **PostgreSQL + pgvector** 단일 DB 통합
-- ✅ **Streamlit UI** ChatGPT 스타일 웹 인터페이스
-- ✅ **LLM-as-a-Judge** 자동 평가 시스템
-- ✅ **Fallback Chain** 오류 복구 메커니즘
-- ✅ **멀티 턴 대화** 맥락 유지 기능
-- ✅ **난이도 조절** Easy/Hard 모드
-- ✅ **Connection Pooling** 성능 최적화
-- ✅ **IVFFlat 인덱스** 고속 벡터 검색
+
 
 ---
 
