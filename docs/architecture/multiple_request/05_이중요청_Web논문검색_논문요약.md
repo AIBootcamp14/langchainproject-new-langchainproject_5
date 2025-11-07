@@ -260,30 +260,28 @@ graph TB
     style M fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
     style End fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
 
-    %% 연결선 스타일 (초기화 0~2)
+    %% 연결선 스타일 (초기화 0~1)
     linkStyle 0 stroke:#00838f,stroke-width:2px
     linkStyle 1 stroke:#00838f,stroke-width:2px
 
-    %% 연결선 스타일 (1단계 2~6)
+    %% 연결선 스타일 (1단계 2~4)
     linkStyle 2 stroke:#1565c0,stroke-width:2px
     linkStyle 3 stroke:#1565c0,stroke-width:2px
-    linkStyle 4 stroke:#1565c0,stroke-width:2px
-    linkStyle 5 stroke:#d84315,stroke-width:2px
+    linkStyle 4 stroke:#d84315,stroke-width:2px
 
-    %% 연결선 스타일 (2단계 6~11)
+    %% 연결선 스타일 (2단계 5~8)
+    linkStyle 5 stroke:#6a1b9a,stroke-width:2px
     linkStyle 6 stroke:#6a1b9a,stroke-width:2px
     linkStyle 7 stroke:#6a1b9a,stroke-width:2px
-    linkStyle 8 stroke:#6a1b9a,stroke-width:2px
-    linkStyle 9 stroke:#6a1b9a,stroke-width:2px
-    linkStyle 10 stroke:#d84315,stroke-width:2px
+    linkStyle 8 stroke:#d84315,stroke-width:2px
 
-    %% 연결선 스타일 (출력 11~12)
-    linkStyle 11 stroke:#1565c0,stroke-width:2px
+    %% 연결선 스타일 (출력 9)
+    linkStyle 9 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 13~15)
-    linkStyle 13 stroke:#616161,stroke-width:3px
-    linkStyle 14 stroke:#616161,stroke-width:3px
-    linkStyle 15 stroke:#616161,stroke-width:3px
+    %% 단계 간 연결 (회색 10~12)
+    linkStyle 10 stroke:#616161,stroke-width:3px
+    linkStyle 11 stroke:#616161,stroke-width:3px
+    linkStyle 12 stroke:#616161,stroke-width:3px
 ```
 
 ---
@@ -407,52 +405,49 @@ graph TB
     style AC fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
     style End fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#000
 
-    %% 연결선 스타일 (초기화 0~2)
+    %% 연결선 스타일 (초기화 0~1)
     linkStyle 0 stroke:#00838f,stroke-width:2px
     linkStyle 1 stroke:#00838f,stroke-width:2px
 
-    %% 연결선 스타일 (패턴 2~8)
+    %% 연결선 스타일 (패턴 2~7)
     linkStyle 2 stroke:#1565c0,stroke-width:2px
     linkStyle 3 stroke:#1565c0,stroke-width:2px
     linkStyle 4 stroke:#1565c0,stroke-width:2px
     linkStyle 5 stroke:#1565c0,stroke-width:2px
     linkStyle 6 stroke:#1565c0,stroke-width:2px
     linkStyle 7 stroke:#1565c0,stroke-width:2px
-    linkStyle 8 stroke:#1565c0,stroke-width:2px
 
-    %% 연결선 스타일 (Web 검색 9~15)
+    %% 연결선 스타일 (Web 검색 8~13)
+    linkStyle 8 stroke:#6a1b9a,stroke-width:2px
     linkStyle 9 stroke:#6a1b9a,stroke-width:2px
     linkStyle 10 stroke:#6a1b9a,stroke-width:2px
     linkStyle 11 stroke:#6a1b9a,stroke-width:2px
     linkStyle 12 stroke:#6a1b9a,stroke-width:2px
-    linkStyle 13 stroke:#6a1b9a,stroke-width:2px
-    linkStyle 14 stroke:#6a1b9a,stroke-width:2px
-    linkStyle 15 stroke:#d84315,stroke-width:2px
+    linkStyle 13 stroke:#d84315,stroke-width:2px
 
-    %% 연결선 스타일 (라우터2 16~18)
-    linkStyle 16 stroke:#e65100,stroke-width:2px
-    linkStyle 17 stroke:#e65100,stroke-width:2px
+    %% 연결선 스타일 (라우터2 14~15)
+    linkStyle 14 stroke:#e65100,stroke-width:2px
+    linkStyle 15 stroke:#e65100,stroke-width:2px
 
-    %% 연결선 스타일 (요약 18~25)
+    %% 연결선 스타일 (요약 16~22)
+    linkStyle 16 stroke:#ad1457,stroke-width:2px
+    linkStyle 17 stroke:#ad1457,stroke-width:2px
     linkStyle 18 stroke:#ad1457,stroke-width:2px
     linkStyle 19 stroke:#ad1457,stroke-width:2px
     linkStyle 20 stroke:#ad1457,stroke-width:2px
     linkStyle 21 stroke:#ad1457,stroke-width:2px
-    linkStyle 22 stroke:#ad1457,stroke-width:2px
-    linkStyle 23 stroke:#ad1457,stroke-width:2px
-    linkStyle 24 stroke:#ad1457,stroke-width:2px
-    linkStyle 25 stroke:#d84315,stroke-width:2px
+    linkStyle 22 stroke:#d84315,stroke-width:2px
 
-    %% 연결선 스타일 (출력 26~28)
-    linkStyle 26 stroke:#1565c0,stroke-width:2px
-    linkStyle 27 stroke:#1565c0,stroke-width:2px
+    %% 연결선 스타일 (출력 23~24)
+    linkStyle 23 stroke:#1565c0,stroke-width:2px
+    linkStyle 24 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 29~33)
+    %% 단계 간 연결 (회색 25~29)
+    linkStyle 25 stroke:#616161,stroke-width:3px
+    linkStyle 26 stroke:#616161,stroke-width:3px
+    linkStyle 27 stroke:#616161,stroke-width:3px
+    linkStyle 28 stroke:#616161,stroke-width:3px
     linkStyle 29 stroke:#616161,stroke-width:3px
-    linkStyle 30 stroke:#616161,stroke-width:3px
-    linkStyle 31 stroke:#616161,stroke-width:3px
-    linkStyle 32 stroke:#616161,stroke-width:3px
-    linkStyle 33 stroke:#616161,stroke-width:3px
 ```
 
 ---
