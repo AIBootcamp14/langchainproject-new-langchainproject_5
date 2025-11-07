@@ -227,9 +227,9 @@ graph TB
 
         subgraph Init["🔸 초기화 & 라우팅"]
             direction LR
-            Start([▶️ 시작]) --> A[사용자 질문<br/>Transformer 논문 요약해줘]
+            Start([▶️ 시작]) --> A[사용자 질문:<br/>Transformer 논문 요약해줘]
             A --> B[router_node<br/>패턴 매칭]
-            B --> C[Pipeline 설정<br/>search_paper → web_search<br/>→ general → summarize]
+            B --> C[Pipeline 설정<br/>4단계 파이프라인]
         end
 
         subgraph Step1["🔹 1단계: RAG 논문 검색"]
@@ -248,7 +248,7 @@ graph TB
 
         subgraph Step3["🔶 3단계: 일반 답변 (Fallback)"]
             direction LR
-            L[general 실행<br/>LLM 지식 기반] --> M[Solar-pro2 (easy)<br/>GPT-5 (hard)]
+            L[general 실행<br/>LLM 지식 기반] --> M[모델 선택:<br/>Solar-pro2 또는 GPT-5]
             M --> N[논문 설명 생성<br/>💾 tool_result]
         end
 
@@ -256,12 +256,12 @@ graph TB
             direction LR
             O[summarize 실행<br/>파이프라인 모드] --> P[이전 tool_result 사용<br/>난이도별 프롬프트]
             P --> Q[LLM 호출<br/>요약 생성]
-            Q --> R[💾 final_answers<br/>elementary + beginner<br/>또는 intermediate + advanced]
+            Q --> R[💾 final_answers<br/>2개 수준 답변]
         end
 
         subgraph Output["💡 5단계: 최종 출력"]
             direction LR
-            S[UI 표시] --> T[난이도별 답변 렌더링]
+            S[UI 표시] --> T[난이도별 답변<br/>렌더링]
             T --> End([✅ 완료])
         end
 
@@ -377,7 +377,7 @@ graph TB
         subgraph Pattern["🔹 패턴 매칭"]
             direction LR
             E[multi_request_patterns.yaml] --> F{키워드 매칭<br/>논문 + 요약?}
-            F -->|Yes| G[tool_pipeline 설정<br/>[search_paper, web_search,<br/>general, summarize]]
+            F -->|Yes| G[tool_pipeline 설정<br/>search_paper → web_search<br/>→ general → summarize]
             F -->|No| H[LLM 라우팅]
             H --> G
         end
@@ -404,8 +404,8 @@ graph TB
 
         subgraph Search3["✨ 일반 답변 도구 (Fallback)"]
             direction LR
-            W[general_answer_node] --> X[난이도 매핑<br/>easy/hard]
-            X --> Y[LLM 호출 (2회)<br/>Solar-pro2 / GPT-5]
+            W[general_answer_node] --> X[난이도 매핑<br/>easy 또는 hard]
+            X --> Y[LLM 호출 2회<br/>Solar-pro2 또는 GPT-5]
             Y --> Z[💾 tool_result<br/>LLM 답변]
         end
 
@@ -415,9 +415,9 @@ graph TB
             AB -->|success| AC[pipeline_router]
             AB -->|failed| AD[fallback_router]
             AC --> AE{스킵 로직}
-            AE -->|검색 성공| AF[→ summarize<br/>직행]
-            AE -->|검색 실패| AG[→ 다음 도구]
-            AD --> AH[TOOL_FALLBACKS<br/>search_paper → web_search<br/>web_search → general]
+            AE -->|검색 성공| AF[summarize 직행]
+            AE -->|검색 실패| AG[다음 도구]
+            AD --> AH[TOOL_FALLBACKS<br/>도구 교체 매핑]
         end
 
         subgraph Summarize["💾 논문 요약 도구"]
@@ -428,12 +428,12 @@ graph TB
             AK --> AM[난이도별 프롬프트]
             AL --> AM
             AM --> AN[LLM 호출]
-            AN --> AO[💾 final_answers<br/>2-level]
+            AN --> AO[💾 final_answers<br/>2개 수준]
         end
 
         subgraph Output["💡 최종 출력"]
             direction LR
-            AP[chat_interface.py] --> AQ[난이도별 표시<br/>elementary/beginner<br/>intermediate/advanced]
+            AP[chat_interface.py] --> AQ[난이도별 표시<br/>4가지 수준]
             AQ --> AR([✅ 완료])
         end
 

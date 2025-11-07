@@ -219,7 +219,7 @@ graph TB
         subgraph Input["🔸 입력 & 라우팅"]
             direction LR
             User["사용자 질문<br/>Transformer 논문<br/>찾아서 저장해줘"] --> Router["Router 노드<br/>패턴 매칭"]
-            Router --> PipelineSet["Pipeline 설정<br/>[search_paper,<br/>save_file]"]
+            Router --> PipelineSet["Pipeline 설정<br/>2단계 파이프라인"]
         end
 
         subgraph Step1["🔹 1단계: RAG 검색"]
@@ -327,10 +327,10 @@ graph TB
 
         subgraph Init["🔸 초기화 & 패턴 매칭"]
             direction LR
-            Start["실행 시작<br/>chat_interface.py"] --> InitState["AgentState 초기화<br/>question, difficulty,<br/>messages"]
+            Start["실행 시작<br/>chat_interface.py"] --> InitState["AgentState 초기화<br/>기본 상태 설정"]
             InitState --> LoadPatterns["패턴 로드<br/>multi_request_<br/>patterns.yaml"]
-            LoadPatterns --> PatternMatch["패턴 매칭<br/>keywords:<br/>[논문, 찾, 저장]"]
-            PatternMatch --> SetPipeline["Pipeline 설정<br/>tool_pipeline:<br/>[search_paper,<br/>save_file]"]
+            LoadPatterns --> PatternMatch["패턴 매칭<br/>keywords:<br/>논문, 찾, 저장"]
+            PatternMatch --> SetPipeline["Pipeline 설정<br/>tool_pipeline:<br/>2단계 파이프라인"]
         end
 
         subgraph Routing["🔹 라우팅 & 도구 선택"]
@@ -367,14 +367,14 @@ graph TB
 
         subgraph State["💡 상태 관리 & 출력"]
             direction LR
-            StateFields["AgentState<br/>tool_pipeline,<br/>pipeline_index,<br/>tool_result,<br/>save_counter"] --> OutputDir["outputs<br/>디렉토리<br/>실험 세션별<br/>분리"]
+            StateFields["AgentState<br/>상태 필드 저장"] --> OutputDir["outputs 디렉토리<br/>실험 세션별 분리"]
             OutputDir --> SavedFile["저장된 파일<br/>날짜_시간_<br/>response_번호.md"]
             SavedFile --> DisplayResult["UI 표시<br/>chat_interface.py<br/>파일 경로 표시"]
         end
 
         subgraph Database["🔷 PostgreSQL + pgvector"]
             direction LR
-            PapersTable["papers 테이블<br/>paper_id, title,<br/>authors,<br/>publish_date"] --> ChunksTable["paper_chunks<br/>chunk_id,<br/>content,<br/>embedding<br/>(vector 1536)"]
+            PapersTable["papers 테이블<br/>메타데이터"] --> ChunksTable["paper_chunks<br/>임베딩 벡터"]
         end
 
         %% 단계 간 연결
