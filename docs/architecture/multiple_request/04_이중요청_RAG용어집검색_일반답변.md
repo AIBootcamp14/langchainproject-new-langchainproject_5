@@ -204,20 +204,19 @@ graph TB
     linkStyle 4 stroke:#7b1fa2,stroke-width:2px
     linkStyle 5 stroke:#7b1fa2,stroke-width:2px
 
-    %% 연결선 스타일 (2단계 - 녹색 6~9)
+    %% 연결선 스타일 (2단계 - 녹색 6~8)
     linkStyle 6 stroke:#2e7d32,stroke-width:2px
     linkStyle 7 stroke:#2e7d32,stroke-width:2px
     linkStyle 8 stroke:#2e7d32,stroke-width:2px
-    linkStyle 9 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (출력 - 파랑 10~11)
+    %% 연결선 스타일 (출력 - 파랑 9~10)
+    linkStyle 9 stroke:#1565c0,stroke-width:2px
     linkStyle 10 stroke:#1565c0,stroke-width:2px
-    linkStyle 11 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 12~14)
+    %% 단계 간 연결 (회색 11~13)
+    linkStyle 11 stroke:#616161,stroke-width:3px
     linkStyle 12 stroke:#616161,stroke-width:3px
     linkStyle 13 stroke:#616161,stroke-width:3px
-    linkStyle 14 stroke:#616161,stroke-width:3px
 ```
 
 ---
@@ -359,25 +358,23 @@ graph TB
     %% 연결선 스타일 (Router 14)
     linkStyle 14 stroke:#880e4f,stroke-width:2px
 
-    %% 연결선 스타일 (일반 답변 15~21)
+    %% 연결선 스타일 (일반 답변 15~19)
     linkStyle 15 stroke:#2e7d32,stroke-width:2px
     linkStyle 16 stroke:#2e7d32,stroke-width:2px
     linkStyle 17 stroke:#2e7d32,stroke-width:2px
     linkStyle 18 stroke:#2e7d32,stroke-width:2px
     linkStyle 19 stroke:#2e7d32,stroke-width:2px
-    linkStyle 20 stroke:#2e7d32,stroke-width:2px
-    linkStyle 21 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (출력 22~23)
-    linkStyle 22 stroke:#1565c0,stroke-width:2px
-    linkStyle 23 stroke:#1565c0,stroke-width:2px
+    %% 연결선 스타일 (출력 20~21)
+    linkStyle 20 stroke:#1565c0,stroke-width:2px
+    linkStyle 21 stroke:#1565c0,stroke-width:2px
 
-    %% 단계 간 연결 (회색 24~28)
+    %% 단계 간 연결 (회색 22~26)
+    linkStyle 22 stroke:#616161,stroke-width:3px
+    linkStyle 23 stroke:#616161,stroke-width:3px
     linkStyle 24 stroke:#616161,stroke-width:3px
     linkStyle 25 stroke:#616161,stroke-width:3px
     linkStyle 26 stroke:#616161,stroke-width:3px
-    linkStyle 27 stroke:#616161,stroke-width:3px
-    linkStyle 28 stroke:#616161,stroke-width:3px
 ```
 
 ---
