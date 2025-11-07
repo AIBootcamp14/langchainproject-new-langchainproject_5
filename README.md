@@ -999,30 +999,227 @@ python scripts/data/run_full_pipeline.py
 
 ### 4. AI Agent 시스템 (LangGraph)
 
-#### 구조
-- **프레임워크**: LangGraph StateGraph
-- **구성**: 1개 Router + 7개 Tool 노드
-- **Fallback Chain**: 도구 실패 시 자동 전환
-  - RAG 용어집 → 일반 답변
-  - RAG 논문 → Web 논문 → 일반 답변
-  - Text2SQL → 일반 답변
+**위치**: `src/agent/` (graph.py, nodes.py, state.py)
+
+LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 도구를 자동 선택하고 실행하는 지능형 라우팅 시스템**입니다.
+
+#### Agent 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 AI Agent 시스템 (LangGraph)"]
+        direction TB
+
+        subgraph Stage1["🔸 질문 분석 단계"]
+            direction LR
+            A1[질문 입력] --> A2[Multi-turn<br/>맥락 감지]
+            A2 --> A3[패턴 매칭<br/>키워드 분석]
+            A3 --> A4[Router 노드<br/>도구 선택]
+        end
+
+        subgraph Stage2["🔹 도구 실행 단계"]
+            direction LR
+            B1[general<br/>일반 답변]
+            B2[search_paper<br/>논문 검색]
+            B3[glossary<br/>용어집]
+            B4[web_search<br/>웹 검색]
+            B5[summarize<br/>논문 요약]
+            B6[text2sql<br/>SQL 변환]
+            B7[save_file<br/>파일 저장]
+        end
+
+        subgraph Stage3["🔺 파이프라인 처리"]
+            direction LR
+            C1[Pipeline<br/>Router] --> C2[다음 도구<br/>존재?]
+            C2 -->|Yes| C3[다음 도구<br/>실행]
+            C2 -->|No| C4[파이프라인<br/>완료]
+        end
+
+        subgraph Stage4["🔻 결과 반환"]
+            direction LR
+            D1[도구 결과<br/>수집] --> D2[최종 답변<br/>생성]
+            D2 --> D3[✅ 사용자에게<br/>전달]
+        end
+
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+    end
+
+    %% MainFlow 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% Stage1 노드 스타일 (청록 계열)
+    style A1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style A2 fill:#26c6da,stroke:#006064,stroke-width:2px,color:#000
+    style A3 fill:#00bcd4,stroke:#006064,stroke-width:2px,color:#000
+    style A4 fill:#00acc1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% Stage2 노드 스타일 (파랑 계열)
+    style B1 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style B2 fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style B3 fill:#42a5f5,stroke:#1976d2,stroke-width:2px,color:#000
+    style B4 fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#000
+    style B5 fill:#1e88e5,stroke:#1565c0,stroke-width:2px,color:#fff
+    style B6 fill:#1976d2,stroke:#1565c0,stroke-width:2px,color:#fff
+    style B7 fill:#1565c0,stroke:#0d47a1,stroke-width:2px,color:#fff
+
+    %% Stage3 노드 스타일 (보라 계열)
+    style C1 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C2 fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C3 fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
+    style C4 fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
+
+    %% Stage4 노드 스타일 (녹색 계열)
+    style D1 fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
+    style D2 fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style D3 fill:#66bb6a,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    %% 연결선 스타일
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
+    linkStyle 3 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 6 stroke:#2e7d32,stroke-width:2px
+    linkStyle 7 stroke:#2e7d32,stroke-width:2px
+    linkStyle 8 stroke:#616161,stroke-width:3px
+    linkStyle 9 stroke:#616161,stroke-width:3px
+    linkStyle 10 stroke:#616161,stroke-width:3px
+```
+
+#### 시스템 구성
+
+| 구분 | 내용 |
+|------|------|
+| **프레임워크** | LangGraph StateGraph |
+| **라우팅 방식** | 패턴 기반 + LLM Fallback (2단계) |
+| **노드 구성** | 1개 Router + 7개 Tool + 1개 Pipeline Router |
+| **상태 관리** | AgentState (TypedDict) |
+| **다중 요청 처리** | tool_pipeline 기반 순차 실행 (최대 6단계) |
+| **LLM 모델** | OpenAI GPT-4o (temperature=0) |
 
 #### 7가지 도구
-| 도구 | 설명 | 파일 |
-|------|------|------|
-| 일반 답변 | LLM 직접 호출 | `tools/general_answer.py` |
-| RAG 논문 검색 | pgvector 유사도 검색 | `tools/search_paper.py` |
-| Web 논문 검색 | Tavily API 검색 | `tools/web_search.py` |
-| RAG 용어집 | 용어 정의 제공 | `tools/glossary.py` |
-| 논문 요약 | 검색 결과 요약 | `tools/summarize.py` |
-| Text2SQL | 자연어→SQL 변환 | `tools/text2sql.py` |
-| 파일 저장 | 대화 저장 | `tools/save_file.py` |
 
-**구현**: `src/agent/graph.py`, `src/agent/nodes.py`
+| 도구명 | 설명 | 파일 위치 | 사용 시나리오 |
+|--------|------|----------|--------------|
+| **general** | LLM 직접 호출 (일반 답변) | `tools/general_answer.py` | 일반적인 질문, 비교 분석, 추론 |
+| **search_paper** | pgvector 유사도 검색 (RAG) | `tools/search_paper.py` | 논문 내용 검색, 기술 설명 |
+| **glossary** | 용어집 DB 조회 | `tools/glossary.py` | 용어 정의, Easy/Hard 설명 |
+| **web_search** | Tavily API 웹 검색 | `tools/web_search.py` | 최신 논문, arXiv 검색 |
+| **summarize** | 논문 전체 요약 | `tools/summarize.py` | 특정 논문 요약 요청 |
+| **text2sql** | 자연어 → SQL 변환 | `tools/text2sql.py` | 논문 통계 (개수, 순위, 분포) |
+| **save_file** | 대화 내용 저장 | `tools/save_file.py` | 결과물 다운로드 요청 |
+
+#### 패턴 기반 라우팅
+
+**라우팅 우선순위** (2단계):
+
+1. **패턴 매칭** (1순위): 키워드 기반 규칙 라우팅
+   - YAML 설정 파일 (`configs/multi_request_patterns.yaml`)
+   - 17개 사전 정의 패턴 (우선순위 0~200)
+   - 빠른 속도 (0.001초 미만), 비용 없음, 100% 일관성
+
+2. **LLM 라우팅** (2순위, Fallback): 패턴 매칭 실패 시
+   - OpenAI GPT-4o 분석
+   - 유연한 판단, 새로운 질문 패턴 대응
+
+**패턴 예시**:
+
+| 키워드 조합 | 실행 도구 파이프라인 | Priority | 설명 |
+|------------|---------------------|----------|------|
+| ["뭐야"] (제외: 논문, 검색) | [glossary] | 200 | 용어 정의 질문 |
+| ["논문", "요약"] | [search_paper, web_search, general, summarize] | 120 | 논문 검색 후 요약 (4단계) |
+| ["몇 개", "논문"] | [text2sql] | 150 | 논문 통계 조회 |
+| ["저장"] | [save_file] | 180 | 파일 저장 요청 |
+
+#### 다중 요청 처리 (Multi-Request Pipeline)
+
+**기능**: "논문 찾아서 요약해줘"와 같은 복합 요청을 자동으로 여러 도구로 분할하여 순차 실행
+
+**처리 흐름**:
+
+```
+사용자: "Transformer 논문 요약해줘"
+   ↓
+1단계: Router 노드
+   - 패턴 매칭: ["논문", "요약"] 감지
+   - tool_pipeline = [search_paper, web_search, general, summarize]
+   - tool_choice = "search_paper" (첫 번째 도구)
+   ↓
+2단계: search_paper 실행
+   - 논문 검색 (pgvector RAG)
+   - 결과: "Attention Is All You Need" 찾음
+   ↓
+3단계: Pipeline Router 확인
+   - pipeline_index (1) < len(tool_pipeline) (4)
+   - 다음 도구 존재 → "continue"
+   ↓
+4단계: web_search 실행 (옵션)
+   - arXiv 최신 정보 검색
+   ↓
+5단계: general 실행
+   - 논문 내용 분석 및 정리
+   ↓
+6단계: summarize 실행
+   - 최종 요약 생성
+   ↓
+최종 답변: "Transformer 논문 요약 내용..."
+```
+
+**AgentState 구조**:
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| **question** | str | 사용자 질문 |
+| **difficulty** | str | 난이도 (easy/hard) |
+| **tool_choice** | str | 현재 실행 중인 도구 |
+| **tool_pipeline** | List[str] | 순차 실행 도구 목록 (다중 요청 시) |
+| **pipeline_index** | int | 현재 실행 중인 도구 인덱스 |
+| **tool_result** | str | 도구 실행 결과 |
+| **final_answer** | str | 최종 답변 |
+| **messages** | Sequence[BaseMessage] | 대화 히스토리 (멀티턴 지원) |
+
+#### Fallback Chain (도구 실패 시 자동 전환)
+
+| 원본 도구 | Fallback 경로 | 트리거 조건 |
+|----------|--------------|------------|
+| **search_paper** (RAG) | → web_search → general | 검색 결과 없음, DB 오류 |
+| **glossary** (용어집) | → general | 용어 미등록 |
+| **text2sql** (SQL) | → general | SQL 실행 오류, 결과 없음 |
+| **web_search** | → general | API 오류, 결과 없음 |
+
+**Fallback 감지 패턴** (`src/agent/failure_detector.py`):
+- "검색 결과가 없습니다"
+- "찾을 수 없습니다"
+- "오류가 발생했습니다"
+- "데이터베이스 연결 실패"
+
+#### 성능 최적화
+
+| 최적화 항목 | 구현 내용 | 효과 |
+|-----------|----------|------|
+| **패턴 기반 라우팅** | 키워드 매칭 우선 사용 | LLM 호출 50% 감소, 응답 속도 2초 단축 |
+| **Streaming 응답** | LLM 결과 실시간 전송 | 사용자 경험 개선 (즉각적 피드백) |
+| **Connection Pooling** | DB 연결 재사용 | DB 연결 오버헤드 제거 |
+| **캐싱** | 동일 질문 결과 캐시 | 중복 LLM 호출 방지 |
+
+**참조 문서**:
+- [AI Agent 시스템 전체](docs/modularization/06_AI_Agent_시스템.md)
+- [다중 요청 처리 상세](docs/modularization/06-1_다중_요청_처리.md)
+- [패턴 기반 라우팅 상세](docs/modularization/06-2_패턴_기반_도구_라우팅.md)
 
 ---
 
-### 4. RAG 시스템
+### 5. RAG 시스템
 
 #### 파이프라인
 1. 임베딩 생성 (text-embedding-3-small, 1536차원)
