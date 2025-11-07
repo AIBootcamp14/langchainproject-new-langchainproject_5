@@ -455,26 +455,549 @@ experiments/
 
 ### 2. 데이터베이스 시스템 (PostgreSQL + pgvector)
 
-#### 구성
-- **RDBMS**: PostgreSQL 15+
-- **벡터 검색**: pgvector 0.3.6 (IVFFlat 인덱스)
-- **Connection Pool**: 최소 1개, 최대 10개 연결
+**위치**: `src/database/`, `database/schema.sql`, `configs/db_config.yaml`
 
-#### 주요 테이블
-- `papers`: 논문 메타데이터 (title, authors, abstract, url)
-- `glossary`: 용어집 (term, definition, easy/hard_explanation)
-- `query_logs`: 사용자 질의 로그
-- `evaluation_results`: 평가 결과
+하나의 데이터베이스에서 **관계형 데이터**와 **벡터 데이터**를 모두 처리하는 통합 솔루션입니다.
 
-#### pgvector 컬렉션
-- `paper_chunks`: 논문 본문 임베딩 (1536차원)
-- `glossary_embeddings`: 용어집 임베딩
+#### 시스템 구성
 
-**구현**: `src/database/`, `database/schema.sql`
+| 구분 | 내용 |
+|------|------|
+| **RDBMS** | PostgreSQL 15.5+ |
+| **벡터 검색** | pgvector 0.5.0+ (IVFFlat 인덱스) |
+| **Connection Pool** | psycopg2.pool (min=1, max=10) |
+| **데이터베이스명** | papers |
+| **사용자** | langchain / dusrufdmlalswhr |
+| **호스트** | localhost:5432 |
+| **임베딩 모델** | OpenAI text-embedding-3-small (1536차원) |
+
+#### PostgreSQL + pgvector 선택 이유
+
+**통합 관리의 장점**:
+- ✅ **단일 DB 관리**: 관계형 + 벡터 데이터를 하나의 DB에서 처리
+- ✅ **비용 효율**: 무료 오픈소스 (Pinecone 등 유료 서비스 불필요)
+- ✅ **트랜잭션 일관성**: ACID 보장, 조인 가능
+- ✅ **Text-to-SQL 지원**: 표준 SQL 사용 가능
+- ✅ **Langchain 통합**: PGVector 네이티브 지원
+- ✅ **검증된 안정성**: 20년+ 프로덕션 검증
+
+**대안 비교** (MySQL + Pinecone, Weaviate, Chroma):
+- MySQL: 벡터 검색 미지원 → 별도 Vector DB 필요 (관리 복잡도 증가)
+- Pinecone: 유료 서비스, 메타데이터만 저장 가능, Text-to-SQL 불가
+- Weaviate: 자체 호스팅 복잡, 관계형 데이터 제한적, SQL 불가
+- Chroma: 메모리 기반, 프로덕션 부적합, 관계형 데이터 불가
+
+#### 전체 테이블 구조
+
+```
+papers DB (PostgreSQL 15+)
+│
+├── 📁 RDBMS 테이블 (수동 생성, 4개)
+│   ├── papers (논문 메타데이터)
+│   ├── glossary (용어집)
+│   ├── query_logs (사용자 질의 로그)
+│   └── evaluation_results (성능 평가 결과)
+│
+└── 📁 VectorDB 테이블 (LangChain 자동 생성, 2개)
+    ├── langchain_pg_collection (벡터 컬렉션 메타데이터)
+    └── langchain_pg_embedding (벡터 임베딩 데이터)
+```
+
+**RDBMS vs VectorDB 구분**:
+
+| 구분 | 테이블 | 생성 방식 | 관리 주체 | 용도 |
+|------|--------|-----------|-----------|------|
+| **RDBMS** | papers, glossary, query_logs, evaluation_results | `database/schema.sql` 수동 실행 | 개발자 | 논문 메타데이터, 용어집, 로그, 평가 저장 |
+| **VectorDB** | langchain_pg_collection, langchain_pg_embedding | LangChain PGVector 자동 생성 | LangChain 라이브러리 | 벡터 임베딩 저장 및 유사도 검색 |
+
+#### 🗄️ 데이터베이스 설계
+
+**데이터베이스 관계도 (ERD)**
+
+```mermaid
+classDiagram
+    %% RDBMS 테이블 (4개)
+    class papers {
+        <<RDBMS 테이블>>
+        +SERIAL paper_id PK : 논문 고유 ID
+        +VARCHAR(500) title : 논문 제목
+        +TEXT authors : 저자 목록
+        +DATE publish_date : 발표 날짜
+        +VARCHAR(100) source : 출처 (arXiv, IEEE, ACL)
+        +TEXT url UK : 논문 URL (중복 방지)
+        +VARCHAR(100) category : 카테고리 (cs.AI, cs.CL, cs.CV)
+        +INT citation_count : 인용 수
+        +TEXT abstract : 논문 초록
+        +TIMESTAMP created_at : 생성 시간
+        +TIMESTAMP updated_at : 수정 시간
+    }
+
+    class glossary {
+        <<RDBMS 테이블>>
+        +SERIAL term_id PK : 용어 고유 ID
+        +VARCHAR(200) term UK : 용어 (예: BERT, Attention)
+        +TEXT definition : 기본 정의
+        +TEXT easy_explanation : Easy 모드 설명 (초심자용)
+        +TEXT hard_explanation : Hard 모드 설명 (전문가용)
+        +VARCHAR(100) category : 카테고리 (ML, NLP, CV, RL)
+        +VARCHAR(20) difficulty_level : 난이도 (beginner, intermediate, advanced)
+        +TEXT[] related_terms : 관련 용어 배열
+        +TEXT examples : 사용 예시
+        +TIMESTAMP created_at : 생성 시간
+        +TIMESTAMP updated_at : 수정 시간
+    }
+
+    class query_logs {
+        <<RDBMS 테이블>>
+        +SERIAL log_id PK : 로그 고유 ID
+        +TEXT user_query : 사용자 질문
+        +VARCHAR(20) difficulty_mode : 난이도 모드 (easy, hard)
+        +VARCHAR(50) tool_used : 사용된 도구명
+        +TEXT response : 생성된 응답
+        +INT response_time_ms : 응답 시간 (밀리초)
+        +BOOLEAN success : 성공 여부
+        +TEXT error_message : 오류 메시지 (실패 시)
+        +TIMESTAMP created_at : 생성 시간
+    }
+
+    class evaluation_results {
+        <<RDBMS 테이블>>
+        +SERIAL eval_id PK : 평가 고유 ID
+        +TEXT question : 사용자 질문
+        +TEXT answer : AI 답변
+        +INT accuracy_score : 정확도 점수 (0-10)
+        +INT relevance_score : 관련성 점수 (0-10)
+        +INT difficulty_score : 난이도 적합성 점수 (0-10)
+        +INT citation_score : 출처 명시 점수 (0-10)
+        +INT total_score : 총점 (0-40)
+        +TEXT comment : 평가 코멘트
+        +TIMESTAMP created_at : 생성 시간
+    }
+
+    %% VectorDB 테이블 (LangChain 자동 생성, 2개)
+    class langchain_pg_collection {
+        <<VectorDB 테이블>>
+        +UUID uuid PK : 컬렉션 고유 ID
+        +VARCHAR name : 컬렉션 이름 (예: paper_chunks)
+        +JSONB cmetadata : 컬렉션 메타데이터
+    }
+
+    class langchain_pg_embedding {
+        <<VectorDB 테이블>>
+        +UUID uuid PK : 임베딩 고유 ID
+        +UUID collection_id FK : 컬렉션 ID
+        +vector(1536) embedding : 벡터 임베딩 (1536차원)
+        +TEXT document : 원본 텍스트 (청크 내용)
+        +JSONB cmetadata : 메타데이터 (paper_id, chunk_index 등)
+    }
+
+    %% 관계
+    langchain_pg_collection "1" -- "N" langchain_pg_embedding
+    papers "1" .. "N" langchain_pg_embedding
+
+    %% 스타일
+    style papers fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style glossary fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style query_logs fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style evaluation_results fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style langchain_pg_collection fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style langchain_pg_embedding fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+```
+
+**RDBMS vs VectorDB 구분**:
+
+| 구분 | 테이블 | 생성 방식 | 관리 주체 | 용도 |
+|------|--------|-----------|-----------|------|
+| **RDBMS** | papers, glossary, query_logs, evaluation_results | `database/schema.sql` 수동 실행 | 개발자 | 논문 메타데이터, 용어집, 로그, 평가 결과 저장 |
+| **VectorDB** | langchain_pg_collection, langchain_pg_embedding | LangChain PGVector 자동 생성 | LangChain 라이브러리 | 벡터 임베딩 저장 및 유사도 검색 |
+
+**관계 및 연결**:
+
+| 관계 | 타입 | 연결 방식 | 설명 |
+|------|------|-----------|------|
+| **langchain_pg_collection ← langchain_pg_embedding** | 1:N (실선) | 외래키 (FK) | `langchain_pg_embedding.collection_id` → `langchain_pg_collection.uuid`<br/>하나의 컬렉션이 여러 임베딩 벡터를 포함 |
+| **papers ↔ langchain_pg_embedding** | 논리적 조인 (점선) | JSONB 조인 | `langchain_pg_embedding.cmetadata->>'paper_id'` = `papers.paper_id`<br/>논문 메타데이터와 벡터 임베딩 연결 (검색 시 사용) |
+| **query_logs** | 독립 테이블 | - | 사용자 질의 로그 독립 저장 (FK 관계 없음) |
+| **evaluation_results** | 독립 테이블 | - | 성능 평가 결과 독립 저장 (FK 관계 없음) |
+| **glossary** | 독립 테이블 | - | 용어집 독립 저장 (FK 관계 없음) |
+
+**연결 상세 설명**:
+
+1. **Collection ← Embedding (1:N 관계)**
+   - **연결 방식**: `collection_id` 외래키로 직접 연결
+   - **무결성**: `ON DELETE CASCADE` (컬렉션 삭제 시 임베딩 자동 삭제)
+   - **용도**: 벡터 컬렉션별 임베딩 그룹화 (예: paper_chunks, glossary_chunks)
+
+2. **Papers ↔ Embedding (논리적 조인)**
+   - **연결 방식**: JSONB `cmetadata` 필드를 통한 논리적 조인
+   - **조인 쿼리 예시**:
+     ```sql
+     SELECT p.title, e.document, e.embedding
+     FROM papers p
+     JOIN langchain_pg_embedding e
+       ON p.paper_id = (e.cmetadata->>'paper_id')::INT
+     WHERE p.category = 'cs.AI';
+     ```
+   - **용도**: 검색 결과에 논문 메타데이터 추가 (제목, 저자, 출처 등)
+
+3. **독립 테이블**
+   - **query_logs**: 사용자 질의 및 응답 이력 추적 (통계 분석용)
+   - **evaluation_results**: 챗봇 성능 평가 결과 저장 (품질 관리용)
+   - **glossary**: 용어 정의 및 난이도별 설명 저장 (독립적 RAG 검색용)
+
+**VectorDB 자동 생성 메커니즘**:
+- **시점**: `PGVector.from_documents()` 또는 `add_documents()` 최초 호출 시
+- **방식**: LangChain이 내부적으로 `CREATE TABLE IF NOT EXISTS` 실행
+- **특징**: 개발자가 직접 테이블 생성 불필요, IVFFlat 인덱스 자동 생성
+
+#### 테이블 상세 스키마
+
+**1. papers 테이블 (논문 메타데이터)**
+
+용도: 논문 메타데이터 저장 및 관리
+
+| 컬럼명 | 타입 | 제약조건 | 설명 |
+|--------|------|----------|------|
+| **paper_id** | SERIAL | PRIMARY KEY | 논문 고유 ID (자동 증가) |
+| **title** | VARCHAR(500) | NOT NULL | 논문 제목 |
+| **authors** | TEXT | - | 저자 목록 (쉼표 구분) |
+| **publish_date** | DATE | - | 발표 날짜 (YYYY-MM-DD) |
+| **source** | VARCHAR(100) | - | 출처 (arXiv, IEEE, ACL 등) |
+| **url** | TEXT | UNIQUE | 논문 URL (중복 방지) |
+| **category** | VARCHAR(100) | - | 카테고리 (cs.AI, cs.CL, cs.CV) |
+| **citation_count** | INT | DEFAULT 0 | 인용 수 |
+| **abstract** | TEXT | - | 논문 초록 |
+| **created_at** | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 생성 시간 |
+| **updated_at** | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 수정 시간 |
+
+주요 인덱스:
+- `idx_papers_title`: GIN 인덱스 (Full-text search) - `to_tsvector('english', title)`
+- `idx_papers_category`: B-tree 인덱스 (카테고리 필터)
+- `idx_papers_publish_date`: B-tree 인덱스 (발표 날짜 정렬, DESC)
+- `idx_papers_created_at`: B-tree 인덱스 (생성 시간 정렬, DESC)
+
+사용 도구: search_paper, summarize, web_search, text2sql
+
+**2. glossary 테이블 (용어집)**
+
+용도: AI/ML 용어 정의 및 난이도별 설명 저장
+
+| 컬럼명 | 타입 | 제약조건 | 설명 |
+|--------|------|----------|------|
+| **term_id** | SERIAL | PRIMARY KEY | 용어 고유 ID |
+| **term** | VARCHAR(200) | NOT NULL, UNIQUE | 용어 (예: "BERT", "Attention") |
+| **definition** | TEXT | NOT NULL | 기본 정의 |
+| **easy_explanation** | TEXT | - | Easy 모드 설명 (초심자용, 비유/예시 중심) |
+| **hard_explanation** | TEXT | - | Hard 모드 설명 (전문가용, 기술적 상세) |
+| **category** | VARCHAR(100) | - | 카테고리 (ML, NLP, CV, RL 등) |
+| **difficulty_level** | VARCHAR(20) | - | 난이도 (beginner, intermediate, advanced) |
+| **related_terms** | TEXT[] | - | 관련 용어 배열 |
+| **examples** | TEXT | - | 사용 예시 |
+| **created_at** | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 생성 시간 |
+| **updated_at** | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 수정 시간 |
+
+주요 인덱스:
+- `idx_glossary_term`: B-tree 인덱스 (용어 검색) - `term` 컬럼
+- `idx_glossary_category`: B-tree 인덱스 (카테고리 필터) - `category` 컬럼
+- `idx_glossary_difficulty`: B-tree 인덱스 (난이도 필터) - `difficulty_level` 컬럼
+
+사용 도구: glossary
+
+**3. query_logs 테이블 (사용자 질의 로그)**
+
+용도: 사용자 질문 및 시스템 응답 로깅 (성능 분석, 사용 패턴 파악)
+
+| 컬럼명 | 타입 | 제약조건 | 설명 |
+|--------|------|----------|------|
+| **log_id** | SERIAL | PRIMARY KEY | 로그 고유 ID |
+| **user_query** | TEXT | NOT NULL | 사용자 질문 |
+| **difficulty_mode** | VARCHAR(20) | - | 난이도 모드 (easy, hard) |
+| **tool_used** | VARCHAR(50) | - | 사용된 도구명 (search_paper, glossary 등) |
+| **response** | TEXT | - | 생성된 응답 |
+| **response_time_ms** | INT | - | 응답 시간 (밀리초) |
+| **success** | BOOLEAN | DEFAULT TRUE | 성공 여부 |
+| **error_message** | TEXT | - | 오류 메시지 (실패 시) |
+| **created_at** | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 생성 시간 |
+
+주요 인덱스:
+- `idx_query_logs_created_at`: B-tree 인덱스 (시간 기반 조회, DESC) - `created_at` 컬럼
+- `idx_query_logs_tool_used`: B-tree 인덱스 (도구별 필터) - `tool_used` 컬럼
+- `idx_query_logs_success`: B-tree 인덱스 (성공/실패 필터) - `success` 컬럼
+
+사용 도구: text2sql (로그 저장)
+
+**4. evaluation_results 테이블 (성능 평가 결과)**
+
+용도: LLM-as-a-Judge 방식 평가 결과 저장
+
+| 컬럼명 | 타입 | 제약조건 | 설명 |
+|--------|------|----------|------|
+| **eval_id** | SERIAL | PRIMARY KEY | 평가 고유 ID |
+| **question** | TEXT | NOT NULL | 사용자 질문 |
+| **answer** | TEXT | NOT NULL | AI 답변 |
+| **accuracy_score** | INT | CHECK (0~10) | 정확도 점수 (참고 문서 일치도) |
+| **relevance_score** | INT | CHECK (0~10) | 관련성 점수 (질문-답변 연관성) |
+| **difficulty_score** | INT | CHECK (0~10) | 난이도 적합성 점수 (Easy/Hard 모드) |
+| **citation_score** | INT | CHECK (0~10) | 출처 명시 점수 (논문 제목, 저자) |
+| **total_score** | INT | CHECK (0~40) | 총점 (4개 항목 합계) |
+| **comment** | TEXT | - | 평가 코멘트 (상세 피드백) |
+| **created_at** | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | 생성 시간 |
+
+주요 인덱스:
+- `idx_evaluation_results_created_at`: B-tree 인덱스 (시간 기반 조회, DESC) - `created_at` 컬럼
+- `idx_evaluation_results_total_score`: B-tree 인덱스 (성능 순위, DESC) - `total_score` 컬럼
+
+사용 시스템: 평가 시스템 (`src/evaluation/evaluator.py`)
+
+**5. langchain_pg_collection 테이블 (VectorDB 컬렉션 메타데이터)**
+
+용도: 벡터 컬렉션 메타데이터 관리 (LangChain 자동 생성)
+
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| **uuid** | UUID | 컬렉션 고유 ID (자동 생성) |
+| **name** | VARCHAR | 컬렉션 이름 (예: "paper_chunks") |
+| **cmetadata** | JSONB | 컬렉션 메타데이터 (선택적) |
+
+자동 생성 시점: `PGVector(collection_name="paper_chunks", ...)` 초기화 시
+
+**6. langchain_pg_embedding 테이블 (VectorDB 벡터 데이터)**
+
+용도: 벡터 임베딩 데이터 및 유사도 검색 (LangChain 자동 생성)
+
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| **uuid** | UUID | 임베딩 고유 ID (자동 생성) |
+| **collection_id** | UUID | 컬렉션 ID (FK → langchain_pg_collection.uuid) |
+| **embedding** | vector(1536) | 벡터 임베딩 (1536차원, OpenAI text-embedding-3-small) |
+| **document** | TEXT | 원본 텍스트 (청크 내용) |
+| **cmetadata** | JSONB | 메타데이터 (paper_id, chunk_index, title 등) |
+
+주요 인덱스:
+- IVFFlat 인덱스 (코사인 유사도, `vector_cosine_ops`)
+
+메타데이터 예시:
+```json
+{
+  "paper_id": 123,
+  "chunk_index": 0,
+  "title": "Attention Is All You Need",
+  "source": "arXiv"
+}
+```
+
+사용 도구: search_paper, summarize, web_search (RAG 검색)
+
+#### 도구별 DB 사용 현황
+
+| 도구 | 사용 테이블 | 쿼리 수 | 주요 작업 |
+|------|-------------|---------|-----------|
+| **search_paper** | langchain_pg_embedding, papers | 1~2회 | 벡터 유사도 검색 + 메타데이터 조회 |
+| **glossary** | glossary | 1회 | 용어 검색 및 난이도별 설명 반환 |
+| **summarize** | papers, langchain_pg_embedding | 2회 | 제목으로 paper_id 검색 + 전체 청크 조회 |
+| **text2sql** | papers, query_logs | 2회 | SQL 쿼리 실행 + 로그 저장 |
+| **web_search** | papers, langchain_pg_embedding | 2회 | arXiv 논문 저장 + 임베딩 저장 |
+| **평가 시스템** | evaluation_results | 1회 | 평가 결과 저장 |
+
+#### 성능 최적화 전략
+
+**Connection Pool**:
+- 최소 1개, 최대 10개 연결 유지
+- 연결 재사용으로 오버헤드 제거
+- 동시 요청 처리 지원
+
+**인덱스 최적화**:
+- **IVFFlat 인덱스**: 벡터 유사도 검색 (O(log n))
+- **GIN 인덱스**: Full-text search (제목 검색)
+- **B-tree 인덱스**: 필터링 및 정렬 (카테고리, 날짜)
+
+**쿼리 최적화**:
+- Prepared statements (SQL 인젝션 방지)
+- EXPLAIN ANALYZE로 실행 계획 확인
+- 적절한 LIMIT 사용으로 결과 제한
+
+**참조 문서**:
+- [데이터베이스 설계 PRD](docs/PRD/11_데이터베이스_설계.md)
+- [데이터베이스 시스템 모듈화 문서](docs/modularization/05_데이터베이스_시스템.md)
+- [데이터베이스 설치 가이드](docs/usage/데이터베이스_설치_및_설정_가이드.md)
 
 ---
 
-### 3. AI Agent 시스템 (LangGraph)
+### 3. 논문 데이터 수집 파이프라인
+
+**위치**: `scripts/data/`, `src/data/`
+
+arXiv API를 통해 AI/ML 논문을 자동 수집하고, PDF를 Langchain Document로 변환하여 PostgreSQL + pgvector에 저장하는 전체 파이프라인입니다.
+
+#### 파이프라인 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 논문 데이터 수집 파이프라인"]
+        direction TB
+
+        subgraph Stage1["🔸 1단계: 논문 수집"]
+            direction LR
+            A1[arXiv API<br/>키워드 검색] --> A2[메타데이터<br/>추출]
+            A2 --> A3[PDF<br/>다운로드]
+            A3 --> A4[중복 제거<br/>제목 기준]
+        end
+
+        subgraph Stage2["🔹 2단계: 문서 처리"]
+            direction LR
+            B1[PyPDFLoader<br/>PDF 로드] --> B2[TextSplitter<br/>청크 분할]
+            B2 --> B3[chunk_index<br/>메타데이터 추가]
+            B3 --> B4[중복 청크<br/>제거]
+        end
+
+        subgraph Stage3["🔺 3단계: 임베딩 생성"]
+            direction LR
+            C1[OpenAI<br/>Embeddings] --> C2[배치 처리<br/>50개 단위]
+            C2 --> C3[vector 1536<br/>차원 생성]
+        end
+
+        subgraph Stage4["🔻 4단계: DB 저장"]
+            direction LR
+            D1[PostgreSQL<br/>메타데이터] --> D2[pgvector<br/>임베딩]
+            D2 --> D3[paper_id<br/>매핑 생성]
+            D3 --> D4[✅ 완료]
+        end
+
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+    end
+
+    %% MainFlow 스타일 (노란색 배경)
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% Stage1 노드 스타일 (청록 계열)
+    style A1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style A2 fill:#26c6da,stroke:#006064,stroke-width:2px,color:#000
+    style A3 fill:#00bcd4,stroke:#006064,stroke-width:2px,color:#000
+    style A4 fill:#00acc1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% Stage2 노드 스타일 (파랑 계열)
+    style B1 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style B2 fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style B3 fill:#42a5f5,stroke:#1976d2,stroke-width:2px,color:#000
+    style B4 fill:#2196f3,stroke:#1565c0,stroke-width:2px,color:#000
+
+    %% Stage3 노드 스타일 (보라 계열)
+    style C1 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C2 fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C3 fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
+
+    %% Stage4 노드 스타일 (녹색 계열)
+    style D1 fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
+    style D2 fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style D3 fill:#66bb6a,stroke:#2e7d32,stroke-width:2px,color:#fff
+    style D4 fill:#4caf50,stroke:#2e7d32,stroke-width:2px,color:#fff
+
+    %% 연결선 스타일
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
+    linkStyle 3 stroke:#1976d2,stroke-width:2px
+    linkStyle 4 stroke:#1976d2,stroke-width:2px
+    linkStyle 5 stroke:#1976d2,stroke-width:2px
+    linkStyle 6 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 8 stroke:#2e7d32,stroke-width:2px
+    linkStyle 9 stroke:#2e7d32,stroke-width:2px
+    linkStyle 10 stroke:#2e7d32,stroke-width:2px
+    linkStyle 11 stroke:#616161,stroke-width:3px
+    linkStyle 12 stroke:#616161,stroke-width:3px
+    linkStyle 13 stroke:#616161,stroke-width:3px
+```
+
+#### 파이프라인 구성 요소
+
+| 단계 | 컴포넌트 | 파일 위치 | 주요 기능 |
+|------|----------|----------|-----------|
+| **1. 논문 수집** | ArxivPaperCollector | `scripts/collect_arxiv_papers.py` | arXiv API 검색, PDF 다운로드, 메타데이터 수집, 중복 제거 |
+| **2. 문서 처리** | PaperDocumentLoader | `src/data/document_loader.py` | PyPDFLoader로 PDF 로드, RecursiveCharacterTextSplitter로 청크 분할 (size=1000, overlap=200) |
+| **3. 임베딩 생성** | PaperEmbeddingManager | `src/data/embeddings.py` | OpenAI text-embedding-3-small (1536차원), 배치 처리 (50개 단위) |
+| **4. DB 저장** | DatabaseManager | `scripts/setup_database.py` | PostgreSQL 메타데이터 저장, pgvector 임베딩 저장, paper_id 매핑 생성 |
+
+#### 핵심 설정
+
+**문서 청킹 (RecursiveCharacterTextSplitter)**:
+
+| 설정 | 값 | 설명 |
+|------|-----|------|
+| **chunk_size** | 1000 | 각 청크의 최대 문자 수 |
+| **chunk_overlap** | 200 | 청크 간 중복 문자 수 (맥락 유지) |
+| **separators** | `["\n\n", "\n", ". ", " ", ""]` | 분할 우선순위 (문단 → 줄 → 문장 → 단어) |
+
+**임베딩 모델**:
+
+| 항목 | 값 |
+|------|-----|
+| **모델** | OpenAI text-embedding-3-small |
+| **차원** | 1536 |
+| **배치 크기** | 50개 (API 속도 제한 대응) |
+
+#### 데이터 품질 관리
+
+**중복 제거 전략**:
+
+1. **논문 레벨**: 제목 기준 중복 제거 (대소문자 정규화)
+2. **청크 레벨**: 내용 해시 기반 중복 청크 필터링
+3. **메타데이터 무결성**: chunk_index 자동 부여 (0부터 순차)
+
+**품질 이슈 해결** (Issue #03-3 참조):
+- ✅ 저작권 페이지 필터링 (의미 없는 메타데이터 제외)
+- ✅ 중복 청크 제거 (동일 내용 hash 비교)
+- ✅ chunk_index 메타데이터 누락 수정
+
+#### 수집 현황
+
+| 항목 | 값 |
+|------|-----|
+| **수집 논문 수** | 100편+ (AI/ML 분야) |
+| **키워드** | Transformer, BERT, GPT, Attention Mechanism, Fine-tuning, NLP, Computer Vision |
+| **총 청크 수** | ~15,000개 (논문당 평균 150개) |
+| **저장 위치** | PostgreSQL papers 테이블, pgvector paper_chunks 컬렉션 |
+
+#### 실행 방법
+
+**전체 파이프라인 실행**:
+```bash
+# 1단계: 논문 수집 (arXiv API)
+python scripts/collect_arxiv_papers.py
+
+# 2단계: 데이터베이스 스키마 생성 및 메타데이터 저장
+python scripts/setup_database.py
+
+# 3단계: 문서 처리 및 청크 분할
+python scripts/data/process_documents.py
+
+# 4단계: 임베딩 생성 및 pgvector 저장
+python scripts/data/load_embeddings.py
+
+# 또는 전체 파이프라인 자동 실행
+python scripts/data/run_full_pipeline.py
+```
+
+**참조 문서**:
+- [논문 데이터 수집 가이드](docs/roles/03_박재홍_논문데이터수집.md)
+- [논문 데이터 수집 및 DB 구축](docs/issues/03_논문데이터_수집_및_DB_구축.md)
+- [데이터 파이프라인 구현](docs/issues/03-1_data_pipeline_implementation.md)
+- [데이터 파이프라인 완료 보고서](docs/issues/03-2_data_pipeline_completion_report.md)
+- [데이터 파이프라인 청크 중복 문제 해결](docs/issues/03-3_데이터_파이프라인_청크_중복_문제.md)
+- [데이터베이스 설치 가이드](docs/usage/데이터베이스_설치_및_설정_가이드.md)
+
+---
+
+### 4. AI Agent 시스템 (LangGraph)
 
 #### 구조
 - **프레임워크**: LangGraph StateGraph
@@ -659,119 +1182,6 @@ python scripts/tests/unit/test_db_connection.py
 ```bash
 python main.py
 ```
-
----
-
-## 🗄️ 데이터베이스 설계
-
-### ERD (Entity Relationship Diagram)
-
-```mermaid
-erDiagram
-    papers ||--o{ query_logs : references
-    papers ||--o{ evaluation_results : analyzes
-    papers {
-        int paper_id PK
-        varchar title
-        text authors
-        date publish_date
-        varchar source
-        text url UK
-        varchar category
-        int citation_count
-        text abstract
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    glossary {
-        int term_id PK
-        varchar term UK
-        text definition
-        text easy_explanation
-        text hard_explanation
-        varchar category
-        varchar difficulty_level
-        text_array related_terms
-        text examples
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    query_logs {
-        int log_id PK
-        text user_query
-        varchar difficulty_mode
-        varchar tool_used
-        text response
-        int response_time_ms
-        boolean success
-        text error_message
-        timestamp created_at
-    }
-
-    evaluation_results {
-        int eval_id PK
-        text question
-        text answer
-        int accuracy_score
-        int relevance_score
-        int difficulty_score
-        int citation_score
-        int total_score
-        text comment
-        timestamp created_at
-    }
-```
-
-### 테이블 상세 설명
-
-#### papers 테이블
-- **용도**: 논문 메타데이터 저장
-- **주요 인덱스**:
-  - `idx_papers_title`: 제목 전문 검색 (GIN 인덱스)
-  - `idx_papers_category`: 카테고리별 조회
-  - `idx_papers_publish_date`: 발표일 기준 정렬
-- **특징**: url 필드 UNIQUE 제약으로 중복 논문 방지
-
-#### glossary 테이블
-- **용도**: AI/ML 용어집 저장
-- **난이도별 설명**:
-  - `easy_explanation`: 초심자용 (비유/예시 중심)
-  - `hard_explanation`: 전문가용 (기술적 상세)
-- **주요 인덱스**:
-  - `idx_glossary_term`: 용어명 검색
-  - `idx_glossary_category`: 카테고리별 분류
-
-#### query_logs 테이블
-- **용도**: 사용자 질의 및 시스템 응답 로깅
-- **추적 정보**:
-  - 사용된 도구 (tool_used)
-  - 응답 시간 (response_time_ms)
-  - 성공/실패 여부
-- **활용**: 성능 분석, 사용 패턴 파악
-
-#### evaluation_results 테이블
-- **용도**: LLM-as-a-Judge 평가 결과 저장
-- **평가 항목** (각 10점, 총 40점):
-  - 정확도 (accuracy_score)
-  - 관련성 (relevance_score)
-  - 난이도 적합성 (difficulty_score)
-  - 출처 명시 (citation_score)
-
-### pgvector 컬렉션
-
-#### paper_chunks
-- **용도**: 논문 본문 청크 벡터 임베딩
-- **차원**: 1536 (text-embedding-3-small)
-- **인덱스**: IVFFlat (빠른 유사도 검색)
-
-#### glossary_embeddings
-- **용도**: 용어집 임베딩
-- **검색 방식**: 코사인 유사도
-
----
-
 ## ⚡ 성능 최적화
 
 ### 데이터베이스 최적화
