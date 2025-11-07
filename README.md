@@ -1005,7 +1005,135 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 
 #### Agent 아키텍처
 
+```mermaid
+graph TB
+    subgraph MainFlow["📋 AI Agent 실행 워크플로우 (LangGraph StateGraph)"]
+        direction TB
 
+        subgraph Stage1["🔸 1단계: Agent 실행 (라우터 + 7개 도구)"]
+            direction LR
+            A[라우터<br/>최종 도구 확정] --> B{도구<br/>선택}
+            B -->|일반| C[일반 답변]
+            B -->|RAG 논문| D[RAG 논문 검색]
+            B -->|Web 논문| E[Web 논문 검색]
+            B -->|RAG 용어| F[RAG 용어집 검색]
+            B -->|요약| G[논문 요약]
+            B -->|통계| H[Text2SQL 통계]
+            B -->|저장| I[파일 저장]
+        end
+
+        subgraph Stage2["🔹 2단계: 데이터 조회"]
+            direction LR
+            C --> J[🤖 LLM<br/>직접 호출]
+            D --> K[(💾 PGVector<br/>논문 임베딩)]
+            F --> L[(💾 PostgreSQL<br/>glossary 테이블)]
+            H --> M[(💾 PostgreSQL<br/>papers 테이블)]
+            E --> N[🔍 Tavily API<br/>웹 검색]
+            G --> O[(💾 PGVector<br/>논문 청크)]
+        end
+
+        subgraph Stage3["🔺 3단계: 도구 자동 전환 (Fallback)"]
+            direction LR
+            P[RAG 용어집 검색<br/>실패] -.-> Q[일반 답변<br/>전환]
+            R[RAG 논문 검색<br/>실패] -.-> S[Web 논문 검색<br/>전환]
+            S -.-> T[일반 답변<br/>전환]
+            U[Text2SQL 통계<br/>실패] -.-> V[일반 답변<br/>전환]
+        end
+
+        subgraph Stage4["🔶 4단계: 최종 답변 생성"]
+            direction LR
+            W{난이도<br/>확인} -->|초보자| X[초보자용<br/>프롬프트]
+            W -->|전문가| Y[전문가용<br/>프롬프트]
+            X --> Z[LLM으로<br/>답변 생성]
+            Y --> Z
+        end
+
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+    end
+
+    %% 메인 워크플로우 배경 (노란색)
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    style Stage3 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Stage4 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (1단계 - 청록)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style D fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style E fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style F fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style G fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style H fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style I fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (2단계 - 파랑)
+    style J fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style K fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style L fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style M fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style N fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style O fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (3단계 - 주황)
+    style P fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style Q fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style R fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style S fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style T fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style U fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style V fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (4단계 - 보라)
+    style W fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style X fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Y fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Z fill:#ba68c8,stroke:#6a1b9a,stroke-width:2px,color:#000
+
+    %% 연결선 스타일 (1단계 내부 0~7)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
+    linkStyle 3 stroke:#006064,stroke-width:2px
+    linkStyle 4 stroke:#006064,stroke-width:2px
+    linkStyle 5 stroke:#006064,stroke-width:2px
+    linkStyle 6 stroke:#006064,stroke-width:2px
+    linkStyle 7 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (2단계 내부 8~13)
+    linkStyle 8 stroke:#1976d2,stroke-width:2px
+    linkStyle 9 stroke:#1976d2,stroke-width:2px
+    linkStyle 10 stroke:#1976d2,stroke-width:2px
+    linkStyle 11 stroke:#1976d2,stroke-width:2px
+    linkStyle 12 stroke:#1976d2,stroke-width:2px
+    linkStyle 13 stroke:#1976d2,stroke-width:2px
+
+    %% 연결선 스타일 (3단계 Fallback 14~19)
+    linkStyle 14 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
+    linkStyle 15 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
+    linkStyle 16 stroke:#ef6c00,stroke-width:2px,stroke-dasharray:5
+    linkStyle 17 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
+    linkStyle 18 stroke:#e65100,stroke-width:2px,stroke-dasharray:5
+    linkStyle 19 stroke:#f57c00,stroke-width:2px,stroke-dasharray:5
+
+    %% 연결선 스타일 (4단계 내부 20~23)
+    linkStyle 20 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 21 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 22 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 23 stroke:#7b1fa2,stroke-width:2px
+
+    %% 단계 간 연결 (24~26)
+    linkStyle 24 stroke:#616161,stroke-width:3px
+    linkStyle 25 stroke:#616161,stroke-width:3px
+    linkStyle 26 stroke:#616161,stroke-width:3px
+```
 
 #### 시스템 구성
 
