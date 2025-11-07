@@ -70,7 +70,7 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 <img width="4295" height="6870" alt="Image" src="https://github.com/user-attachments/assets/64a80ba1-2b61-47c4-91c4-ba1806e5738b" />
 
 #### 전체 아키텍처 구조 (상세 흐름도)
-<img width="7048" height="13679" alt="Image" src="https://github.com/user-attachments/assets/4030b2ba-2960-4c18-bbbb-cd68550b7fc5" />
+<img width="6764" height="13654" alt="Image" src="https://github.com/user-attachments/assets/e83a9271-0362-4cac-a0ec-3879419ba5eb" />
 
 ---
 
