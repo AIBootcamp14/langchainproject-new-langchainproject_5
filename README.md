@@ -514,95 +514,8 @@ papers DB (PostgreSQL 15+)
 
 **데이터베이스 관계도 (ERD)**
 
-```mermaid
-classDiagram
-    %% RDBMS 테이블 (4개)
-    class papers {
-        <<RDBMS 테이블>>
-        +SERIAL paper_id PK : 논문 고유 ID
-        +VARCHAR(500) title : 논문 제목
-        +TEXT authors : 저자 목록
-        +DATE publish_date : 발표 날짜
-        +VARCHAR(100) source : 출처 (arXiv, IEEE, ACL)
-        +TEXT url UK : 논문 URL (중복 방지)
-        +VARCHAR(100) category : 카테고리 (cs.AI, cs.CL, cs.CV)
-        +INT citation_count : 인용 수
-        +TEXT abstract : 논문 초록
-        +TIMESTAMP created_at : 생성 시간
-        +TIMESTAMP updated_at : 수정 시간
-    }
+![데이터베이스 관계도](docs/images/architecture/05_데이터베이스_스키마.png)
 
-    class glossary {
-        <<RDBMS 테이블>>
-        +SERIAL term_id PK : 용어 고유 ID
-        +VARCHAR(200) term UK : 용어 (예: BERT, Attention)
-        +TEXT definition : 기본 정의
-        +TEXT easy_explanation : Easy 모드 설명 (초심자용)
-        +TEXT hard_explanation : Hard 모드 설명 (전문가용)
-        +VARCHAR(100) category : 카테고리 (ML, NLP, CV, RL)
-        +VARCHAR(20) difficulty_level : 난이도 (beginner, intermediate, advanced)
-        +TEXT[] related_terms : 관련 용어 배열
-        +TEXT examples : 사용 예시
-        +TIMESTAMP created_at : 생성 시간
-        +TIMESTAMP updated_at : 수정 시간
-    }
-
-    class query_logs {
-        <<RDBMS 테이블>>
-        +SERIAL log_id PK : 로그 고유 ID
-        +TEXT user_query : 사용자 질문
-        +VARCHAR(20) difficulty_mode : 난이도 모드 (easy, hard)
-        +VARCHAR(50) tool_used : 사용된 도구명
-        +TEXT response : 생성된 응답
-        +INT response_time_ms : 응답 시간 (밀리초)
-        +BOOLEAN success : 성공 여부
-        +TEXT error_message : 오류 메시지 (실패 시)
-        +TIMESTAMP created_at : 생성 시간
-    }
-
-    class evaluation_results {
-        <<RDBMS 테이블>>
-        +SERIAL eval_id PK : 평가 고유 ID
-        +TEXT question : 사용자 질문
-        +TEXT answer : AI 답변
-        +INT accuracy_score : 정확도 점수 (0-10)
-        +INT relevance_score : 관련성 점수 (0-10)
-        +INT difficulty_score : 난이도 적합성 점수 (0-10)
-        +INT citation_score : 출처 명시 점수 (0-10)
-        +INT total_score : 총점 (0-40)
-        +TEXT comment : 평가 코멘트
-        +TIMESTAMP created_at : 생성 시간
-    }
-
-    %% VectorDB 테이블 (LangChain 자동 생성, 2개)
-    class langchain_pg_collection {
-        <<VectorDB 테이블>>
-        +UUID uuid PK : 컬렉션 고유 ID
-        +VARCHAR name : 컬렉션 이름 (예: paper_chunks)
-        +JSONB cmetadata : 컬렉션 메타데이터
-    }
-
-    class langchain_pg_embedding {
-        <<VectorDB 테이블>>
-        +UUID uuid PK : 임베딩 고유 ID
-        +UUID collection_id FK : 컬렉션 ID
-        +vector(1536) embedding : 벡터 임베딩 (1536차원)
-        +TEXT document : 원본 텍스트 (청크 내용)
-        +JSONB cmetadata : 메타데이터 (paper_id, chunk_index 등)
-    }
-
-    %% 관계
-    langchain_pg_collection "1" -- "N" langchain_pg_embedding
-    papers "1" .. "N" langchain_pg_embedding
-
-    %% 스타일
-    style papers fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-    style glossary fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-    style query_logs fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-    style evaluation_results fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-    style langchain_pg_collection fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style langchain_pg_embedding fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-```
 
 **RDBMS vs VectorDB 구분**:
 
@@ -831,7 +744,7 @@ arXiv API를 통해 AI/ML 논문을 자동 수집하고, PDF를 Langchain Docume
 
 #### 파이프라인 아키텍처
 
-![논문 데이터 수집 파이프라인](docs/images/architecture/%EB%85%BC%EB%AC%B8%20%EB%8D%B0%EC%9D%B4%ED%84%B0%20%EC%88%98%EC%A7%91%20%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8.png)
+![논문 데이터 수집 파이프라인](docs/images/architecture/04_논문_데이터_수집_파이프라인.png)
 
 #### 파이프라인 구성 요소
 
