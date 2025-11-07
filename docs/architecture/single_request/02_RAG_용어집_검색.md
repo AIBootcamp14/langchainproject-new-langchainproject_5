@@ -371,6 +371,28 @@ graph TB
 
 ---
 
+### 전체 흐름 요약 표
+
+| 단계 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | DB 사용 |
+|------|--------|----------|-----------|------|------|---------|
+| 1 | `src/agent/nodes.py` | `router_node()` | 질문 분석 및 도구 선택 | question | tool_choice | 없음 |
+| 2 | `src/agent/nodes.py` | `glossary_node()` | 용어집 노드 실행 | state | state | 없음 |
+| 3 | `src/tools/glossary.py` | `search_glossary()` | @tool 함수 호출 | query, difficulty, mode | Markdown 문자열 | glossary, glossary_embeddings |
+| 4 | `src/tools/glossary.py` | `_extract_term_from_question()` | 용어 추출 | "RAG가 뭐야?" | "RAG" | 없음 |
+| 5 | `src/tools/glossary.py` | `_fetch_glossary_sql()` | SQL 검색 | query, limit | List[Dict] | glossary (term, definition, explanation) |
+| 6 | `src/tools/glossary.py` | `_get_glossary_vectorstore()` | VectorStore 초기화 | collection_name | PGVector 객체 | glossary_embeddings |
+| 7 | `src/tools/glossary.py` | `_vector_search_glossary()` | Vector 검색 | query, k | List[Tuple[Document, score]] | glossary_embeddings |
+| 8 | `src/tools/glossary.py` | `search_glossary()` (병합) | 하이브리드 병합 | SQL 결과, Vector 결과 | List[Dict] | 없음 |
+| 9 | `src/tools/glossary.py` | `_pick_explanation()` | 난이도별 설명 선택 | row, difficulty_mode | explanation 문자열 | 없음 |
+| 10 | `src/tools/glossary.py` | `_format_glossary_md()` | Markdown 포맷팅 | items | Markdown 문자열 | 없음 |
+| 11 | `src/agent/nodes.py` | `glossary_node()` (답변 생성) | 난이도별 프롬프트 로드 | difficulty | system_prompt | 없음 |
+| 12 | `prompts/tool_prompts.json` | - | JSON 프롬프트 로드 | tool, level | prompt 문자열 | 없음 |
+| 13 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 답변 생성 | messages | response.content | 없음 |
+| 14 | `src/agent/failure_detector.py` | `is_failed()` | 실패 패턴 감지 | final_answer | (is_failed, reason) | 없음 |
+| 15 | `src/agent/nodes.py` | `fallback_router_node()` | Fallback 다음 도구 선택 | state | state (tool_choice) | 없음 |
+
+---
+
 ## 📖 동작 설명 (초보 개발자용)
 
 ### 단계별 상세 설명
@@ -665,28 +687,6 @@ for tool in fallback_chain:
 
 **실패 시 처리:**
 - `general` 도구 실행 → LLM이 직접 용어 설명 생성
-
----
-
-### 전체 흐름 요약 표
-
-| 단계 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | DB 사용 |
-|------|--------|----------|-----------|------|------|---------|
-| 1 | `src/agent/nodes.py` | `router_node()` | 질문 분석 및 도구 선택 | question | tool_choice | 없음 |
-| 2 | `src/agent/nodes.py` | `glossary_node()` | 용어집 노드 실행 | state | state | 없음 |
-| 3 | `src/tools/glossary.py` | `search_glossary()` | @tool 함수 호출 | query, difficulty, mode | Markdown 문자열 | glossary, glossary_embeddings |
-| 4 | `src/tools/glossary.py` | `_extract_term_from_question()` | 용어 추출 | "RAG가 뭐야?" | "RAG" | 없음 |
-| 5 | `src/tools/glossary.py` | `_fetch_glossary_sql()` | SQL 검색 | query, limit | List[Dict] | glossary (term, definition, explanation) |
-| 6 | `src/tools/glossary.py` | `_get_glossary_vectorstore()` | VectorStore 초기화 | collection_name | PGVector 객체 | glossary_embeddings |
-| 7 | `src/tools/glossary.py` | `_vector_search_glossary()` | Vector 검색 | query, k | List[Tuple[Document, score]] | glossary_embeddings |
-| 8 | `src/tools/glossary.py` | `search_glossary()` (병합) | 하이브리드 병합 | SQL 결과, Vector 결과 | List[Dict] | 없음 |
-| 9 | `src/tools/glossary.py` | `_pick_explanation()` | 난이도별 설명 선택 | row, difficulty_mode | explanation 문자열 | 없음 |
-| 10 | `src/tools/glossary.py` | `_format_glossary_md()` | Markdown 포맷팅 | items | Markdown 문자열 | 없음 |
-| 11 | `src/agent/nodes.py` | `glossary_node()` (답변 생성) | 난이도별 프롬프트 로드 | difficulty | system_prompt | 없음 |
-| 12 | `prompts/tool_prompts.json` | - | JSON 프롬프트 로드 | tool, level | prompt 문자열 | 없음 |
-| 13 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 답변 생성 | messages | response.content | 없음 |
-| 14 | `src/agent/failure_detector.py` | `is_failed()` | 실패 패턴 감지 | final_answer | (is_failed, reason) | 없음 |
-| 15 | `src/agent/nodes.py` | `fallback_router_node()` | Fallback 다음 도구 선택 | state | state (tool_choice) | 없음 |
 
 ---
 

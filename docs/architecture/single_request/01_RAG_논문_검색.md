@@ -388,6 +388,33 @@ graph TB
 
 ---
 
+### 전체 흐름 요약 표
+
+| 단계 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | DB 사용 |
+|------|--------|----------|-----------|------|------|---------|
+| 1 | `main.py` | - | Streamlit 서버 시작 | - | - | 없음 |
+| 2 | `ui/app.py` | `initialize_agent()` | Agent 그래프 초기화 | - | agent_executor | 없음 |
+| 3 | `src/agent/graph.py` | `create_agent_graph()` | LangGraph 상태 머신 생성 | exp_manager | CompiledGraph | 없음 |
+| 4 | `src/agent/nodes.py` | `router_node()` | 질문 분석 및 도구 선택 | state (question) | state (tool_choice) | 없음 |
+| 5 | `configs/multi_request_patterns.yaml` | - | 패턴 매칭 (키워드 기반) | question | tool_pipeline | 없음 |
+| 6 | `src/agent/nodes.py` | `search_paper_node()` | 도구 노드 실행 | state (question, difficulty) | state (final_answer) | 없음 |
+| 7 | `src/tools/search_paper.py` | `search_paper_database()` | @tool 함수 호출 | query, top_k, ... | Markdown 문자열 | papers, paper_chunks |
+| 8 | `src/rag/retriever.py` | `RAGRetriever.__init__()` | Retriever 초기화 | collection_name | RAGRetriever | pgvector 연결 |
+| 9 | `src/database/vector_store.py` | `get_pgvector_store()` | PGVector 연결 | collection_name | PGVector 객체 | paper_chunks |
+| 10 | `src/rag/retriever.py` | `multi_query_search()` | LLM 쿼리 확장 + 검색 | query, k | List[Document] | paper_chunks |
+| 11 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 쿼리 확장 | query | 3-5개 쿼리 | 없음 |
+| 12 | `src/tools/search_paper.py` | `_keyword_search()` | PostgreSQL Full-Text Search | query, top_k | List[Dict] | papers (title, abstract) |
+| 13 | `src/tools/search_paper.py` | `search_paper_database()` (병합) | 하이브리드 점수 병합 | vector_results, keyword_results | List[Dict] | 없음 |
+| 14 | `src/tools/search_paper.py` | `_fetch_paper_meta()` | 메타데이터 조회 | paper_ids | Dict[int, Dict] | papers (all columns) |
+| 15 | `src/tools/search_paper.py` | `_format_markdown()` | 결과 포맷팅 + 임계값 검증 | results | Markdown 문자열 | 없음 |
+| 16 | `src/agent/nodes.py` | `search_paper_node()` (답변 생성) | 난이도별 프롬프트 로드 | difficulty | system_prompt | 없음 |
+| 17 | `prompts/tool_prompts.json` | - | JSON 프롬프트 로드 | tool, level | prompt 문자열 | 없음 |
+| 18 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 답변 생성 | messages | response.content | 없음 |
+| 19 | `src/agent/failure_detector.py` | `is_failed()` | 실패 패턴 감지 | final_answer | (is_failed, reason) | 없음 |
+| 20 | `src/agent/nodes.py` | `fallback_router_node()` | Fallback 다음 도구 선택 | state (failed_tools) | state (tool_choice) | 없음 |
+
+---
+
 ## 📖 동작 설명 (초보 개발자용)
 
 ### 단계별 상세 설명

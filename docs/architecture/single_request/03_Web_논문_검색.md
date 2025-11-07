@@ -388,6 +388,26 @@ graph TB
 
 ---
 
+### 전체 흐름 요약 표
+
+| 단계 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | API 사용 |
+|------|--------|----------|-----------|------|------|---------|
+| 1 | `src/agent/nodes.py` | `router_node()` | 질문 분석 및 도구 선택 | question | tool_choice | 없음 |
+| 2 | `configs/multi_request_patterns.yaml` | - | 시간 키워드 패턴 매칭 | question | tool_pipeline | 없음 |
+| 3 | `src/agent/nodes.py` | `web_search_node()` | Web 검색 노드 실행 | state | state | 없음 |
+| 4 | `src/tools/web_search.py` | `TavilySearchResults()` | Tavily API 초기화 | API_KEY | search_tool | Tavily |
+| 5 | `src/tools/web_search.py` | `search_tool.invoke()` | 웹 검색 실행 | query | List[Dict] | Tavily API |
+| 6 | `src/tools/arxiv_handler.py` | `process_arxiv_paper()` | arXiv 논문 처리 | url | success (bool) | arXiv API |
+| 7 | `src/tools/arxiv_handler.py` | `save_to_database()` | PostgreSQL 저장 | metadata | success | papers 테이블 |
+| 8 | `src/tools/web_search.py` | `web_search_node()` (포맷팅) | 검색 결과 포맷팅 | search_results | formatted_results | 없음 |
+| 9 | `prompts/tool_prompts.json` | - | 프롬프트 로드 | tool, level | system_prompt | 없음 |
+| 10 | `src/prompts/__init__.py` | `get_web_search_user_prompt_template()` | 템플릿 로드 | level | template | 없음 |
+| 11 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 답변 생성 | messages | response.content | OpenAI/Solar |
+| 12 | `src/agent/failure_detector.py` | `is_failed()` | 실패 패턴 감지 | final_answer | (is_failed, reason) | 없음 |
+| 13 | `src/agent/nodes.py` | `fallback_router_node()` | Fallback 다음 도구 선택 | state | state (tool_choice) | 없음 |
+
+---
+
 ## 📖 동작 설명 (초보 개발자용)
 
 ### 두 가지 실행 경로
@@ -665,26 +685,6 @@ for tool in fallback_chain:
 
 **실패 시 처리:**
 - `general` 도구 실행 → LLM이 직접 최신 논문 지식 기반 답변
-
----
-
-### 전체 흐름 요약 표
-
-| 단계 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | API 사용 |
-|------|--------|----------|-----------|------|------|---------|
-| 1 | `src/agent/nodes.py` | `router_node()` | 질문 분석 및 도구 선택 | question | tool_choice | 없음 |
-| 2 | `configs/multi_request_patterns.yaml` | - | 시간 키워드 패턴 매칭 | question | tool_pipeline | 없음 |
-| 3 | `src/agent/nodes.py` | `web_search_node()` | Web 검색 노드 실행 | state | state | 없음 |
-| 4 | `src/tools/web_search.py` | `TavilySearchResults()` | Tavily API 초기화 | API_KEY | search_tool | Tavily |
-| 5 | `src/tools/web_search.py` | `search_tool.invoke()` | 웹 검색 실행 | query | List[Dict] | Tavily API |
-| 6 | `src/tools/arxiv_handler.py` | `process_arxiv_paper()` | arXiv 논문 처리 | url | success (bool) | arXiv API |
-| 7 | `src/tools/arxiv_handler.py` | `save_to_database()` | PostgreSQL 저장 | metadata | success | papers 테이블 |
-| 8 | `src/tools/web_search.py` | `web_search_node()` (포맷팅) | 검색 결과 포맷팅 | search_results | formatted_results | 없음 |
-| 9 | `prompts/tool_prompts.json` | - | 프롬프트 로드 | tool, level | system_prompt | 없음 |
-| 10 | `src/prompts/__init__.py` | `get_web_search_user_prompt_template()` | 템플릿 로드 | level | template | 없음 |
-| 11 | `src/llm/client.py` | `LLMClient.invoke()` | LLM 답변 생성 | messages | response.content | OpenAI/Solar |
-| 12 | `src/agent/failure_detector.py` | `is_failed()` | 실패 패턴 감지 | final_answer | (is_failed, reason) | 없음 |
-| 13 | `src/agent/nodes.py` | `fallback_router_node()` | Fallback 다음 도구 선택 | state | state (tool_choice) | 없음 |
 
 ---
 
