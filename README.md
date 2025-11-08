@@ -1158,7 +1158,6 @@ langchain-project/
 ├── database/                                 # DB 스키마 및 마이그레이션
 │
 ├── docs/                                     # 프로젝트 문서
-│   ├── PPT/                                  # 발표 자료
 │   ├── PRD/                                  # 제품 요구사항 명세서
 │   ├── QnA/                                  # 질의응답 문서
 │   ├── architecture/                         # 아키텍처 문서
