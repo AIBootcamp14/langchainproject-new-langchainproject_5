@@ -7,10 +7,13 @@
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.2.59-green.svg)](https://github.com/langchain-ai/langgraph)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.41.1-red.svg)](https://streamlit.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-blue.svg)](https://www.postgresql.org/)
-[![pgvector](https://img.shields.io/badge/pgvector-0.8.0-orange.svg)](https://github.com/pgvector/pgvector)
+[![LangChain](https://img.shields.io/badge/LangChain-0.1.0+-green.svg)](https://github.com/langchain-ai/langchain)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1.0.1+-green.svg)](https://github.com/langchain-ai/langgraph)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--5-412991.svg)](https://openai.com/)
+[![Upstage](https://img.shields.io/badge/Upstage-Solar--pro2-orange.svg)](https://www.upstage.ai/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.29.0+-red.svg)](https://streamlit.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
+[![pgvector](https://img.shields.io/badge/pgvector-0.3.6-orange.svg)](https://github.com/pgvector/pgvector)
 
 </div>
 
