@@ -85,6 +85,7 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 - **팀명**: 연결의 민족
 - **팀장**: 최현화
+- **팀원**: 박재홍, 신준엽, 임예슬
 - **프로젝트 기간**: 2025.10.28 ~ 2025.11.06
 - **GitHub**: [Team Repository](https://github.com/AIBootcamp14/langchainproject-new-langchainproject_5)
 
