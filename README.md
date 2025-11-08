@@ -19,21 +19,32 @@
 ## 📋 목차
 
 - [🎯 프로젝트 개요](#-프로젝트-개요)
+  - [배경](#배경)
+  - [목적](#목적)
+  - [핵심 가치](#핵심-가치)
 - [👥 팀 소개](#-팀-소개)
 - [🏗️ 시스템 아키텍처](#️-시스템-아키텍처)
+  - [전체 워크플로우](#전체-워크플로우)
+  - [단계별 워크플로우 상세 설명](#단계별-워크플로우-상세-설명)
+    - [Phase 1: 프로그램 시작 및 초기화](#-phase-1-프로그램-시작-및-초기화-16단계)
+    - [Phase 2: 사용자 입력 및 Agent 실행](#-phase-2-사용자-입력-및-agent-실행-710단계)
+    - [Phase 3: 도구 실행 및 Fallback](#-phase-3-도구-실행-및-fallback-1118단계)
+    - [Phase 4: LLM 호출 및 상태 관리](#-phase-4-llm-호출-및-상태-관리-1921단계)
+    - [Phase 5: UI 표시 및 부가 기능](#️-phase-5-ui-표시-및-부가-기능-2226단계)
+  - [핵심 개념 정리](#-핵심-개념-정리)
 - [🚀 주요 기능](#-주요-기능)
 - [🛠️ 기술 스택](#️-기술-스택)
-- [✅ 구현 완료 기능](#-구현-완료-기능)
+- [📁 프로젝트 구조](#-프로젝트-구조)
+- [🔧 핵심 기술 구현](#-핵심-기술-구현)
   - [1. 로깅 & 실험 관리 시스템](#1-로깅--실험-관리-시스템)
   - [2. 데이터베이스 시스템 (PostgreSQL + pgvector)](#2-데이터베이스-시스템-postgresql--pgvector)
-  - [3. AI Agent 시스템 (LangGraph)](#3-ai-agent-시스템-langgraph)
-  - [4. RAG 시스템](#4-rag-시스템)
+  - [3. 논문 데이터 수집 파이프라인](#3-논문-데이터-수집-파이프라인)
+  - [4. AI Agent 시스템 (LangGraph)](#4-ai-agent-시스템-langgraph)
+  - [5. RAG 시스템](#5-rag-시스템)
   - [5. Streamlit UI 시스템](#5-streamlit-ui-시스템)
   - [6. 평가 시스템 (LLM-as-a-Judge)](#6-평가-시스템-llm-as-a-judge)
   - [7. 프롬프트 엔지니어링](#7-프롬프트-엔지니어링)
 - [📦 설치 및 실행](#-설치-및-실행)
-- [📁 프로젝트 구조](#-프로젝트-구조)
-- [🗄️ 데이터베이스 설계](#️-데이터베이스-설계)
 - [⚡ 성능 최적화](#-성능-최적화)
 - [📊 주요 성과](#-주요-성과)
 - [📚 참고 자료](#-참고-자료)
@@ -91,6 +102,925 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 #### 전체 아키텍처 구조 (상세 흐름도)
 ![전체 아키텍처 (상세 흐름도)](docs/images/architecture/02_전체%20아키텍처(상세%20흐름도).png)
+
+#### 전체 흐름 요약 표
+
+아래 표는 main.py부터 시작되는 전체 시스템 실행 흐름을 단계별로 정리한 것입니다.
+
+| 단계 | 도구/컴포넌트명 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | Fallback | 세션 저장 |
+|------|-----------------|--------|----------|-----------|------|------|----------|----------|
+| **1** | **프로그램 시작** | `main.py` | `main()`, `load_dotenv()` | .env 파일 로드 후 Streamlit 서버 시작 | 없음 | 환경변수 로드 완료 | 없음 | 없음 |
+| **2** | **Streamlit 서버** | `main.py` | `subprocess.run()` | Streamlit 앱 실행 (port 8501) | `ui/app.py` 경로 | 브라우저 localhost:8501 열림 | 없음 | 없음 |
+| **3** | **UI 초기화** | `ui/app.py` | `st.set_page_config()`, `initialize_agent()` | 페이지 설정 및 환경변수 검증 | OPENAI_API_KEY 확인 | Agent 및 ExpManager 생성 | 없음 | `st.session_state` |
+| **4** | **ExperimentManager** | `src/utils/experiment_manager.py` | `__init__()`, `Logger.write()` | 실험 폴더 생성 (experiments/YYYYMMDD/ID) | 없음 | 로그 파일 생성, config.json 저장 | 없음 | 로컬 파일 |
+| **5** | **Agent 그래프 생성** | `src/agent/graph.py` | `create_agent_graph()`, `StateGraph()`, `workflow.compile()` | LangGraph 그래프 구성 (router + 7개 도구 노드) | `exp_manager` | 컴파일된 Agent 그래프 | 없음 | 메모리 |
+| **6** | **UI 렌더링** | `ui/app.py` | `initialize_storage()`, `initialize_chat_sessions()`, `create_new_chat()`, `render_sidebar()` | Storage 및 채팅 세션 초기화 | 없음 | 첫 채팅 자동 생성 완료 | 없음 | `st.session_state` |
+| **7** | **사용자 입력 처리** | `ui/components/chat_interface.py` | `st.chat_input()`, `render_chat_input()` | 사용자 질문 수신 및 메시지 추가 | 사용자 prompt | 채팅 히스토리에 메시지 추가 | 없음 | `st.session_state.chats` |
+| **8** | **Agent 실행** | `ui/components/chat_interface.py` | `agent_executor.invoke()` | LangGraph 그래프 실행 시작 | `question`, `difficulty`, `messages` | AgentState 반환 | 없음 | 없음 |
+| **9** | **라우터 노드** | `src/agent/nodes.py` | `router_node()`, `extract_keywords()` | 다중 요청 패턴 확인 및 도구 선택 | `question`, `multi_request_patterns.yaml` | `tool_choice`, `tool_pipeline`, `routing_reason` | 없음 | `AgentState` |
+| **10** | **도구 래퍼** | `src/agent/tool_wrapper.py` | `wrap_tool_node()` | 도구 실행 전 래퍼 적용 | 도구 함수 | `tool_status`, `tool_result` 설정 | 없음 | `AgentState` |
+| **11-A** | **RAG 용어집 검색** | `src/tools/glossary.py` | `glossary_node()`, `extract_term_from_question()`, `hybrid_search()` | SQL(ILIKE) + Vector 하이브리드 검색 (50%+50%) | `question` | 용어 정의 또는 실패 | **일반 답변** | `AgentState.tool_result` |
+| **11-A-F** | **일반 답변 (Fallback)** | `src/tools/general.py` | `general_node()`, `get_general_template()`, `LLMClient.generate()` | LLM으로 직접 답변 생성 | `question`, `difficulty` | 일반 답변 텍스트 | 없음 | `AgentState.final_answers` |
+| **12** | **DB 조회 (glossary)** | `src/db/rag_retriever.py` | `hybrid_search()`, `sql_search()`, `vector_search()` | PostgreSQL glossary 테이블 + pgvector 검색 | 추출된 용어 | SQL 결과 + 벡터 결과 병합 | 없음 | 없음 |
+| **13** | **Fallback 체크** | `src/agent/graph.py` | `check_pipeline_or_fallback()` | `tool_status` 확인하여 Fallback 또는 Pipeline 진행 | `tool_status` | `pipeline_router` 또는 `fallback_router_node` | 없음 | 없음 |
+| **14** | **Fallback Router** | `src/agent/nodes.py` | `fallback_router_node()`, `TOOL_FALLBACKS.get()` | 실패한 도구를 Fallback 도구로 교체 (glossary→general) | `tool_choice`, `TOOL_FALLBACKS` | `tool_pipeline` 수정, `retry_count` 증가 | 없음 | `AgentState` |
+| **15** | **Pipeline Router** | `src/agent/graph.py` | `pipeline_router()` | 검색 성공 시 스킵 로직 적용 (search_paper→summarize 직행) | `tool_status`, `pipeline_index` | 다음 도구 선택 또는 스킵 | 없음 | `AgentState` |
+| **16-A** | **RAG 논문 검색** | `src/tools/search_paper.py` | `search_paper_node()`, `RAGRetriever()`, `hybrid_search()` | Vector(70%) + FTS(30%) 하이브리드 검색 | `question` | 논문 본문 또는 실패 | **Web 논문 검색** | `AgentState.tool_result` |
+| **16-A-F1** | **Web 논문 검색 (Fallback 1)** | `src/tools/web_search.py` | `web_search_node()`, `TavilySearchResults()` | Tavily API로 웹 검색 | `question` | 웹 검색 결과 또는 실패 | **일반 답변** | `AgentState.tool_result` |
+| **16-A-F2** | **일반 답변 (Fallback 2)** | `src/tools/general.py` | `general_node()`, `get_general_template()`, `LLMClient.generate()` | LLM으로 직접 답변 생성 | `question`, `difficulty` | 일반 답변 텍스트 | 없음 | `AgentState.final_answers` |
+| **17** | **DB 조회 (papers)** | `src/db/rag_retriever.py` | `hybrid_search()`, `vector_search()`, `fts_search()` | PostgreSQL papers 테이블 + pgvector 검색 | 질문 임베딩 | Vector 70% + FTS 30% 병합 결과 | 없음 | 없음 |
+| **18** | **논문 요약** | `src/tools/summarize.py` | `summarize_node()`, `get_summarize_template()`, `LLMClient.generate()` | 파이프라인 모드: 이전 tool_result 활용하여 요약 | 검색된 논문 본문, `difficulty` | 난이도별 논문 요약 | **일반 답변** | `AgentState.final_answers` |
+| **18-F** | **일반 답변 (Fallback)** | `src/tools/general.py` | `general_node()`, `get_general_template()`, `LLMClient.generate()` | 요약 실패 시 일반 답변 생성 | `question`, `difficulty` | 일반 답변 텍스트 | 없음 | `AgentState.final_answers` |
+| **19** | **LLM 호출** | `src/llm/client.py` | `LLMClient.generate()`, `chat.completions.create()` | OpenAI API 호출 (Solar-pro2 또는 GPT-5) | 시스템 프롬프트 + 사용자 질문 | `generated_text`, 토큰 사용량 | 없음 | 없음 |
+| **20** | **AgentState 업데이트** | `src/agent/graph.py` | (LangGraph 자동) | `tool_result`, `final_answers`, `tool_status`, `messages`, `metadata` 업데이트 | 도구 출력 | AgentState 갱신 | 없음 | 메모리 |
+| **21** | **종료 조건 확인** | `src/agent/graph.py` | `should_end()` | `pipeline_index` 완료, `final_answers` 존재, `retry_count` 초과 확인 | `AgentState` | `END` 또는 `CONTINUE` | 없음 | 없음 |
+| **22** | **UI 답변 표시** | `ui/components/chat_interface.py` | `render_chat_input()`, `st.markdown()` | 난이도별 답변, 도구 배지, 선택 이유 표시 | `response.final_answers` | 채팅 UI에 답변 렌더링 | 없음 | `st.session_state.chats` |
+| **23** | **용어 추출 및 저장** | `ui/components/chat_interface.py` | `extract_and_save_terms()`, 정규식 매칭, LLM 추출 | 답변에서 기술 용어 추출 후 DB 저장 | 답변 텍스트 | `extracted_terms` 테이블에 INSERT | 없음 | PostgreSQL DB |
+| **24** | **답변 평가** | `ui/components/chat_interface.py` | `LLMClient.generate()` (평가 프롬프트) | LLM-as-a-Judge로 정확성/완전성/명확성 평가 | 질문 + 답변 | 평가 점수(0~100), `evaluations` 테이블 저장 | 없음 | PostgreSQL DB |
+| **25** | **계속 대화** | `ui/components/chat_interface.py` | `st.chat_input()` | 새 질문 대기, 있으면 7단계로 복귀 | 새 질문 또는 없음 | 7단계로 복귀 또는 세션 유지 | 없음 | `st.session_state` |
+| **26** | **세션 종료** | `ui/app.py` | `cleanup_on_exit()`, `atexit.register()` | 브라우저 탭 닫기 시 빈 폴더 정리 | `experiments/` 폴더 | 빈 폴더 삭제 완료 | 없음 | 로컬 파일 시스템 |
+
+### 표 설명
+
+- **단계**: 실행 순서 (1~26단계)
+- **Fallback 표기**:
+  - `11-A`: 용어집 검색 (메인)
+  - `11-A-F`: 용어집 실패 시 Fallback (일반 답변)
+  - `16-A`: 논문 검색 (메인)
+  - `16-A-F1`: 논문 검색 실패 시 Fallback 1단계 (Web 검색)
+  - `16-A-F2`: Web 검색 실패 시 Fallback 2단계 (일반 답변)
+- **세션 저장**: 각 단계의 결과가 저장되는 위치 (메모리, DB, 파일 등)
+
+---
+
+## 단계별 워크플로우 상세 설명
+
+아래는 각 단계가 **언제, 왜, 어떻게** 실행되는지를 이해할 수 있도록 상세히 설명한 것입니다.
+
+### 🚀 Phase 1: 프로그램 시작 및 초기화 (1~6단계)
+
+<details>
+<summary><strong>1단계: 프로그램 시작</strong></summary>
+
+**언제 실행되나요?**
+- 터미널에서 `python main.py` 명령어를 실행했을 때 가장 먼저 실행됩니다.
+
+**무엇을 하나요?**
+- `.env` 파일에 저장된 환경변수(API 키, DB 접속 정보 등)를 메모리에 로드합니다.
+- `load_dotenv()` 함수가 `.env` 파일을 읽어서 `os.getenv()`로 접근 가능하게 만듭니다.
+
+**왜 필요한가요?**
+- OpenAI API 키나 PostgreSQL 비밀번호 같은 민감한 정보를 코드에 직접 쓰지 않고 안전하게 관리하기 위함입니다.
+
+**실제 코드 예시:**
+```python
+# main.py
+from dotenv import load_dotenv
+load_dotenv()  # .env 파일 로드
+```
+
+</details>
+
+<details>
+<summary><strong>2단계: Streamlit 서버 시작</strong></summary>
+
+**언제 실행되나요?**
+- 1단계에서 환경변수 로드가 완료된 직후 실행됩니다.
+
+**무엇을 하나요?**
+- `subprocess.run()` 함수로 새로운 프로세스를 생성하여 Streamlit 서버를 시작합니다.
+- 서버는 `localhost:8501` 포트에서 실행되며, 자동으로 브라우저가 열립니다.
+
+**왜 필요한가요?**
+- 사용자가 웹 브라우저에서 챗봇과 대화할 수 있는 UI를 제공하기 위함입니다.
+
+**실제 코드 예시:**
+```python
+# main.py
+subprocess.run(["streamlit", "run", "ui/app.py"])
+```
+
+</details>
+
+<details>
+<summary><strong>3단계: UI 초기화</strong></summary>
+
+**언제 실행되나요?**
+- Streamlit 서버가 시작되고 브라우저에서 페이지를 로드할 때 실행됩니다.
+
+**무엇을 하나요?**
+- `st.set_page_config()`로 페이지 제목, 아이콘, 레이아웃을 설정합니다.
+- 환경변수 검증: `OPENAI_API_KEY`가 없으면 에러 메시지를 표시하고 앱을 중지합니다.
+- `initialize_agent()` 함수로 Agent와 ExperimentManager를 생성합니다 (캐싱됨).
+
+**왜 필요한가요?**
+- API 키가 없으면 LLM을 호출할 수 없으므로, 앱 시작 전에 검증해야 합니다.
+- Agent를 매번 새로 생성하면 느리므로, 캐싱하여 재사용합니다.
+
+**실제 코드 예시:**
+```python
+# ui/app.py
+st.set_page_config(page_title="논문 리뷰 챗봇", page_icon="📚")
+if not os.getenv("OPENAI_API_KEY"):
+    st.error("❌ API 키가 없습니다")
+    st.stop()
+```
+
+</details>
+
+<details>
+<summary><strong>4단계: ExperimentManager 생성</strong></summary>
+
+**언제 실행되나요?**
+- 3단계의 `initialize_agent()` 함수 내부에서 실행됩니다.
+
+**무엇을 하나요?**
+- 실험 폴더를 생성합니다: `experiments/20250108/exp_001/` (날짜와 ID로 구분)
+- 로그 파일(`log.txt`)과 설정 파일(`config.json`)을 생성합니다.
+- 모든 실험 데이터를 이 폴더에 저장합니다.
+
+**왜 필요한가요?**
+- 여러 실험을 체계적으로 관리하고, 나중에 결과를 비교/분석하기 위함입니다.
+- 로그를 통해 문제가 발생했을 때 디버깅이 쉬워집니다.
+
+**실제 폴더 구조:**
+```
+experiments/
+└── 20251028/
+    ├── 날짜_시간_session_001/
+    └── 날짜_시간_session_002/
+```
+
+</details>
+
+<details>
+<summary><strong>5단계: Agent 그래프 생성</strong></summary>
+
+**언제 실행되나요?**
+- 4단계에서 ExperimentManager 생성 직후 실행됩니다.
+
+**무엇을 하나요?**
+- LangGraph의 `StateGraph`를 사용하여 Agent의 실행 흐름을 정의합니다.
+- 노드 추가: `router_node`, `glossary_node`, `search_paper_node` 등 8개 노드
+- 엣지 추가: 노드 간 연결 (조건부 라우팅 포함)
+- `workflow.compile()`로 그래프를 실행 가능한 형태로 컴파일합니다.
+
+**왜 필요한가요?**
+- Agent가 질문을 받았을 때 어떤 순서로 도구를 실행할지 미리 정의해야 합니다.
+- 그래프 구조로 표현하면 복잡한 로직도 시각적으로 이해하기 쉽습니다.
+
+**실제 코드 예시:**
+```python
+# src/agent/graph.py
+workflow = StateGraph(AgentState)
+workflow.add_node("router", router_node)
+workflow.add_node("glossary", glossary_node)
+workflow.add_edge("router", "glossary")
+agent = workflow.compile()
+```
+
+</details>
+
+<details>
+<summary><strong>6단계: UI 렌더링</strong></summary>
+
+**언제 실행되나요?**
+- 5단계에서 Agent 그래프 생성 완료 후, 페이지를 처음 로드할 때 실행됩니다.
+
+**무엇을 하나요?**
+- `initialize_storage()`: Storage 초기화 (채팅 데이터 저장용)
+- `initialize_chat_sessions()`: 세션 상태 초기화 (`st.session_state.chats = {}`)
+- `create_new_chat()`: 첫 번째 채팅을 자동으로 생성 (난이도: easy)
+- `render_sidebar()`: 사이드바에 난이도 선택, 채팅 목록 표시
+
+**왜 필요한가요?**
+- 사용자가 페이지를 열자마자 바로 대화를 시작할 수 있도록 준비합니다.
+- 여러 채팅 세션을 관리하기 위한 초기 구조를 설정합니다.
+
+**실제 화면:**
+```
+사이드바: [새 채팅] [난이도: Easy] [채팅 1, 채팅 2, ...]
+메인 화면: 채팅 입력창 (비어있음)
+```
+
+</details>
+
+---
+
+### 💬 Phase 2: 사용자 입력 및 Agent 실행 (7~10단계)
+
+<details>
+<summary><strong>7단계: 사용자 입력 처리</strong></summary>
+
+**언제 실행되나요?**
+- 사용자가 채팅 입력창에 질문을 입력하고 Enter를 누를 때 실행됩니다.
+
+**무엇을 하나요?**
+- `st.chat_input()`으로 사용자 입력을 수신합니다.
+- 현재 채팅 ID를 가져와서 해당 채팅의 메시지 히스토리에 사용자 메시지를 추가합니다.
+- 이전 대화 내역도 함께 로드하여 Agent에 전달합니다.
+
+**왜 필요한가요?**
+- Agent가 이전 대화 맥락을 이해하고 연속적인 대화를 할 수 있도록 합니다.
+- 여러 채팅 세션을 구분하여 관리합니다.
+
+**실제 코드 예시:**
+```python
+# ui/components/chat_interface.py
+user_input = st.chat_input("질문을 입력하세요")
+if user_input:
+    st.session_state.chats[chat_id]["messages"].append({
+        "role": "user",
+        "content": user_input
+    })
+```
+
+</details>
+
+<details>
+<summary><strong>8단계: Agent 실행</strong></summary>
+
+**언제 실행되나요?**
+- 7단계에서 사용자 메시지가 추가된 직후 실행됩니다.
+
+**무엇을 하나요?**
+- `agent_executor.invoke()`로 LangGraph 그래프를 실행합니다.
+- 입력 데이터: `question` (사용자 질문), `difficulty` (난이도), `messages` (대화 히스토리)
+- Streamlit Callback을 사용하여 실시간으로 로그를 출력합니다.
+
+**왜 필요한가요?**
+- Agent의 실행을 시작하는 진입점입니다.
+- 입력 데이터를 AgentState에 전달하여 모든 노드에서 접근 가능하게 만듭니다.
+
+**실제 코드 예시:**
+```python
+# ui/components/chat_interface.py
+response = agent_executor.invoke({
+    "question": user_input,
+    "difficulty": difficulty,
+    "messages": previous_messages
+})
+```
+
+</details>
+
+<details>
+<summary><strong>9단계: 라우터 노드</strong></summary>
+
+**언제 실행되나요?**
+- Agent 실행 시 가장 먼저 실행되는 노드입니다.
+
+**무엇을 하나요?**
+- 사용자 질문을 분석하여 어떤 도구를 사용할지 결정합니다.
+- **다중 요청 패턴 확인**: `multi_request_patterns.yaml` 파일에서 패턴을 찾습니다.
+  - 예: "논문 검색 후 요약해줘" → `[search_paper, summarize]` 파이프라인
+- **단일 요청**: LLM을 사용하여 가장 적합한 도구 1개를 선택합니다.
+- 결과: `tool_choice`, `tool_pipeline`, `routing_reason`을 AgentState에 저장
+
+**왜 필요한가요?**
+- 질문에 따라 다른 도구를 사용해야 하므로, 라우팅 로직이 필요합니다.
+- 다중 요청을 자동으로 감지하여 여러 도구를 순차 실행합니다.
+
+**실제 예시:**
+```
+질문: "Transformer가 뭐야?"
+→ 라우터 판단: glossary (용어집 검색)
+
+질문: "Attention 논문 찾아서 요약해줘"
+→ 라우터 판단: [search_paper, summarize] 파이프라인
+```
+
+</details>
+
+<details>
+<summary><strong>10단계: 도구 래퍼</strong></summary>
+
+**언제 실행되나요?**
+- 라우터가 도구를 선택한 직후, 실제 도구를 실행하기 전에 래퍼가 감싸서 실행합니다.
+
+**무엇을 하나요?**
+- 선택된 도구 함수(예: `glossary_node`)를 호출합니다.
+- 도구 실행 결과를 검증합니다 (성공/실패 판단).
+- `tool_status`를 자동으로 설정합니다 (`success` 또는 `failed`).
+- `tool_result`를 AgentState에 저장합니다.
+
+**왜 필요한가요?**
+- 모든 도구에 공통적으로 적용되는 로직(상태 설정, 결과 저장)을 중복 없이 처리합니다.
+- 도구가 실패했을 때 자동으로 Fallback을 트리거할 수 있습니다.
+
+**실제 코드 예시:**
+```python
+# src/agent/tool_wrapper.py
+def wrap_tool_node(tool_func):
+    def wrapper(state: AgentState):
+        result = tool_func(state)  # 도구 실행
+        if result:
+            state["tool_status"] = "success"
+        else:
+            state["tool_status"] = "failed"
+        state["tool_result"] = result
+        return state
+    return wrapper
+```
+
+</details>
+
+---
+
+### 🔍 Phase 3: 도구 실행 및 Fallback (11~18단계)
+
+<details>
+<summary><strong>11-A단계: RAG 용어집 검색</strong></summary>
+
+**언제 실행되나요?**
+- 라우터가 `glossary` 도구를 선택했을 때 실행됩니다.
+
+**무엇을 하나요?**
+1. **용어 추출**: `extract_term_from_question()`으로 질문에서 기술 용어를 추출
+   - 예: "Transformer가 뭐야?" → "Transformer"
+2. **SQL 검색**: PostgreSQL `glossary` 테이블에서 `ILIKE '%Transformer%'` 검색
+3. **벡터 검색**: `glossary_embeddings` 테이블에서 코사인 유사도 검색
+4. **하이브리드 병합**: SQL 결과 50% + 벡터 결과 50%를 합산하여 최종 결과 선택
+
+**왜 필요한가요?**
+- 단순 키워드 검색(SQL)만으로는 동의어나 유사 용어를 찾기 어렵습니다.
+- 벡터 검색을 함께 사용하면 의미적으로 유사한 용어도 찾을 수 있습니다.
+
+**결과:**
+- **성공**: 용어 정의를 `tool_result`에 저장 → 바로 22단계(UI 표시)로 이동
+- **실패**: `tool_status = "failed"` → 11-A-F단계(Fallback)로 이동
+
+</details>
+
+<details>
+<summary><strong>11-A-F단계: 일반 답변 (Fallback)</strong></summary>
+
+**언제 실행되나요?**
+- 11-A단계에서 용어를 찾지 못했을 때(실패) 자동으로 실행됩니다.
+
+**무엇을 하나요?**
+- `general_node()`를 실행하여 LLM에게 직접 질문을 전달합니다.
+- 난이도에 맞는 프롬프트 템플릿을 로드합니다 (`get_general_template()`).
+- LLM이 자체 지식으로 답변을 생성합니다.
+
+**왜 필요한가요?**
+- DB에 없는 용어라도 사용자에게 "찾을 수 없습니다"라고만 답하는 것보다, LLM의 일반 지식으로 답변하는 것이 더 유용합니다.
+
+**실제 예시:**
+```
+질문: "Quantum Attention이 뭐야?"
+→ glossary 검색 실패 (DB에 없음)
+→ Fallback: general_node가 LLM으로 답변 생성
+→ "Quantum Attention은 양자 컴퓨팅 개념을 Attention 메커니즘에 적용한 것입니다..."
+```
+
+</details>
+
+<details>
+<summary><strong>12단계: DB 조회 (glossary)</strong></summary>
+
+**언제 실행되나요?**
+- 11-A단계의 `glossary_node` 내부에서 실행됩니다.
+
+**무엇을 하나요?**
+- `RAGRetriever.hybrid_search()` 메서드 호출
+- **SQL 검색**: `SELECT * FROM glossary WHERE term ILIKE '%검색어%'`
+- **벡터 검색**: pgvector 확장을 사용하여 임베딩 유사도 검색
+- 두 결과를 점수 기반으로 병합합니다.
+
+**왜 필요한가요?**
+- 실제 데이터를 가져오는 레이어입니다.
+- SQL과 벡터 검색을 분리하여 각각의 장점을 활용합니다.
+
+**실제 SQL 예시:**
+```sql
+-- SQL 검색
+SELECT term, definition FROM glossary WHERE term ILIKE '%Transformer%';
+
+-- 벡터 검색 (pgvector)
+SELECT term, definition
+FROM glossary_embeddings
+ORDER BY embedding <=> '[0.1, 0.2, ...]'
+LIMIT 5;
+```
+
+</details>
+
+<details>
+<summary><strong>13단계: Fallback 체크</strong></summary>
+
+**언제 실행되나요?**
+- 도구(11-A단계) 실행 완료 후 자동으로 실행됩니다.
+
+**무엇을 하나요?**
+- `tool_status`를 확인합니다.
+- **성공**: `pipeline_router`로 이동 (다음 도구 실행 또는 종료)
+- **실패**: `fallback_router_node`로 이동 (Fallback 도구 실행)
+
+**왜 필요한가요?**
+- 도구 실패 시 자동으로 대체 도구를 실행하여 사용자에게 항상 답변을 제공합니다.
+
+**실제 흐름:**
+```
+glossary 성공 → pipeline_router → END
+glossary 실패 → fallback_router_node → general 실행
+```
+
+</details>
+
+<details>
+<summary><strong>14단계: Fallback Router</strong></summary>
+
+**언제 실행되나요?**
+- 13단계에서 `tool_status = "failed"`일 때 실행됩니다.
+
+**무엇을 하나요?**
+- `TOOL_FALLBACKS` 딕셔너리에서 실패한 도구의 Fallback을 조회합니다.
+  - 예: `TOOL_FALLBACKS = {"glossary": "general", "search_paper": "web_search"}`
+- `tool_pipeline`을 수정하여 실패한 도구를 Fallback 도구로 교체합니다.
+- `retry_count`를 증가시켜 무한 루프를 방지합니다.
+
+**왜 필요한가요?**
+- 도구마다 다른 Fallback 전략을 가질 수 있습니다.
+- 자동으로 Fallback 체인을 따라 재시도합니다.
+
+**실제 예시:**
+```python
+TOOL_FALLBACKS = {
+    "glossary": "general",
+    "search_paper": "web_search",
+    "web_search": "general",
+    "summarize": "general"
+}
+
+# glossary 실패 시
+tool_pipeline = ["glossary"]  # 원래
+→ tool_pipeline = ["general"]  # Fallback 적용
+```
+
+</details>
+
+<details>
+<summary><strong>15단계: Pipeline Router</strong></summary>
+
+**언제 실행되나요?**
+- 13단계에서 `tool_status = "success"`일 때, 또는 14단계(Fallback Router) 실행 후 실행됩니다.
+
+**무엇을 하나요?**
+- **검색 스킵 로직**: 검색 도구가 성공하면 나머지 검색 도구를 건너뜁니다.
+  - `search_paper` 성공 → `web_search`, `general` 건너뛰기 → `summarize`로 직행
+  - `web_search` 성공 → `general` 건너뛰기 → `summarize`로 직행
+- **순차 진행**: 파이프라인의 다음 도구로 `pipeline_index`를 증가시킵니다.
+
+**왜 필요한가요?**
+- 불필요한 검색을 방지하여 실행 시간과 비용을 절약합니다.
+- 다중 요청 파이프라인에서 효율적으로 도구를 실행합니다.
+
+**실제 예시:**
+```
+파이프라인: [search_paper, web_search, general, summarize]
+
+Case 1: search_paper 성공
+→ web_search, general 스킵
+→ summarize 실행
+
+Case 2: search_paper 실패 → web_search 성공
+→ general 스킵
+→ summarize 실행
+
+Case 3: search_paper, web_search 모두 실패
+→ general 실행 (Fallback)
+→ summarize 실행
+```
+
+</details>
+
+<details>
+<summary><strong>16-A단계: RAG 논문 검색</strong></summary>
+
+**언제 실행되나요?**
+- 라우터가 `search_paper` 도구를 선택했을 때 실행됩니다.
+
+**무엇을 하나요?**
+1. **RAGRetriever 초기화**: PostgreSQL + pgvector 연결
+2. **벡터 검색**: `papers_embeddings` 테이블에서 임베딩 유사도 검색 (70% 가중치)
+3. **FTS 검색**: `papers` 테이블에서 Full-Text Search (30% 가중치)
+4. **하이브리드 병합**: 벡터 70% + FTS 30%를 합산하여 최상위 논문 선택
+5. **유사도 확인**: 유사도가 0.5 미만이면 성공, 0.5 이상이면 실패
+
+**왜 필요한가요?**
+- 로컬 DB에 저장된 논문을 먼저 검색하는 것이 웹 검색보다 빠르고 정확합니다.
+- 벡터 검색은 의미적 유사도를, FTS는 키워드 매칭을 잘 수행합니다.
+
+**결과:**
+- **성공**: 논문 본문을 `tool_result`에 저장 → 18단계(요약)로 이동
+- **실패**: `tool_status = "failed"` → 16-A-F1단계(Web 검색)로 Fallback
+
+</details>
+
+<details>
+<summary><strong>16-A-F1단계: Web 논문 검색 (Fallback 1)</strong></summary>
+
+**언제 실행되나요?**
+- 16-A단계에서 논문을 찾지 못했을 때 자동으로 실행됩니다.
+
+**무엇을 하나요?**
+- Tavily API를 사용하여 웹에서 논문을 검색합니다.
+- `TavilySearchResults()` 도구가 Google Scholar, arXiv 등에서 검색합니다.
+- 검색 결과(제목, 링크, 요약)를 반환합니다.
+
+**왜 필요한가요?**
+- 로컬 DB에 없는 최신 논문이나 특정 논문은 웹 검색으로 찾아야 합니다.
+
+**결과:**
+- **성공**: 웹 검색 결과를 `tool_result`에 저장 → 18단계(요약)로 이동
+- **실패**: `tool_status = "failed"` → 16-A-F2단계(일반 답변)로 Fallback
+
+</details>
+
+<details>
+<summary><strong>16-A-F2단계: 일반 답변 (Fallback 2)</strong></summary>
+
+**언제 실행되나요?**
+- 16-A-F1단계(Web 검색)도 실패했을 때 최종적으로 실행됩니다.
+
+**무엇을 하나요?**
+- LLM에게 질문을 직접 전달하여 일반 지식으로 답변을 생성합니다.
+
+**왜 필요한가요?**
+- 모든 검색이 실패해도 사용자에게 "찾을 수 없습니다"보다는 LLM의 일반 지식으로 답변하는 것이 더 유용합니다.
+
+**실제 예시:**
+```
+질문: "2025년 1월에 발표된 최신 LLM 논문 찾아줘"
+→ search_paper 실패 (로컬 DB에 없음)
+→ web_search 실패 (너무 최신이라 인덱싱 안 됨)
+→ Fallback: general_node가 답변
+→ "2025년 1월 최신 논문은 아직 제 데이터베이스에 없습니다. 하지만 일반적으로 LLM 연구는..."
+```
+
+</details>
+
+<details>
+<summary><strong>17단계: DB 조회 (papers)</strong></summary>
+
+**언제 실행되나요?**
+- 16-A단계의 `search_paper_node` 내부에서 실행됩니다.
+
+**무엇을 하나요?**
+- **벡터 검색**: `papers_embeddings` 테이블에서 임베딩 유사도 검색
+- **FTS 검색**: `papers` 테이블에서 PostgreSQL Full-Text Search
+- 두 결과를 가중치 기반으로 병합 (벡터 70%, FTS 30%)
+
+**왜 필요한가요?**
+- 논문 검색은 용어집보다 복잡하므로 벡터 검색 비중을 더 높입니다.
+- FTS는 저자명, 논문 제목 등 정확한 키워드 매칭에 유리합니다.
+
+**실제 SQL 예시:**
+```sql
+-- FTS 검색
+SELECT title, abstract, content
+FROM papers
+WHERE to_tsvector('english', content) @@ to_tsquery('Transformer & Attention');
+
+-- 벡터 검색
+SELECT title, abstract, content
+FROM papers_embeddings
+ORDER BY embedding <=> '[...]'
+LIMIT 10;
+```
+
+</details>
+
+<details>
+<summary><strong>18단계: 논문 요약</strong></summary>
+
+**언제 실행되나요?**
+- 16-A, 16-A-F1, 또는 16-A-F2 중 하나가 성공한 후, 파이프라인에 `summarize`가 있을 때 실행됩니다.
+
+**무엇을 하나요?**
+1. **파이프라인 모드 확인**: 이전 단계의 `tool_result` 사용 (검색 결과 활용)
+2. **난이도 매핑**: `easy` → `elementary/beginner` 수준으로 변환
+3. **프롬프트 로드**: `get_summarize_template(difficulty)`로 난이도별 프롬프트 가져오기
+4. **LLM 호출**: `LLMClient.generate()`로 요약 생성
+
+**왜 필요한가요?**
+- 논문 전문은 길고 어려우므로, 사용자 난이도에 맞게 요약해야 합니다.
+- 초보자는 쉬운 용어로, 전문가는 상세한 기술 내용으로 요약합니다.
+
+**결과:**
+- **성공**: 난이도별 요약을 `final_answers`에 저장 → 22단계(UI 표시)로 이동
+- **실패**: Fallback (`18-F`)으로 일반 답변 생성
+
+</details>
+
+<details>
+<summary><strong>18-F단계: 일반 답변 (Fallback)</strong></summary>
+
+**언제 실행되나요?**
+- 18단계에서 요약 생성이 실패했을 때 실행됩니다.
+
+**무엇을 하나요?**
+- LLM에게 원래 질문을 전달하여 일반 답변을 생성합니다.
+
+**왜 필요한가요?**
+- 요약 실패 시에도 사용자에게 답변을 제공하기 위함입니다.
+
+</details>
+
+---
+
+### 🤖 Phase 4: LLM 호출 및 상태 관리 (19~21단계)
+
+<details>
+<summary><strong>19단계: LLM 호출</strong></summary>
+
+**언제 실행되나요?**
+- 일반 답변(`general_node`), 요약(`summarize_node`), 평가 등에서 LLM이 필요할 때 실행됩니다.
+
+**무엇을 하나요?**
+1. **모델 선택**: 환경변수 또는 설정에 따라 Solar-pro2 또는 GPT-5 선택
+2. **프롬프트 조합**: 시스템 프롬프트 + 사용자 질문 결합
+3. **OpenAI API 호출**: `chat.completions.create()` 메서드 사용
+4. **응답 수신**: `generated_text` 추출
+5. **토큰 사용량 계산**: `prompt_tokens + completion_tokens` 계산하여 로깅
+
+**왜 필요한가요?**
+- LLM은 모든 도구의 핵심입니다 (답변 생성, 라우팅, 평가 등).
+- 토큰 사용량을 추적하여 비용을 관리합니다.
+
+**실제 코드 예시:**
+```python
+# src/llm/client.py
+response = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_question}
+    ],
+    temperature=0.7
+)
+generated_text = response.choices[0].message.content
+```
+
+</details>
+
+<details>
+<summary><strong>20단계: AgentState 업데이트</strong></summary>
+
+**언제 실행되나요?**
+- 각 도구 실행 후 자동으로 LangGraph가 상태를 업데이트합니다.
+
+**무엇을 하나요?**
+- `tool_result`: 도구 실행 결과 저장
+- `final_answers`: 난이도별 최종 답변 저장
+- `tool_status`: `success` 또는 `failed` 저장
+- `messages`: 대화 히스토리에 AI 메시지 추가
+- `metadata`: 도구명, 선택 이유, 실행 시간 등 저장
+
+**왜 필요한가요?**
+- 모든 노드가 공유 상태를 통해 데이터를 주고받습니다.
+- 대화 히스토리를 유지하여 연속적인 대화를 가능하게 합니다.
+
+**AgentState 구조:**
+```python
+class AgentState(TypedDict):
+    question: str
+    difficulty: str
+    tool_choice: str
+    tool_result: str
+    tool_status: str  # "success" or "failed"
+    final_answers: dict  # {"easy": "...", "medium": "...", "hard": "..."}
+    messages: list
+    metadata: dict
+    pipeline_index: int
+    retry_count: int
+```
+
+</details>
+
+<details>
+<summary><strong>21단계: 종료 조건 확인</strong></summary>
+
+**언제 실행되나요?**
+- 각 도구 실행 후 매번 확인합니다.
+
+**무엇을 하나요?**
+- `should_end()` 함수가 다음 조건을 확인합니다:
+  1. **파이프라인 완료**: `pipeline_index >= len(tool_pipeline)`
+  2. **최종 답변 존재**: `final_answers`에 난이도별 답변이 모두 있음
+  3. **재시도 횟수 초과**: `retry_count > 3`
+- 조건 충족 시 `END`, 아니면 `CONTINUE`
+
+**왜 필요한가요?**
+- 무한 루프를 방지합니다.
+- 답변이 완성되면 즉시 종료하여 불필요한 실행을 막습니다.
+
+**실제 코드 예시:**
+```python
+# src/agent/graph.py
+def should_end(state: AgentState):
+    if state.get("final_answers"):
+        return "END"
+    if state.get("retry_count", 0) > 3:
+        return "END"
+    if state.get("pipeline_index", 0) >= len(state.get("tool_pipeline", [])):
+        return "END"
+    return "CONTINUE"
+```
+
+</details>
+
+---
+
+### 🖥️ Phase 5: UI 표시 및 부가 기능 (22~26단계)
+
+<details>
+<summary><strong>22단계: UI 답변 표시</strong></summary>
+
+**언제 실행되나요?**
+- Agent 실행이 완료되고 `response` 객체를 받은 후 실행됩니다.
+
+**무엇을 하나요?**
+1. **`final_answers` 추출**: 난이도별 답변 가져오기
+2. **도구 배지 표시**: 어떤 도구를 사용했는지 표시 (예: `[용어집]`, `[논문 검색]`)
+3. **선택 이유 표시**: `routing_reason` 출력
+4. **답변 텍스트**: `st.markdown()`으로 마크다운 형식 렌더링
+
+**왜 필요한가요?**
+- 사용자에게 답변을 시각적으로 보기 좋게 표시합니다.
+- 어떤 도구를 사용했는지 투명하게 보여줍니다.
+
+**실제 화면 예시:**
+```
+🤖 AI 답변 [용어집]
+
+선택 이유: 질문에서 기술 용어 "Transformer"를 감지하여 용어집 검색을 선택했습니다.
+
+Transformer는 2017년 Google이 발표한...
+```
+
+</details>
+
+<details>
+<summary><strong>23단계: 용어 추출 및 저장</strong></summary>
+
+**언제 실행되나요?**
+- 22단계에서 답변이 UI에 표시된 직후 자동으로 실행됩니다.
+
+**무엇을 하나요?**
+1. **정규식 매칭**: 답변 텍스트에서 대문자로 시작하는 기술 용어 패턴 찾기
+2. **LLM 용어 추출**: GPT로 기술 용어를 자동으로 추출
+3. **DB 저장**: `extracted_terms` 테이블에 INSERT
+4. **UI 표시**: 추출된 용어 목록을 사이드바나 하단에 표시
+
+**왜 필요한가요?**
+- 대화 중 등장한 기술 용어를 자동으로 수집하여 나중에 복습할 수 있습니다.
+- 사용자가 어떤 용어에 관심 있는지 분석할 수 있습니다.
+
+**실제 예시:**
+```
+답변: "Transformer는 Self-Attention 메커니즘을 사용합니다..."
+
+추출된 용어:
+- Transformer
+- Self-Attention
+- Multi-Head Attention
+```
+
+</details>
+
+<details>
+<summary><strong>24단계: 답변 평가</strong></summary>
+
+**언제 실행되나요?**
+- 사용자가 "평가하기" 버튼을 클릭했을 때 실행됩니다 (선택적 기능).
+
+**무엇을 하나요?**
+1. **평가 프롬프트 생성**: 질문 + 답변을 LLM에게 전달
+2. **평가 기준 적용**:
+   - 정확성 (Accuracy): 답변이 사실적으로 정확한가?
+   - 완전성 (Completeness): 질문에 충분히 답변했는가?
+   - 명확성 (Clarity): 이해하기 쉬운가?
+3. **점수 계산**: 0~100점 산출
+4. **DB 저장**: `evaluations` 테이블에 저장
+5. **UI 표시**: 평가 결과를 사용자에게 표시
+
+**왜 필요한가요?**
+- Agent의 답변 품질을 자동으로 평가하여 개선점을 찾을 수 있습니다.
+- LLM-as-a-Judge 방식으로 인간 평가 없이 빠르게 평가합니다.
+
+**실제 평가 결과 예시:**
+```
+📊 답변 평가 결과
+
+✅ 정확성: 90/100
+✅ 완전성: 85/100
+✅ 명확성: 95/100
+
+총점: 90/100
+```
+
+</details>
+
+<details>
+<summary><strong>25단계: 계속 대화</strong></summary>
+
+**언제 실행되나요?**
+- 22~24단계가 완료된 후, 화면 하단에 입력창이 다시 활성화됩니다.
+
+**무엇을 하나요?**
+- `st.chat_input()`이 새로운 질문을 대기합니다.
+- **새 질문 입력 시**: 7단계로 복귀하여 새 질문 처리
+- **입력 없음**: 세션 유지, 대화 히스토리 보존
+
+**왜 필요한가요?**
+- 연속적인 대화를 지원하여 멀티턴 대화가 가능합니다.
+- 이전 대화 맥락을 유지합니다.
+
+**실제 흐름:**
+```
+사용자: "Transformer가 뭐야?"
+→ (7~24단계 실행)
+→ AI: "Transformer는..."
+
+사용자: "그럼 BERT는?"
+→ (7~24단계 다시 실행, 이전 대화 맥락 포함)
+→ AI: "BERT는 Transformer 기반의..."
+```
+
+</details>
+
+<details>
+<summary><strong>26단계: 세션 종료</strong></summary>
+
+**언제 실행되나요?**
+- 사용자가 브라우저 탭을 닫거나 Streamlit 서버를 종료할 때 실행됩니다.
+
+**무엇을 하나요?**
+1. **`cleanup_on_exit()` 함수 호출**: `atexit.register()`로 등록된 정리 함수
+2. **빈 폴더 탐색**: `experiments/YYYYMMDD/` 폴더에서 빈 폴더 찾기
+3. **빈 폴더 삭제**: `folder.rmdir()`로 빈 폴더 정리
+4. **로그 출력**: 삭제된 폴더 개수 출력
+
+**왜 필요한가요?**
+- 실험 폴더는 자동으로 생성되지만, 아무 파일도 없으면 불필요한 폴더가 쌓입니다.
+- 정리 함수로 자동으로 디스크 공간을 절약합니다.
+
+**실제 코드 예시:**
+```python
+# ui/app.py
+def cleanup_on_exit():
+    date_dir = Path(f"experiments/{today}")
+    for folder in sorted(date_dir.rglob("*"), key=lambda p: -len(p.parts)):
+        if folder.is_dir() and not any(folder.iterdir()):
+            folder.rmdir()
+
+atexit.register(cleanup_on_exit)
+```
+
+</details>
+
+---
+
+### 📊 핵심 개념 정리
+
+#### Fallback 체인 (도구 자동 전환)
+
+```
+용어집 검색:
+glossary (DB 검색) → 실패 → general (LLM 답변)
+
+논문 검색:
+search_paper (로컬 DB) → 실패 → web_search (Tavily) → 실패 → general (LLM)
+
+요약:
+summarize (파이프라인 모드) → 실패 → general (LLM)
+```
+
+#### 하이브리드 검색
+
+**용어집 (50% + 50%)**
+- SQL 검색 50%: 정확한 키워드 매칭
+- 벡터 검색 50%: 의미적 유사도
+
+**논문 (70% + 30%)**
+- 벡터 검색 70%: 논문은 의미적 유사도가 더 중요
+- FTS 검색 30%: 저자명, 제목 등 정확한 매칭
+
+#### 다중 요청 파이프라인
+
+```
+질문: "Attention 논문 찾아서 초보자용으로 요약해줘"
+
+파이프라인: [search_paper, web_search, general, summarize]
+
+실행 흐름:
+1. search_paper 실행 → 성공
+2. web_search, general 스킵 (검색 성공했으므로)
+3. summarize 실행 (이전 검색 결과 활용)
+4. 최종 답변 반환
+```
 
 ---
 
