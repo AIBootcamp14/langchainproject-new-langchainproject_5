@@ -1162,13 +1162,16 @@ langchain-project/
 │   ├── PRD/                                  # 제품 요구사항 명세서
 │   ├── QnA/                                  # 질의응답 문서
 │   ├── architecture/                         # 아키텍처 문서
-│   │   ├── claude_prompts/                   # Claude 프롬프트
-│   │   ├── images/                           # 아키텍처 이미지
 │   │   ├── mermaid/                          # Mermaid 다이어그램
 │   │   ├── multiple_request/                 # 다중 요청 아키텍처 문서
 │   │   └── single_request/                   # 단일 요청 아키텍처 문서
 │   ├── errors/                               # 에러 로그
 │   ├── images/                               # 문서 이미지
+│   │   ├── architecture/                     # 아키텍처 이미지
+│   │   ├── github/                           # GitHub 관련 이미지
+│   │   ├── logging_experimentmanager_system/ # 로깅/실험관리 시스템 이미지
+│   │   ├── run_img/                          # 실행 화면 이미지
+│   │   └── slack/                            # Slack 관련 이미지
 │   ├── issues/                               # 이슈 트래킹
 │   ├── minutes/                              # 회의록
 │   ├── modularization/                       # 모듈화 문서
