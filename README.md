@@ -1163,9 +1163,10 @@ langchain-project/
 │   ├── QnA/                          # 질의응답 문서
 │   ├── architecture/                 # 아키텍처 문서
 │   │   ├── claude_prompts/           # Claude 프롬프트
+│   │   ├── images/                   # 아키텍처 이미지
 │   │   ├── mermaid/                  # Mermaid 다이어그램
-│   │   ├── multiple_request/         # 다중 요청 문서
-│   │   └── single_request/           # 단일 요청 문서
+│   │   ├── multiple_request/         # 다중 요청 아키텍처 문서
+│   │   └── single_request/           # 단일 요청 아키텍처 문서
 │   ├── errors/                       # 에러 로그
 │   ├── images/                       # 문서 이미지
 │   ├── issues/                       # 이슈 트래킹
@@ -1175,6 +1176,20 @@ langchain-project/
 │   ├── rules/                        # 규칙 및 가이드
 │   ├── scenarios/                    # 사용 시나리오
 │   └── usage/                        # 사용법 문서
+│
+├── experiments/                      # 실험 로그 (자동 생성)
+│   └── YYYYMMDD/                     # 날짜별 폴더
+│       └── YYYYMMDD_HHMMSS_session_XXX/  # 세션별 폴더
+│           ├── configs/              # 설정 파일
+│           ├── database/             # 데이터베이스 관련 로그
+│           ├── evaluation/           # 평가 결과
+│           ├── outputs/              # 출력 파일
+│           │   └── save_data/        # 사용자 저장 데이터
+│           ├── prompts/              # 프롬프트 기록
+│           ├── tools/                # 도구 실행 로그
+│           ├── ui/                   # UI 인터랙션 로그
+│           ├── chatbot.log           # 메인 챗봇 로그
+│           └── metadata.json         # 세션 메타데이터
 │
 ├── notebooks/                        # Jupyter 노트북
 │   ├── base/                         # 기본 실험 노트북
