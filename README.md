@@ -111,6 +111,10 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 아래 표는 main.py부터 시작되는 전체 시스템 실행 흐름을 단계별로 정리한 것입니다.
 
+
+<details>
+<summary><strong>전체 흐름 요약 표</strong></summary>
+
 | 단계 | 도구/컴포넌트명 | 파일명 | 메서드명 | 동작 설명 | 입력 | 출력 | Fallback | 세션 저장 |
 |------|-----------------|--------|----------|-----------|------|------|----------|----------|
 | **1** | **프로그램 시작** | `main.py` | `main()`, `load_dotenv()` | .env 파일 로드 후 Streamlit 서버 시작 | 없음 | 환경변수 로드 완료 | 없음 | 없음 |
@@ -143,6 +147,7 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 | **24** | **답변 평가** | `ui/components/chat_interface.py` | `LLMClient.generate()` (평가 프롬프트) | LLM-as-a-Judge로 정확성/완전성/명확성 평가 | 질문 + 답변 | 평가 점수(0~100), `evaluations` 테이블 저장 | 없음 | PostgreSQL DB |
 | **25** | **계속 대화** | `ui/components/chat_interface.py` | `st.chat_input()` | 새 질문 대기, 있으면 7단계로 복귀 | 새 질문 또는 없음 | 7단계로 복귀 또는 세션 유지 | 없음 | `st.session_state` |
 | **26** | **세션 종료** | `ui/app.py` | `cleanup_on_exit()`, `atexit.register()` | 브라우저 탭 닫기 시 빈 폴더 정리 | `experiments/` 폴더 | 빈 폴더 삭제 완료 | 없음 | 로컬 파일 시스템 |
+</details>
 
 ### 표 설명
 
