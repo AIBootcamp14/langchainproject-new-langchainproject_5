@@ -90,10 +90,10 @@ AI 연구가 빠르게 발전하면서 arXiv 등의 플랫폼에 매일 수백 �
 
 | 이름 | 역할 | 기술 개발 및 구현 | 프로젝트 운영 및 문서화 |
 |------|------|------------------|----------------------|
-| **[최현화](https://github.com/iejob/langchain-project)** | Project Lead & Tech Lead | 프로젝트 총괄 및 시스템 아키텍처 설계, AI Agent 시스템(LangGraph), 단일/다중 요청에 따른 Fallback 도구 자동 전환 시스템, 멀티턴 대화 기능, 로깅 & 실험 모니터링 시스템, 평가 시스템(LLM-as-a-Judge), Web 논문 검색 도구, 논문 요약 도구, 파일 저장 도구, Streamlit UI (멀티 세션 관리 및 ChatGPT 스타일 UI) | 팀 리드 및 역할 배분, 개발 규칙 및 컨벤션 정립, 회의록(팀/멘토링) 작성 및 관리, PRD 및 기술 명세 문서 총괄, PPT 및 README 작성 및 관리, Github Issue 관리, Github Project 관리, Git 브랜치 관리 & 병합 |
-| **[박재홍](https://github.com/woghd8503/langchainproject-new-langchainproject_5)** | Database & Data Pipeline | 데이터베이스 설계, 데이터 수집, 데이터 저장(로컬/RDBMS), 임베딩 및 Vector DB 적재, Streamlit UI | PRD 자료조사, 데이터파이프라인 기술 보고서 작성, Github Issue 작성 |
-| **[신준엽](https://github.com/Shin-junyeob/langchainproject_5)** | RAG & Query Systems | RAG 시스템, RAG 논문 검색 도구, RAG 용어집 검색 도구, Text2SQL 도구 | PRD 자료조사, Github Issue 작성, PPT |
-| **[임예슬](https://github.com/joy007fun/langchainproject_team5)** | Prompt Engineering & QA | 프롬프트 엔지니어링, 프롬프트 최적화, 실행 테스트 및 검증(QA) | PRD 자료조사, Github Issue 작성, PPT |
+| <img src="https://avatars.githubusercontent.com/u/166781765?v=4" width="80" height="80" style="border-radius: 50%;"><br>**[최현화](https://github.com/iejob/langchain-project)** | Project Lead & Tech Lead | - 프로젝트 총괄 및 시스템 아키텍처 설계<br>- AI Agent 시스템(LangGraph)<br>- 단일/다중 요청에 따른 Fallback 도구 자동 전환 시스템<br>- 멀티턴 대화 기능<br>- 로깅 & 실험 모니터링 시스템<br>- 평가 시스템(LLM-as-a-Judge)<br>- Web 논문 검색 도구<br>- 논문 요약 도구<br>- 파일 저장 도구<br>- Streamlit UI (멀티 세션 관리 및 ChatGPT 스타일 UI) | - 팀 리드 및 역할 배분<br>- 개발 규칙 및 컨벤션 정립<br>- 회의록(팀/멘토링) 작성 및 관리<br>- PRD 및 기술 명세 문서 총괄<br>- PPT 및 README 작성 및 관리<br>- Github Issue 관리<br>- Github Project 관리<br>- Git 브랜치 관리 & 병합 |
+| <img src="https://avatars.githubusercontent.com/u/66048976?v=4" width="80" height="80" style="border-radius: 50%;"><br>**[박재홍](https://github.com/woghd8503/langchainproject-new-langchainproject_5)** | Database & Data Pipeline | - 데이터베이스 설계<br>- 데이터 수집<br>- 데이터 저장(로컬/RDBMS)<br>- 임베딩 및 Vector DB 적재<br>- Streamlit UI | - PRD 자료조사<br>- 데이터파이프라인 기술 보고서 작성<br>- Github Issue 작성 |
+| <img src="https://avatars.githubusercontent.com/u/180160571?v=4" width="80" height="80" style="border-radius: 50%;"><br>**[신준엽](https://github.com/Shin-junyeob/langchainproject_5)** | RAG & Query Systems | - RAG 시스템<br>- RAG 논문 검색 도구<br>- RAG 용어집 검색 도구<br>- Text2SQL 도구 | - PRD 자료조사<br>- Github Issue 작성<br>- PPT |
+| <img src="https://avatars.githubusercontent.com/u/113421456?v=4" width="80" height="80" style="border-radius: 50%;"><br>**[임예슬](https://github.com/joy007fun/langchainproject_team5)** | Prompt Engineering & QA | - 프롬프트 엔지니어링<br>- 프롬프트 최적화<br>- 실행 테스트 및 검증(QA) | - PRD 자료조사<br>- Github Issue 작성<br>- PPT |
 
 ---
 
