@@ -1179,6 +1179,8 @@ langchain-project/
 │   ├── rules/                                # 규칙 및 가이드
 │   ├── scenarios/                            # 사용 시나리오
 │   └── usage/                                # 사용법 문서
+│       ├── team/                             # 팀별 사용법 문서
+│       └── tests/                            # 테스트 관련 문서
 │
 ├── experiments/                              # 실험 로그 (자동 생성)
 │   └── YYYYMMDD/                             # 날짜별 폴더
