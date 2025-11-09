@@ -4510,17 +4510,550 @@ Agent 동작:
 
 ### 10. Streamlit UI 시스템
 
-#### 주요 기능
-- ChatGPT 스타일 채팅 인터페이스
-- 멀티 세션 관리
-- 난이도 선택 (Easy/Hard)
-- 실시간 스트리밍 답변
-- 도구 배지 & 출처 표시
-- 평가 결과 표시
-- LocalStorage 연동
-- 사용자 인증
+**ChatGPT 스타일의 직관적인 웹 인터페이스**를 제공하여 사용자가 논문 검색, 요약, 통계 조회 등 다양한 작업을 손쉽게 수행할 수 있도록 합니다. **멀티 세션 관리**, **다크 모드**, **메시지 복사**, **채팅 내보내기** 등 현대적인 채팅 애플리케이션의 핵심 기능을 모두 지원합니다.
 
-**구현**: `ui/app.py`, `ui/components/`
+<details>
+<summary><strong>Streamlit UI 아키텍처 상세 보기</strong></summary>
+
+#### 📊 UI 시스템 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["🎨 Streamlit UI 시스템 전체 흐름"]
+        style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:3px
+
+        subgraph Stage1["1단계: 사용자 인터페이스 (User Interface)"]
+            style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:2px
+
+            direction LR
+            Browser["🌐 웹 브라우저<br/>(Chrome/Safari/Edge)"]
+            style Browser fill:#4dd0e1,stroke:#006064,stroke-width:2px
+
+            LocalStorage["💾 LocalStorage<br/>(세션 영속화)"]
+            style LocalStorage fill:#4dd0e1,stroke:#006064,stroke-width:2px
+
+            JavaScript["⚡ JavaScript<br/>(다크모드/복사)"]
+            style JavaScript fill:#4dd0e1,stroke:#006064,stroke-width:2px
+        end
+
+        subgraph Stage2["2단계: Streamlit 애플리케이션 (Streamlit App)"]
+            style Stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+
+            direction LR
+            AppPy["📱 app.py<br/>(메인 진입점)"]
+            style AppPy fill:#90caf9,stroke:#1976d2,stroke-width:2px
+
+            PageConfig["⚙️ Page Config<br/>(레이아웃/테마)"]
+            style PageConfig fill:#90caf9,stroke:#1976d2,stroke-width:2px
+
+            Auth["🔐 사용자 인증<br/>(로그인/로그아웃)"]
+            style Auth fill:#90caf9,stroke:#1976d2,stroke-width:2px
+        end
+
+        subgraph Stage3["3단계: UI 컴포넌트 (UI Components)"]
+            style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+
+            direction LR
+            Sidebar["📂 sidebar.py<br/>(채팅 세션 관리)"]
+            style Sidebar fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+
+            ChatInterface["💬 chat_interface.py<br/>(채팅 화면)"]
+            style ChatInterface fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+
+            ChatManager["🗂️ chat_manager.py<br/>(세션 데이터)"]
+            style ChatManager fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+        end
+
+        subgraph Stage4["4단계: AI Agent 통합 (AI Agent Integration)"]
+            style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+            direction LR
+            StreamlitCallback["📡 StreamlitCallback<br/>Handler"]
+            style StreamlitCallback fill:#ffcc80,stroke:#f57c00,stroke-width:2px
+
+            DifficultySelector["🎚️ 난이도 선택<br/>(Easy/Hard)"]
+            style DifficultySelector fill:#ffcc80,stroke:#f57c00,stroke-width:2px
+
+            AgentExecutor["🤖 run_agent()<br/>(LangGraph 실행)"]
+            style AgentExecutor fill:#ffcc80,stroke:#f57c00,stroke-width:2px
+        end
+
+        subgraph Stage5["5단계: 실시간 응답 표시 (Real-time Response)"]
+            style Stage5 fill:#ffebee,stroke:#c62828,stroke-width:2px
+
+            direction LR
+            Streaming["📺 스트리밍 답변<br/>(실시간 출력)"]
+            style Streaming fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+
+            ToolBadge["🏷️ 도구 배지<br/>(search_paper/등)"]
+            style ToolBadge fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+
+            SourceDisplay["📚 출처 표시<br/>(논문/웹/DB)"]
+            style SourceDisplay fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+
+            EvalDisplay["⭐ 평가 결과<br/>(정확도/관련성)"]
+            style EvalDisplay fill:#ef9a9a,stroke:#c62828,stroke-width:2px
+        end
+
+        Browser --> AppPy
+        LocalStorage -.->|"세션 복원"| AppPy
+        JavaScript -.->|"UI 기능"| AppPy
+
+        AppPy --> PageConfig
+        AppPy --> Auth
+
+        PageConfig --> Sidebar
+        Auth --> Sidebar
+
+        Sidebar --> ChatInterface
+        Sidebar --> ChatManager
+
+        ChatInterface --> StreamlitCallback
+        ChatInterface --> DifficultySelector
+
+        StreamlitCallback --> AgentExecutor
+        DifficultySelector --> AgentExecutor
+
+        AgentExecutor --> Streaming
+        AgentExecutor --> ToolBadge
+        AgentExecutor --> SourceDisplay
+        AgentExecutor --> EvalDisplay
+
+        Streaming -.->|"결과 저장"| ChatManager
+        ToolBadge -.->|"메타데이터"| ChatManager
+        SourceDisplay -.->|"출처 정보"| ChatManager
+        EvalDisplay -.->|"평가 점수"| ChatManager
+
+        ChatManager -.->|"영속화"| LocalStorage
+    end
+
+    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22 stroke:#424242,stroke-width:2px
+```
+
+#### 🏗️ 멀티 세션 관리 아키텍처
+
+```mermaid
+graph TB
+    subgraph SessionFlow["💬 멀티 세션 관리 시스템"]
+        style SessionFlow fill:#fffde7,stroke:#f9a825,stroke-width:3px
+
+        subgraph Stage1["1단계: 세션 초기화 (Session Initialization)"]
+            style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:2px
+
+            direction LR
+            Init["🚀 initialize_chat<br/>_sessions()"]
+            style Init fill:#4dd0e1,stroke:#006064,stroke-width:2px
+
+            LoadLS["📥 LocalStorage<br/>데이터 로드"]
+            style LoadLS fill:#4dd0e1,stroke:#006064,stroke-width:2px
+
+            CreateDefault["➕ 기본 세션<br/>생성"]
+            style CreateDefault fill:#4dd0e1,stroke:#006064,stroke-width:2px
+        end
+
+        subgraph Stage2["2단계: 세션 그룹화 (Session Grouping)"]
+            style Stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+
+            direction LR
+            GroupChats["📅 group_chats<br/>_by_date()"]
+            style GroupChats fill:#90caf9,stroke:#1976d2,stroke-width:2px
+
+            Today["📆 오늘"]
+            style Today fill:#90caf9,stroke:#1976d2,stroke-width:2px
+
+            Yesterday["📆 어제"]
+            style Yesterday fill:#90caf9,stroke:#1976d2,stroke-width:2px
+
+            Last7Days["📆 지난 7일"]
+            style Last7Days fill:#90caf9,stroke:#1976d2,stroke-width:2px
+
+            Older["📆 그 이전"]
+            style Older fill:#90caf9,stroke:#1976d2,stroke-width:2px
+        end
+
+        subgraph Stage3["3단계: 세션 CRUD 연산 (Session CRUD)"]
+            style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+
+            direction LR
+            Create["➕ create_new<br/>_chat()"]
+            style Create fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+
+            Switch["🔄 switch_chat()"]
+            style Switch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+
+            Delete["🗑️ delete_chat()"]
+            style Delete fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+
+            Export["📤 export_chat()"]
+            style Export fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px
+        end
+
+        subgraph Stage4["4단계: 데이터 영속화 (Data Persistence)"]
+            style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+            direction LR
+            SessionState["🗄️ st.session_state<br/>(인메모리)"]
+            style SessionState fill:#ffcc80,stroke:#f57c00,stroke-width:2px
+
+            LocalStorageWrite["💾 LocalStorage<br/>(브라우저 저장)"]
+            style LocalStorageWrite fill:#ffcc80,stroke:#f57c00,stroke-width:2px
+
+            MarkdownFile["📝 Markdown 파일<br/>(내보내기)"]
+            style MarkdownFile fill:#ffcc80,stroke:#f57c00,stroke-width:2px
+        end
+
+        Init --> LoadLS
+        LoadLS --> CreateDefault
+
+        CreateDefault --> GroupChats
+        GroupChats --> Today
+        GroupChats --> Yesterday
+        GroupChats --> Last7Days
+        GroupChats --> Older
+
+        Today --> Create
+        Yesterday --> Switch
+        Last7Days --> Delete
+        Older --> Export
+
+        Create --> SessionState
+        Switch --> SessionState
+        Delete --> SessionState
+        Export --> MarkdownFile
+
+        SessionState -.->|"자동 저장"| LocalStorageWrite
+    end
+
+    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 stroke:#424242,stroke-width:2px
+```
+
+#### 📁 UI 컴포넌트 구조
+
+| 컴포넌트 | 파일 경로 | 주요 기능 | 핵심 함수 |
+|---------|----------|----------|----------|
+| **메인 애플리케이션** | `ui/app.py` | - Streamlit 앱 진입점<br>- 페이지 설정 (레이아웃/테마)<br>- 사용자 인증 관리<br>- 컴포넌트 통합 | `main()`<br>`setup_page_config()`<br>`initialize_session_state()` |
+| **사이드바** | `ui/components/sidebar.py` | - 채팅 세션 목록 표시<br>- 날짜별 그룹화 (오늘/어제/지난 7일/그 이전)<br>- 새 채팅 생성<br>- 채팅 전환/삭제<br>- 다크 모드 토글 | `render_sidebar()`<br>`create_new_chat()`<br>`switch_chat()`<br>`delete_chat()`<br>`group_chats_by_date()` |
+| **채팅 인터페이스** | `ui/components/chat_interface.py` | - 메시지 표시 (사용자/AI)<br>- 실시간 스트리밍 답변<br>- 도구 배지 표시<br>- 출처/평가 결과 표시<br>- 메시지 복사 기능 | `render_chat_interface()`<br>`display_message()`<br>`stream_response()`<br>`copy_message()` |
+| **채팅 관리자** | `ui/components/chat_manager.py` | - 세션 데이터 관리<br>- LocalStorage 연동<br>- 채팅 내보내기 (Markdown)<br>- 세션 메타데이터 관리 | `ChatManager.load()`<br>`ChatManager.save()`<br>`ChatManager.export()`<br>`ChatManager.clear()` |
+| **Callback Handler** | `ui/components/callback.py` | - Agent 실행 중 이벤트 처리<br>- 실시간 스트리밍 출력<br>- 도구 실행 상태 표시<br>- 에러 처리 및 표시 | `StreamlitCallbackHandler`<br>`on_llm_new_token()`<br>`on_tool_start()`<br>`on_tool_end()` |
+| **정적 자산** | `ui/assets/` | - CSS 스타일시트<br>- JavaScript 스크립트 (다크모드/복사)<br>- 이미지 파일 | `dark_mode.js`<br>`copy_message.js`<br>`custom.css` |
+
+#### ✨ 주요 기능
+
+| 기능 | 설명 | 구현 방식 | 사용자 경험 |
+|-----|------|----------|------------|
+| **ChatGPT 스타일 UI** | OpenAI ChatGPT와 유사한 직관적인 인터페이스 | - Streamlit Chat Elements<br>- Custom CSS 스타일링<br>- 메시지 버블 디자인 | 익숙한 대화형 인터페이스로 진입 장벽 낮춤 |
+| **멀티 세션 관리** | 여러 대화를 독립적으로 관리 | - `st.session_state` 활용<br>- 세션별 고유 ID (UUID)<br>- 날짜별 자동 그룹화 | 주제별로 대화를 분리하여 관리 가능 |
+| **난이도 선택** | Easy/Hard 모드로 답변 상세도 조절 | - 사이드바 라디오 버튼<br>- Agent State에 난이도 전달<br>- 난이도별 프롬프트 분기 | 초보자는 쉬운 설명, 전문가는 상세 답변 |
+| **실시간 스트리밍** | AI 답변을 실시간으로 출력 | - `StreamlitCallbackHandler`<br>- `on_llm_new_token()` 이벤트<br>- `st.write_stream()` | 답변 생성 과정을 즉시 확인 가능 |
+| **도구 배지 표시** | 실행된 도구를 시각적으로 표시 | - Streamlit Badge/Tag<br>- 도구명 추출 (search_paper 등)<br>- 색상 코딩 | 어떤 도구가 사용되었는지 한눈에 파악 |
+| **출처 표시** | 논문/웹/DB 출처를 명확히 표시 | - Expander 컴포넌트<br>- 출처별 아이콘 (📄/🌐/💾)<br>- 링크 클릭 가능 | 답변의 신뢰도 확인 가능 |
+| **평가 결과 표시** | LLM-as-a-Judge 평가 점수 표시 | - 정확도/관련성 점수<br>- 별점 시각화 (⭐)<br>- 평가 이유 설명 | 답변 품질을 정량적으로 확인 |
+| **LocalStorage 연동** | 브라우저 새로고침 시에도 세션 유지 | - JavaScript `localStorage` API<br>- Python ↔ JS 브릿지<br>- 자동 저장/복원 | 브라우저 닫아도 대화 내용 보존 |
+| **다크 모드** | 눈의 피로를 줄이는 다크 테마 | - CSS 변수 활용<br>- JavaScript 토글<br>- 사용자 선택 저장 | 야간 사용 시 편안한 시각 경험 |
+| **메시지 복사** | 메시지를 클립보드로 복사 | - JavaScript `navigator.clipboard`<br>- 복사 버튼 (📋)<br>- 성공 알림 표시 | 답변을 다른 곳에 쉽게 활용 가능 |
+| **채팅 내보내기** | 대화 내용을 Markdown 파일로 저장 | - Markdown 포맷 변환<br>- 다운로드 버튼<br>- 날짜/시간 포함 | 대화 기록을 로컬에 보관 가능 |
+| **사용자 인증** | 로그인/로그아웃 기능 | - Simple Auth (환경 변수)<br>- 세션별 사용자 ID<br>- 로그인 상태 관리 | 개인 대화 내용 보호 |
+
+#### 🛠️ 기술 스택
+
+| 계층 | 기술 | 용도 | 버전/설정 |
+|-----|------|------|----------|
+| **프론트엔드 프레임워크** | Streamlit | - 웹 UI 구성<br>- 컴포넌트 렌더링<br>- 상태 관리 | `streamlit>=1.28.0` |
+| **스타일링** | CSS | - 커스텀 디자인<br>- 다크 모드<br>- 반응형 레이아웃 | `ui/assets/custom.css` |
+| **클라이언트 스크립트** | JavaScript | - LocalStorage 연동<br>- 메시지 복사<br>- 다크 모드 토글 | `ui/assets/*.js` |
+| **AI Agent 통합** | LangChain + LangGraph | - Agent 실행<br>- 도구 호출<br>- 스트리밍 응답 | `StreamlitCallbackHandler` |
+| **데이터 영속화** | LocalStorage + Session State | - 세션 저장<br>- 브라우저 캐시<br>- 인메모리 상태 | `st.session_state`<br>`localStorage` API |
+| **날짜 처리** | Python `datetime` | - 세션 그룹화<br>- 타임스탬프<br>- 날짜 포맷팅 | 한국 시간 (KST) |
+| **파일 다운로드** | Streamlit Download Button | - 채팅 내보내기<br>- Markdown 파일 생성 | `st.download_button()` |
+
+#### 🎨 UI/UX 디자인 특징
+
+| 디자인 요소 | 설명 | 구현 상세 |
+|------------|------|----------|
+| **ChatGPT 스타일 레이아웃** | - 왼쪽 사이드바 (채팅 목록)<br>- 오른쪽 메인 영역 (대화 화면)<br>- 하단 입력창 (고정) | Streamlit `sidebar` + `container` + `chat_input` |
+| **메시지 버블** | - 사용자 메시지: 파란색 말풍선 (우측 정렬)<br>- AI 메시지: 회색 말풍선 (좌측 정렬)<br>- 아바타 아이콘 표시 | `st.chat_message()` + Custom CSS |
+| **날짜별 그룹화** | - 오늘 (Today)<br>- 어제 (Yesterday)<br>- 지난 7일 (Last 7 Days)<br>- 그 이전 (Older) | `group_chats_by_date()` 함수<br>날짜 계산 로직 |
+| **실시간 스트리밍 애니메이션** | - 토큰 단위 출력<br>- 커서 깜빡임 효과<br>- 부드러운 스크롤 | `st.write_stream()`<br>`StreamlitCallbackHandler` |
+| **도구 배지 색상 코딩** | - 🔍 search_paper: 파란색<br>- 📖 glossary: 보라색<br>- 🌐 web_search: 주황색<br>- 📊 text2sql: 녹색 | Streamlit Badge + Custom CSS |
+| **출처 Expander** | - 클릭 시 확장/축소<br>- 논문 제목 + 링크<br>- 출처별 아이콘 구분 | `st.expander()`<br>`st.markdown()` |
+| **다크 모드 토글** | - 사이드바 하단 스위치<br>- 실시간 테마 전환<br>- CSS 변수 업데이트 | JavaScript + CSS Variables<br>`dark_mode.js` |
+| **로딩 스피너** | - Agent 실행 중 표시<br>- 도구별 상태 메시지<br>- 진행률 표시 | `st.spinner()`<br>`st.status()` |
+
+#### 🔄 사용자 워크플로우
+
+```
+1. 사용자 로그인
+   ↓
+2. 채팅 세션 선택 또는 새로 생성
+   ↓
+3. 난이도 선택 (Easy/Hard)
+   ↓
+4. 질문 입력
+   ↓
+5. [AI Agent 실행]
+   - Router 노드: 도구 선택
+   - Tool 노드: 도구 실행 (실시간 스트리밍)
+   - Generator 노드: 최종 답변 생성
+   ↓
+6. 답변 표시
+   - 도구 배지 표시
+   - 출처 Expander
+   - 평가 결과 (별점)
+   ↓
+7. 메시지 복사 또는 채팅 내보내기 (선택)
+   ↓
+8. 추가 질문 (Multi-turn) 또는 세션 전환
+```
+
+#### 📋 핵심 컴포넌트 설명
+
+##### 1. `app.py` - 메인 애플리케이션
+
+**역할**: Streamlit 앱의 진입점으로, 페이지 설정, 사용자 인증, 컴포넌트 통합을 담당
+
+**주요 로직**:
+```python
+# 페이지 설정
+st.set_page_config(
+    page_title="AI 논문 리뷰 챗봇",
+    page_icon="🤖",
+    layout="wide",  # 전체 너비 사용
+    initial_sidebar_state="expanded"  # 사이드바 기본 열림
+)
+
+# 세션 초기화
+initialize_session_state()
+
+# 사용자 인증
+if not st.session_state.get("authenticated"):
+    show_login_page()
+else:
+    # 사이드바 렌더링
+    render_sidebar()
+
+    # 채팅 인터페이스 렌더링
+    render_chat_interface()
+```
+
+##### 2. `sidebar.py` - 채팅 세션 관리
+
+**역할**: 채팅 목록 표시, 세션 CRUD, 날짜별 그룹화
+
+**주요 함수**:
+- `initialize_chat_sessions()`: LocalStorage에서 세션 복원 또는 기본 세션 생성
+- `group_chats_by_date()`: 세션을 날짜별로 그룹화 (오늘/어제/지난 7일/그 이전)
+- `create_new_chat()`: 새 채팅 세션 생성 (UUID 할당)
+- `switch_chat(chat_id)`: 다른 세션으로 전환
+- `delete_chat(chat_id)`: 세션 삭제 (확인 다이얼로그)
+
+**날짜 그룹화 로직**:
+```python
+def group_chats_by_date(chat_sessions):
+    now = datetime.now()
+    today = now.date()
+    yesterday = today - timedelta(days=1)
+    last_7_days = today - timedelta(days=7)
+
+    groups = {
+        "오늘": [],
+        "어제": [],
+        "지난 7일": [],
+        "그 이전": []
+    }
+
+    for chat in chat_sessions:
+        chat_date = datetime.fromisoformat(chat["created_at"]).date()
+
+        if chat_date == today:
+            groups["오늘"].append(chat)
+        elif chat_date == yesterday:
+            groups["어제"].append(chat)
+        elif chat_date > last_7_days:
+            groups["지난 7일"].append(chat)
+        else:
+            groups["그 이전"].append(chat)
+
+    return groups
+```
+
+##### 3. `chat_interface.py` - 채팅 화면
+
+**역할**: 메시지 표시, 사용자 입력 처리, AI 답변 스트리밍
+
+**주요 함수**:
+- `render_chat_interface()`: 채팅 화면 전체 렌더링
+- `display_message(message)`: 단일 메시지 표시 (사용자/AI 구분)
+- `stream_response(agent_response)`: 실시간 스트리밍 답변 출력
+- `show_tool_badge(tool_name)`: 도구 배지 표시
+- `show_sources(sources)`: 출처 Expander 표시
+- `show_evaluation(eval_result)`: 평가 결과 (별점) 표시
+
+**스트리밍 구현**:
+```python
+def stream_response(agent_response):
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+
+        # StreamlitCallbackHandler를 통해 토큰 단위 스트리밍
+        for token in agent_response:
+            full_response += token
+            message_placeholder.markdown(full_response + "▌")  # 커서 효과
+
+        message_placeholder.markdown(full_response)  # 최종 출력
+```
+
+##### 4. `chat_manager.py` - 세션 데이터 관리
+
+**역할**: 세션 영속화, LocalStorage 연동, 내보내기
+
+**주요 함수**:
+- `ChatManager.load()`: LocalStorage에서 세션 데이터 로드
+- `ChatManager.save()`: 세션 데이터를 LocalStorage에 저장
+- `ChatManager.export(format="markdown")`: 채팅을 Markdown 파일로 내보내기
+- `ChatManager.clear()`: 세션 데이터 초기화
+
+**LocalStorage 연동**:
+```python
+# JavaScript를 통해 LocalStorage 읽기/쓰기
+def save_to_localstorage(key, value):
+    st.components.v1.html(f"""
+        <script>
+            localStorage.setItem('{key}', JSON.stringify({value}));
+        </script>
+    """, height=0)
+
+def load_from_localstorage(key):
+    return st.components.v1.html(f"""
+        <script>
+            const value = localStorage.getItem('{key}');
+            window.parent.postMessage({{type: 'localstorage', value: value}}, '*');
+        </script>
+    """, height=0)
+```
+
+##### 5. `StreamlitCallbackHandler` - 실시간 이벤트 처리
+
+**역할**: Agent 실행 중 이벤트를 실시간으로 Streamlit UI에 반영
+
+**주요 이벤트**:
+- `on_llm_new_token(token)`: LLM이 새 토큰 생성 시 → 실시간 스트리밍
+- `on_tool_start(tool, input)`: 도구 실행 시작 시 → 스피너 표시
+- `on_tool_end(output)`: 도구 실행 완료 시 → 도구 배지 표시
+- `on_agent_action(action)`: Agent 액션 실행 시 → 로그 표시
+- `on_agent_finish(finish)`: Agent 완료 시 → 최종 답변 표시
+
+**구현 예시**:
+```python
+class StreamlitCallbackHandler(BaseCallbackHandler):
+    def __init__(self):
+        self.tokens = []
+        self.container = st.empty()
+
+    def on_llm_new_token(self, token: str, **kwargs):
+        self.tokens.append(token)
+        self.container.markdown("".join(self.tokens) + "▌")
+
+    def on_tool_start(self, serialized, input_str: str, **kwargs):
+        tool_name = serialized.get("name", "Unknown")
+        st.spinner(f"🔧 {tool_name} 실행 중...")
+
+    def on_tool_end(self, output: str, **kwargs):
+        st.success(f"✅ 도구 실행 완료")
+```
+
+#### 📂 파일 구조
+
+```
+ui/
+├── app.py                          # 메인 애플리케이션 (진입점)
+├── components/                     # UI 컴포넌트
+│   ├── sidebar.py                  # 사이드바 (세션 관리)
+│   ├── chat_interface.py           # 채팅 화면
+│   ├── chat_manager.py             # 세션 데이터 관리
+│   └── callback.py                 # StreamlitCallbackHandler
+├── assets/                         # 정적 자산
+│   ├── custom.css                  # 커스텀 스타일
+│   ├── dark_mode.js                # 다크 모드 토글
+│   └── copy_message.js             # 메시지 복사
+└── pages/                          # 추가 페이지 (선택)
+    └── settings.py                 # 설정 페이지
+```
+
+#### 🔗 AI Agent 통합 흐름
+
+```
+[사용자 입력] → [chat_interface.py]
+                      ↓
+              [난이도 선택 반영]
+                      ↓
+              [StreamlitCallbackHandler 생성]
+                      ↓
+              [run_agent(question, difficulty, callback)]
+                      ↓
+              [LangGraph Agent 실행]
+                      ↓
+    ┌─────────────────┼─────────────────┐
+    ↓                 ↓                 ↓
+[Router 노드]    [Tool 노드]      [Generator 노드]
+    │                 │                 │
+    └────── Callback Events ───────────┘
+                      ↓
+          [on_llm_new_token / on_tool_start / on_tool_end]
+                      ↓
+          [Streamlit UI 실시간 업데이트]
+                      ↓
+          [최종 답변 + 도구 배지 + 출처 + 평가 결과]
+                      ↓
+          [chat_manager.save() → LocalStorage]
+```
+
+#### 📊 성능 최적화
+
+| 최적화 기법 | 설명 | 효과 |
+|------------|------|------|
+| **세션 캐싱** | `st.session_state` 활용 | 페이지 재렌더링 시 데이터 보존 |
+| **지연 로딩** | 채팅 세션 클릭 시에만 메시지 로드 | 초기 로딩 속도 향상 |
+| **스트리밍 출력** | 토큰 단위 실시간 출력 | 사용자 대기 시간 체감 단축 |
+| **LocalStorage 활용** | 브라우저 로컬 저장소 사용 | 서버 부하 감소 |
+| **CSS Minification** | CSS 파일 압축 | 페이지 로딩 속도 향상 |
+| **이미지 최적화** | WebP 포맷 사용 | 네트워크 대역폭 절약 |
+
+#### 🎯 사용자 경험 개선 포인트
+
+1. **즉각적인 피드백**
+   - 도구 실행 시 스피너 표시
+   - 실시간 스트리밍 답변
+   - 성공/실패 알림 메시지
+
+2. **직관적인 네비게이션**
+   - ChatGPT와 동일한 레이아웃
+   - 날짜별 그룹화로 쉬운 세션 찾기
+   - 검색 없이도 최근 대화 빠르게 접근
+
+3. **유연한 난이도 조절**
+   - Easy 모드: 초보자 친화적 간단 설명
+   - Hard 모드: 전문가용 상세 분석
+   - 세션별 독립적 난이도 설정
+
+4. **풍부한 메타데이터 표시**
+   - 도구 배지로 실행된 도구 확인
+   - 출처로 답변 신뢰도 검증
+   - 평가 결과로 품질 확인
+
+5. **데이터 보존**
+   - LocalStorage로 브라우저 닫아도 대화 유지
+   - Markdown 내보내기로 로컬 백업
+   - 세션별 독립적 관리
+
+#### 참조 문서
+
+- [`docs/PRD/16_UI_설계.md`](docs/PRD/16_UI_설계.md) - Streamlit UI 설계 명세서 및 Workflow
+- [`docs/modularization/14_Streamlit_UI_시스템.md`](docs/modularization/14_Streamlit_UI_시스템.md) - Streamlit UI 시스템 아키텍처 및 구현 상세
+- [`docs/roles/01-3_최현화_Streamlit_UI_구현.md`](docs/roles/01-3_최현화_Streamlit_UI_구현.md) - Streamlit UI 구현 담당자 작업 내용 및 코드 예시
+
+</details>
 
 ---
 
