@@ -2552,12 +2552,20 @@ graph TB
     style End3 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
     style End4 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
-    %% 연결선 스타일
+    %% 연결선 스타일 (Input 단계: 0-7)
     linkStyle 0,1,2,3,4,5,6,7 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (Search 단계: 8-12)
     linkStyle 8,9,10,11,12 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 13,14,15 stroke:#2e7d32,stroke-width:2px
-    linkStyle 16,17,18,19 stroke:#e65100,stroke-width:2px
-    linkStyle 20,21,22,23 stroke:#616161,stroke-width:3px
+
+    %% 연결선 스타일 (Generation 단계: 13-14)
+    linkStyle 13,14 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (Fallback 단계: 15-17)
+    linkStyle 15,16,17 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (단계 간 연결: 18-21)
+    linkStyle 18,19,20,21 stroke:#616161,stroke-width:3px
 ```
 
 ##### 주요 기능
