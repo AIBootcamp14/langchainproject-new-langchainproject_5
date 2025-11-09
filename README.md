@@ -4516,113 +4516,197 @@ Agent 동작:
 
 ```mermaid
 graph TB
-    Browser["🌐 웹 브라우저<br/>(Chrome/Safari/Edge)"]:::stage1
-    LocalStorage["💾 LocalStorage<br/>(세션 영속화)"]:::stage1
-    JavaScript["⚡ JavaScript<br/>(다크모드/복사)"]:::stage1
+    subgraph MainFlow["🎨 Streamlit UI 시스템 전체 흐름"]
+        direction TB
 
-    AppPy["📱 app.py<br/>(메인 진입점)"]:::stage2
-    PageConfig["⚙️ Page Config<br/>(레이아웃/테마)"]:::stage2
-    Auth["🔐 사용자 인증<br/>(로그인/로그아웃)"]:::stage2
+        subgraph Stage1["🔸 1단계: 사용자 인터페이스"]
+            direction LR
+            Browser["🌐 웹 브라우저<br/>Chrome/Safari/Edge"]
+            LocalStorage["💾 LocalStorage<br/>세션 영속화"]
+            JavaScript["⚡ JavaScript<br/>다크모드/복사"]
+        end
 
-    Sidebar["📂 sidebar.py<br/>(채팅 세션 관리)"]:::stage3
-    ChatInterface["💬 chat_interface.py<br/>(채팅 화면)"]:::stage3
-    ChatManager["🗂️ chat_manager.py<br/>(세션 데이터)"]:::stage3
+        subgraph Stage2["🔹 2단계: Streamlit 애플리케이션"]
+            direction LR
+            AppPy["📱 app.py<br/>메인 진입점"]
+            PageConfig["⚙️ Page Config<br/>레이아웃/테마"]
+            Auth["🔐 사용자 인증<br/>로그인/로그아웃"]
+        end
 
-    StreamlitCallback["📡 StreamlitCallback<br/>Handler"]:::stage4
-    DifficultySelector["🎚️ 난이도 선택<br/>(Easy/Hard)"]:::stage4
-    AgentExecutor["🤖 run_agent()<br/>(LangGraph 실행)"]:::stage4
+        subgraph Stage3["🔺 3단계: UI 컴포넌트"]
+            direction LR
+            Sidebar["📂 sidebar.py<br/>채팅 세션 관리"]
+            ChatInterface["💬 chat_interface.py<br/>채팅 화면"]
+            ChatManager["🗂️ chat_manager.py<br/>세션 데이터"]
+        end
 
-    Streaming["📺 스트리밍 답변<br/>(실시간 출력)"]:::stage5
-    ToolBadge["🏷️ 도구 배지<br/>(search_paper/등)"]:::stage5
-    SourceDisplay["📚 출처 표시<br/>(논문/웹/DB)"]:::stage5
-    EvalDisplay["⭐ 평가 결과<br/>(정확도/관련성)"]:::stage5
+        subgraph Stage4["🔶 4단계: AI Agent 통합"]
+            direction LR
+            StreamlitCallback["📡 StreamlitCallback<br/>Handler"]
+            DifficultySelector["🎚️ 난이도 선택<br/>Easy/Hard"]
+            AgentExecutor["🤖 run_agent<br/>LangGraph 실행"]
+        end
 
-    Browser --> AppPy
-    LocalStorage -.->|"세션 복원"| AppPy
-    JavaScript -.->|"UI 기능"| AppPy
+        subgraph Stage5["✨ 5단계: 실시간 응답 표시"]
+            direction LR
+            Streaming["📺 스트리밍 답변<br/>실시간 출력"]
+            ToolBadge["🏷️ 도구 배지<br/>search_paper 등"]
+            SourceDisplay["📚 출처 표시<br/>논문/웹/DB"]
+            EvalDisplay["⭐ 평가 결과<br/>정확도/관련성"]
+        end
 
-    AppPy --> PageConfig
-    AppPy --> Auth
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+        Stage4 --> Stage5
+        Stage5 --> Stage3
+    end
 
-    PageConfig --> Sidebar
-    Auth --> Sidebar
+    %% MainFlow 래퍼 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
 
-    Sidebar --> ChatInterface
-    Sidebar --> ChatManager
+    %% Subgraph 스타일
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Stage5 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
 
-    ChatInterface --> StreamlitCallback
-    ChatInterface --> DifficultySelector
+    %% 노드 스타일 (1단계 - 청록 계열)
+    style Browser fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style LocalStorage fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style JavaScript fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    StreamlitCallback --> AgentExecutor
-    DifficultySelector --> AgentExecutor
+    %% 노드 스타일 (2단계 - 파랑 계열)
+    style AppPy fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style PageConfig fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Auth fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
 
-    AgentExecutor --> Streaming
-    AgentExecutor --> ToolBadge
-    AgentExecutor --> SourceDisplay
-    AgentExecutor --> EvalDisplay
+    %% 노드 스타일 (3단계 - 보라 계열)
+    style Sidebar fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style ChatInterface fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style ChatManager fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
 
-    Streaming -.->|"결과 저장"| ChatManager
-    ToolBadge -.->|"메타데이터"| ChatManager
-    SourceDisplay -.->|"출처 정보"| ChatManager
-    EvalDisplay -.->|"평가 점수"| ChatManager
+    %% 노드 스타일 (4단계 - 주황 계열)
+    style StreamlitCallback fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style DifficultySelector fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style AgentExecutor fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
 
-    ChatManager -.->|"영속화"| LocalStorage
+    %% 노드 스타일 (5단계 - 녹색 계열)
+    style Streaming fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style ToolBadge fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style SourceDisplay fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style EvalDisplay fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
 
-    classDef stage1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    classDef stage2 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    classDef stage3 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    classDef stage4 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    classDef stage5 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    %% 단계 간 연결선 스타일 (회색)
+    linkStyle 0 stroke:#616161,stroke-width:3px
+    linkStyle 1 stroke:#616161,stroke-width:3px
+    linkStyle 2 stroke:#616161,stroke-width:3px
+    linkStyle 3 stroke:#616161,stroke-width:3px
+    linkStyle 4 stroke:#616161,stroke-width:3px
 ```
 
 #### 🏗️ 멀티 세션 관리 아키텍처
 
 ```mermaid
 graph TB
-    Init["🚀 initialize_chat_sessions()"]:::stage1
-    LoadLS["📥 LocalStorage 데이터 로드"]:::stage1
-    CreateDefault["➕ 기본 세션 생성"]:::stage1
+    subgraph MainFlow["💬 멀티 세션 관리 시스템"]
+        direction TB
 
-    GroupChats["📅 group_chats_by_date()"]:::stage2
-    Today["📆 오늘"]:::stage2
-    Yesterday["📆 어제"]:::stage2
-    Last7Days["📆 지난 7일"]:::stage2
-    Older["📆 그 이전"]:::stage2
+        subgraph Stage1["🔸 1단계: 세션 초기화"]
+            direction LR
+            Init["🚀 initialize_chat<br/>_sessions"]
+            LoadLS["📥 LocalStorage<br/>데이터 로드"]
+            CreateDefault["➕ 기본 세션<br/>생성"]
+            Init --> LoadLS
+            LoadLS --> CreateDefault
+        end
 
-    Create["➕ create_new_chat()"]:::stage3
-    Switch["🔄 switch_chat()"]:::stage3
-    Delete["🗑️ delete_chat()"]:::stage3
-    Export["📤 export_chat()"]:::stage3
+        subgraph Stage2["🔹 2단계: 세션 그룹화"]
+            direction LR
+            GroupChats["📅 group_chats<br/>_by_date"]
+            Today["📆 오늘"]
+            Yesterday["📆 어제"]
+            Last7Days["📆 지난 7일"]
+            Older["📆 그 이전"]
+            GroupChats --> Today
+            GroupChats --> Yesterday
+            GroupChats --> Last7Days
+            GroupChats --> Older
+        end
 
-    SessionState["🗄️ st.session_state<br/>(인메모리)"]:::stage4
-    LocalStorageWrite["💾 LocalStorage<br/>(브라우저 저장)"]:::stage4
-    MarkdownFile["📝 Markdown 파일<br/>(내보내기)"]:::stage4
+        subgraph Stage3["🔺 3단계: 세션 CRUD 연산"]
+            direction LR
+            Create["➕ create_new<br/>_chat"]
+            Switch["🔄 switch_chat"]
+            Delete["🗑️ delete_chat"]
+            Export["📤 export_chat"]
+        end
 
-    Init --> LoadLS
-    LoadLS --> CreateDefault
+        subgraph Stage4["🔶 4단계: 데이터 영속화"]
+            direction LR
+            SessionState["🗄️ st.session_state<br/>인메모리"]
+            LocalStorageWrite["💾 LocalStorage<br/>브라우저 저장"]
+            MarkdownFile["📝 Markdown<br/>내보내기"]
+            SessionState --> LocalStorageWrite
+        end
 
-    CreateDefault --> GroupChats
-    GroupChats --> Today
-    GroupChats --> Yesterday
-    GroupChats --> Last7Days
-    GroupChats --> Older
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+    end
 
-    Today --> Create
-    Yesterday --> Switch
-    Last7Days --> Delete
-    Older --> Export
+    %% MainFlow 래퍼 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
 
-    Create --> SessionState
-    Switch --> SessionState
-    Delete --> SessionState
-    Export --> MarkdownFile
+    %% Subgraph 스타일
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
 
-    SessionState -.->|"자동 저장"| LocalStorageWrite
+    %% 노드 스타일 (1단계 - 청록 계열)
+    style Init fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style LoadLS fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style CreateDefault fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    classDef stage1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    classDef stage2 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    classDef stage3 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    classDef stage4 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    %% 노드 스타일 (2단계 - 파랑 계열)
+    style GroupChats fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Today fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Yesterday fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Last7Days fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Older fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (3단계 - 보라 계열)
+    style Create fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Switch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Delete fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Export fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (4단계 - 주황 계열)
+    style SessionState fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style LocalStorageWrite fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style MarkdownFile fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+
+    %% 연결선 스타일 (1단계 0~1)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (2단계 2~5)
+    linkStyle 2 stroke:#01579b,stroke-width:2px
+    linkStyle 3 stroke:#01579b,stroke-width:2px
+    linkStyle 4 stroke:#01579b,stroke-width:2px
+    linkStyle 5 stroke:#01579b,stroke-width:2px
+
+    %% 연결선 스타일 (4단계 6)
+    linkStyle 6 stroke:#e65100,stroke-width:2px
+
+    %% 단계 간 연결 (회색 7~9)
+    linkStyle 7 stroke:#616161,stroke-width:3px
+    linkStyle 8 stroke:#616161,stroke-width:3px
+    linkStyle 9 stroke:#616161,stroke-width:3px
 ```
 
 #### 📁 UI 컴포넌트 구조
@@ -4678,30 +4762,158 @@ graph TB
 | **다크 모드 토글** | - 사이드바 하단 스위치<br>- 실시간 테마 전환<br>- CSS 변수 업데이트 | JavaScript + CSS Variables<br>`dark_mode.js` |
 | **로딩 스피너** | - Agent 실행 중 표시<br>- 도구별 상태 메시지<br>- 진행률 표시 | `st.spinner()`<br>`st.status()` |
 
-#### 🔄 사용자 워크플로우
+#### 🔄 사용자 워크플로우 & AI Agent 통합
 
-```
-1. 사용자 로그인
-   ↓
-2. 채팅 세션 선택 또는 새로 생성
-   ↓
-3. 난이도 선택 (Easy/Hard)
-   ↓
-4. 질문 입력
-   ↓
-5. [AI Agent 실행]
-   - Router 노드: 도구 선택
-   - Tool 노드: 도구 실행 (실시간 스트리밍)
-   - Generator 노드: 최종 답변 생성
-   ↓
-6. 답변 표시
-   - 도구 배지 표시
-   - 출처 Expander
-   - 평가 결과 (별점)
-   ↓
-7. 메시지 복사 또는 채팅 내보내기 (선택)
-   ↓
-8. 추가 질문 (Multi-turn) 또는 세션 전환
+```mermaid
+graph TB
+    subgraph MainFlow["🎨 사용자 워크플로우 전체"]
+        direction TB
+
+        subgraph Stage1["🔸 1단계: 초기화"]
+            direction LR
+            Start([▶️ 시작])
+            Login["🔐 사용자 로그인"]
+            SelectSession["📂 채팅 세션 선택"]
+            Start --> Login
+            Login --> SelectSession
+        end
+
+        subgraph Stage2["🔹 2단계: 사용자 입력"]
+            direction LR
+            Difficulty["🎚️ 난이도 선택<br/>Easy/Hard"]
+            Question["💭 질문 입력"]
+            Submit["📤 전송"]
+            Difficulty --> Question
+            Question --> Submit
+        end
+
+        subgraph Stage3["🔺 3단계: AI Agent 실행"]
+            direction LR
+            Router["🧭 router_node<br/>도구 선택"]
+            Tool["🔧 Tool 노드<br/>도구 실행"]
+            Generator["✨ generator_node<br/>답변 생성"]
+            Router --> Tool
+            Tool --> Generator
+        end
+
+        subgraph Stage4["🔶 4단계: 실시간 UI 업데이트"]
+            direction LR
+            Streaming["📺 스트리밍 답변"]
+            ToolBadge["🏷️ 도구 배지"]
+            Sources["📚 출처 표시"]
+            Eval["⭐ 평가 결과"]
+            Streaming --> ToolBadge
+            ToolBadge --> Sources
+            Sources --> Eval
+        end
+
+        subgraph Stage5["✨ 5단계: 사용자 액션"]
+            direction LR
+            View["👁️ 답변 확인"]
+            Copy["📋 메시지 복사"]
+            Export["📤 채팅 내보내기"]
+            Next{추가 질문?}
+            View --> Copy
+            Copy --> Export
+            Export --> Next
+        end
+
+        subgraph Output["💡 6단계: 완료 또는 반복"]
+            direction LR
+            MultiTurn["🔄 Multi-turn<br/>계속 대화"]
+            Switch["🔀 세션 전환"]
+            End([✅ 완료])
+            Next -->|Yes| MultiTurn
+            Next -->|No| Switch
+            Switch --> End
+        end
+
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+        Stage4 --> Stage5
+        Stage5 --> Output
+        MultiTurn --> Stage2
+    end
+
+    %% MainFlow 래퍼 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Stage5 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (1단계 - 청록 계열)
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
+    style Login fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style SelectSession fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (2단계 - 파랑 계열)
+    style Difficulty fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Question fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Submit fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (3단계 - 보라 계열)
+    style Router fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Tool fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Generator fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (4단계 - 주황 계열)
+    style Streaming fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style ToolBadge fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style Sources fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style Eval fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (5단계 - 빨강 계열)
+    style View fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Copy fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Export fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Next fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (6단계 - 녹색 계열)
+    style MultiTurn fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Switch fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% 연결선 스타일 (1단계 0~1)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (2단계 2~3)
+    linkStyle 2 stroke:#01579b,stroke-width:2px
+    linkStyle 3 stroke:#01579b,stroke-width:2px
+
+    %% 연결선 스타일 (3단계 4~5)
+    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 5 stroke:#7b1fa2,stroke-width:2px
+
+    %% 연결선 스타일 (4단계 6~8)
+    linkStyle 6 stroke:#e65100,stroke-width:2px
+    linkStyle 7 stroke:#e65100,stroke-width:2px
+    linkStyle 8 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (5단계 9~11)
+    linkStyle 9 stroke:#c62828,stroke-width:2px
+    linkStyle 10 stroke:#c62828,stroke-width:2px
+    linkStyle 11 stroke:#c62828,stroke-width:2px
+
+    %% 연결선 스타일 (6단계 12~14)
+    linkStyle 12 stroke:#2e7d32,stroke-width:2px
+    linkStyle 13 stroke:#2e7d32,stroke-width:2px
+    linkStyle 14 stroke:#2e7d32,stroke-width:2px
+
+    %% 단계 간 연결 (회색 15~20)
+    linkStyle 15 stroke:#616161,stroke-width:3px
+    linkStyle 16 stroke:#616161,stroke-width:3px
+    linkStyle 17 stroke:#616161,stroke-width:3px
+    linkStyle 18 stroke:#616161,stroke-width:3px
+    linkStyle 19 stroke:#616161,stroke-width:3px
+    linkStyle 20 stroke:#616161,stroke-width:3px
 ```
 
 #### 📂 파일 구조
