@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 2,
+  "relevance_score": 7,
+  "difficulty_score": 8,
+  "citation_score": 5,
+  "total_score": 22,
+  "comment": "질문 주제에는 맞지만 사실성 문제와 일관성 문제가 큽니다. 2024년 BERT 계열 논문 수를 3편/5편으로 서로 다르게 제시했고, 유사도 점수(0.3, 0.7740) 등 출처 불명의 수치를 사용했습니다. 제시된 논문 제목과 저자, 성능 수치(예: BERT 85% vs GPT 78%)도 근거가 불명확하고 일부는 실존 여부가 의심됩니다. 난이도는 Easy 모드에 비교적 적합하게 쉬운 표현을 사용했으나, 연도·저자·학회 정보가 일관되게 제공되지 않아 인용 신뢰도가 낮습니다.",
+  "question": "2024년 BERT 계열 논문 통계 보여주고 대표 논문 하나 요약해줘",
+  "answer": "### 초등학생용 (8-13세)\n\n2024년 BERT 계열 논문은 총 **3편**이 검색되었어요! 📊  \n(유사도 점수 낮은 순으로 3개 선택)\n\n### 대표 논문 추천:  \n**\"BERT vs GPT for financial engineering\"**  \n\n🔬 이 논문은 **금융 공학을 위한 BERT vs GPT 모델 비교**에 대한 거예요!  \n- BERT가 뉴스 감정 분석(예: 주가 영향 예측)에서 GPT보다 더 정확하다는 실험 결과를 담았어요  \n- 금융 데이터 분석에 **BERT가 더 유용**할 수 있다는 결론을 내렸답니다 ✨  \n\n> 저자: Edward Sharkey와 Philip Treleaven 과학자가 함께 연구했어요!\n\n---\n\n### 다른 논문들 간단 소개:  \n1. **\"(Chat)GPT v BERT: Dawn of Justice for Semantic Change Detection\"**  \n   📖 **단어 의미 변화 추적**에서 BERT vs ChatGPT를 비교한 연구예요 (2024년 1월)  \n\n2. **\"Selecting Between BERT and GPT for Text Classification in Political Science Research\"**  \n   🗳️ **정치학 텍스트 분류**에 어떤 모델이 적합한지 분석한 논문이에요 (2024년 11월)  \n\nBERT는 정말 다방면에 쓰이는 모델이죠? 😊\n\n---\n\n### 초급자용 (14-22세)\n\n### 2024년 BERT 계열 논문 통계 (검색 결과 기준)\n- **총 5편**의 논문이 검색되었으며, 이 중 **3편**이 2024년 출판되었습니다.\n- **분야**: 의료(NLP), 정치학, 금융 공학, 음성 인식, 의미 변화 탐지 등 다양한 분야에서 BERT 활용 연구 진행.\n- **유사도 점수**: 가장 낮은 점수(0.3)는 \"BERT vs GPT for financial engineering\", \"Adapting GPT/BERT for speech recognition\", \"ChatGPT v BERT: semantic change detection\" 논문입니다.\n\n---\n\n### 대표 논문 요약: **\"Selecting Between BERT and GPT for Text Classification in Political Science Research\"** (Wang et al., 2024)\n1. **제목**: 정치학 연구에서 텍스트 분류를 위한 BERT vs GPT 선택 (Wang, Qu, Ye, 2024)  \n2. **핵심 내용**:  \n   - **BERT** (인코더 기반 모델)는 정치학 텍스트 분류(예: 정책 문서 분석, 선거 발언 분류)에서 **높은 정확도**를 보임.  \n   - **GPT** (디코더 기반 모델)는 생성 능력이 뛰어나지만, 분류 작업에서는 BERT에 비해 **일관성 부족** 문제 발생.  \n   - 정치학 연구에 적용할 때 **데이터 특성** (예: 짧은 문서 vs 장문)에 따라 모델 선택이 달라져야 함.  \n   - 실험 결과, **정치 발언 분류**에서는 BERT가 85% 정확도로 GPT(78%)를 크게 앞섬.  \n\n3. **왜 중요한 논문인가요?**  \n   - **첫 번째**로 정치학 연구에 특화된 BERT/GPT 비교 분석을 제시.  \n   - **실용성** 높은 가이드라인으로, 사회과학 연구자들이 모델 선택 시 참고할 수 있는 기준 마련.  \n   - **GPT의 한계**와 **BERT의 강점**을 구체적으로 제시해 학계/산업계에 도움.  \n\n4. **유사도 점수**: 0.7740 (BERT와 GPT 비교에 초점)  \n\n---\n\n### 다른 주목할 만한 2024년 논문\n- **\"BERT vs GPT for financial engineering\"**: 금융 분야에서 BERT가 GPT보다 **감정 분석** 정확도가 높음을 입증.  \n- **\"ChatGPT v BERT: semantic change detection\"**: 시간에 따른 단어 의미 변화 분석에서 BERT가 ChatGPT보다 우수함을 보여줌.  \n\nBERT는 여전히 **특정 분야(의료, 금융, 정치학)**에서 강력한 성능을 보이고 있네요! 😊\n\n---",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "easy",
+  "timestamp": "2025-11-09T21:53:18.506947"
+}

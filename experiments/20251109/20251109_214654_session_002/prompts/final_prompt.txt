@@ -1,0 +1,159 @@
+[SYSTEM PROMPT - beginner]
+당신은 논문을 쉽게 설명하는 친절한 전문가입니다.
+
+답변 규칙:
+- 검색된 논문들을 번호로 정리하세요
+- 각 논문마다:
+  1. 제목 (저자, 연도)
+  2. 핵심 내용 3-5줄 요약
+  3. 왜 이 논문이 중요한지
+  4. 유사도 점수 (있으면)
+- 전문 용어는 괄호로 쉽게 설명
+- 최대 5개까지만 소개
+- 친근하고 이해하기 쉬운 톤
+
+[USER PROMPT]
+[논문 검색 결과]
+## 검색된 논문
+
+### 1. Enhancing Answer Selection in Community Question Answering with Pre-trained and Large Language Models
+- **저자**: Xinghang Hu
+- **출판일**: 2023-11-29
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2311.17502v1
+- **섹션**: 초록
+- **유사도 점수(낮을수록 유사)**: 0.7260
+
+Community Question Answering (CQA) becomes increasingly prevalent in recent
+years. However, there are a large number of answers, which is difficult for
+users to select the relevant answers. Therefore, answer selection is a very
+significant subtask of CQA. In this paper, we first propose the Question-Answer
+cross attention networks (QAN) with pre-trained models for answer selection and
+utilize large language model (LLM) to perform answer selection with knowledge
+augmentation. Specifically, we apply the BERT model as the encoder layer to do
+pre-training for question subjects, question bodies and...
+
+---
+
+### 2. Alleviating Hallucination in Large Vision-Language Models with Active Retrieval Augmentation
+- **저자**: Xiaoye Qu, Qiyuan Chen, Wei Wei, Jishuo Sun, Jianfeng Dong
+- **출판일**: 2024-08-01
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2408.00555v1
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.4314
+
+the full citation on the ﬁrst page. Copyrights for components of th is work owned by others than the author(s) must be
+honored.Abstractingwithcreditispermitted.Tocopy otherwise,or republish,topostonserversortoredistributetolists,
+requires prior speciﬁc permission and/or a fee.Request permissions f rom permissions@acm.org.
+© 2018Copyright heldby theowner/author(s).Publication rights licensedtoACM.
+ACM1557-735X/2018/8-ART111
+https://doi.org/XXXXXXX.XXXXXXX
+J. ACM,Vol. 37,No. 4,Article111. Publication date: August 201 8.
+
+---
+
+### 3. TRiSM for Agentic AI: A Review of Trust, Risk, and Security Management in LLM-based Agentic Multi-Agent Systems
+- **저자**: Shaina Raza, Ranjan Sapkota, Manoj Karkee, Christos Emmanouilidis
+- **출판일**: 2025-06-04
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2506.04133v4
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.4280
+
+(a) Agentic AI papers per year (2022–2025).
+ (b) Papers by TRiSM pillar.
+2019 2020 2021 2022 2023 2024 2025
+Year020406080Count
+T opic trends by year (selected)
+agents
+security
+explainability
+(c) Topic trends in Agentic AI (agents, security, explainability).
+1987.0
+1993.0
+1997.0
+1998.0
+1999.0
+2002.0
+2003.0
+2004.0
+2005.0
+2006.0
+2007.0
+2009.0
+2010.0
+2011.0
+2012.0
+2013.0
+2014.0
+2016.0
+2017.0
+2018.0
+2019.0
+2020.0
+2021.0
+2022.0
+2023.0
+2024.0
+2025.0
+Year020406080100120CountBibliography Entries per Year (d) Bibliography entries per year (1987–2025).
+Figure 2: Bibliographic analysis of Agentic AI resea...
+
+---
+
+### 4. The Heap: A Contamination-Free Multilingual Code Dataset for Evaluating Large Language Models
+- **저자**: Jonathan Katzy, Razvan Mihai Popescu, Arie van Deursen, Maliheh Izadi
+- **출판일**: 2025-01-16
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2501.09653v1
+- **섹션**: 본문
+- **유사도 점수(낮을수록 유사)**: 0.4239
+
+2024. Just Accepted.
+[5] Denis Kocetkov, Raymond Li, Loubna Ben allal, Jia LI, Che nghao
+Mou, Yacine Jernite, Margaret Mitchell, Carlos Mu˜ noz Ferr andis, Sean
+Hughes, Thomas Wolf, Dzmitry Bahdanau, Leandro V on Werra, a nd
+Harm de Vries. The stack: 3 TB of permissively licensed sourc e code.
+Transactions on Machine Learning Research , 2023.
+[6] Leo Gao, Stella Biderman, Sid Black, Laurence Golding, T ravis Hoppe,
+Charles Foster, Jason Phang, Horace He, Anish Thite, Noa Nab eshima,
+et al. The pile: An 800gb dataset of diverse text for language modeling.
+arXiv preprint arXiv:2101.00027 , 2020....
+
+---
+
+### 5. Selective Attention Improves Transformer
+- **저자**: Yaniv Leviathan, Matan Kalman, Yossi Matias
+- **출판일**: 2024-10-03
+- **카테고리**: None
+- **인용수**: 0
+- **URL**: http://arxiv.org/pdf/2410.02703v2
+- **섹션**: 초록
+- **유사도 점수(낮을수록 유사)**: 0.3000
+
+Unneeded elements in the attention's context degrade performance. We
+introduce Selective Attention, a simple parameter-free change to the standard
+attention mechanism which reduces attention to unneeded elements. Selective
+attention consistently improves language modeling and downstream task
+performance in a variety of model sizes and context lengths. For example,
+transformers trained with the language modeling objective on C4 with selective
+attention perform language modeling equivalently to standard transformers with
+~2X more heads and parameters in their attention modules. Selective attenti...
+
+---
+
+
+[질문]
+SELECT title, citation_count FROM papers WHERE publication_year = 2024 ORDER BY citation_count DESC LIMIT 10
+
+위 검색 결과를 바탕으로 질문에 답변해주세요.
+
+===== 메타데이터 =====
+tool: search_paper
+difficulty: easy
+level: beginner

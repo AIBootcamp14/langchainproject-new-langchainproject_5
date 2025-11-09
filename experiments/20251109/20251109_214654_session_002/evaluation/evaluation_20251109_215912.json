@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 7,
+  "relevance_score": 10,
+  "difficulty_score": 8,
+  "citation_score": 0,
+  "total_score": 25,
+  "comment": "요청(전체 대화 저장)에 직접적으로 응답했고 저장 경로를 제시해 관련성은 높습니다. 다만 실제로 ‘전체 대화’가 저장되었는지, 저장 형식/내용 확인 등이 없어 정확성은 약간 불확실합니다. Easy 모드로 간단명료하나 파일 경로 등 기술적 표현이 있어 난이도는 8점. 참고 문서가 없고 인용도 하지 않아 출처 점수는 0점입니다.",
+  "question": "전체 대화 저장해줘",
+  "answer": "파일이 성공적으로 저장되었습니다.\n파일 경로: experiments/20251109/20251109_214654_session_002/outputs/save_data/20251109_215901_response_1.md",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "easy",
+  "timestamp": "2025-11-09T21:59:12.838297"
+}

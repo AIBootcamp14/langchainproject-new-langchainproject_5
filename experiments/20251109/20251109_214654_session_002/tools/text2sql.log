@@ -1,0 +1,71 @@
+2025-11-09 21:52:12 | Text2SQL 도구 실행 시작
+2025-11-09 21:52:12 | 질문: 2024년 BERT 계열 논문 통계 보여주고 대표 논문 하나 요약해줘
+2025-11-09 21:52:13 | SQL 실행 완료
+2025-11-09 21:52:13 | 결과 길이: 591 글자
+2025-11-09 21:52:13 | 결과 미리보기:
+**질문**: 2024년 BERT 계열 논문 통계 보여주고 대표 논문 하나 요약해줘
+
+**생성된 SQL(검증 전)**:
+```sql
+SELECT 
+  COUNT(*) AS total_bert_papers,
+  AVG(citation_count) AS avg_citations,
+  MAX(citation_count) AS max_citations,
+  (ARRAY_AGG(title ORDER BY citation_count DESC LIMIT 1))[1] AS top_title,
+  (ARRAY_AGG(abstract ORDER BY citation_count DESC LIMIT 1))[1] AS top_abstract
+FROM papers
+WHERE 
+  EXTRACT(YEAR FROM publish_date) = 2024
+  AND (title ILIKE '%bert%' OR abstract ILIKE '%bert%')
+GROUP BY category
+ORDER BY total_b
+2025-11-09 21:56:12 | Text2SQL 도구 실행 시작
+2025-11-09 21:56:12 | 질문: 카테고리별 논문 수 통계 보여줘
+2025-11-09 21:56:16 | SQL 실행 완료
+2025-11-09 21:56:16 | 결과 길이: 890 글자
+2025-11-09 21:56:16 | 결과 미리보기:
+**질문**: 카테고리별 논문 수 통계 보여줘
+
+**생성된 SQL**:
+```sql
+SELECT category, COUNT(*) AS paper_count FROM papers GROUP BY category ORDER BY paper_count DESC LIMIT 100;
+```
+
+**분석 결과**:
+
+### 1. 요약  
+제공된 데이터베이스 검색 결과, 논문 카테고리별 통계에서 **"(빈 카테고리)"**로 분류된 논문이 **108건**으로 가장 많았습니다. 다른 카테고리에 대한 정보는 현재 결과에 포함되어 있지 않아 추가 분석이 필요해 보입니다.
+
+---
+
+### 2. 통계 표  
+| 카테고리       | 논문 수 | 설명                     |
+|----------------|---------|--------------------------|
+| (빈 카테고리) | 108     | 카테고리가 지정되지 않은 논문 |
+
+---
+
+### 3. 핵심 인사이트
+2025-11-09 21:58:40 | Text2SQL 도구 실행 시작
+2025-11-09 21:58:40 | 질문: 2024년에 나온 AI 논문 몇 개야?
+2025-11-09 21:58:44 | SQL 실행 완료
+2025-11-09 21:58:44 | 결과 길이: 895 글자
+2025-11-09 21:58:44 | 결과 미리보기:
+**질문**: 2024년에 나온 AI 논문 몇 개야?
+
+**생성된 SQL**:
+```sql
+SELECT COUNT(*) AS paper_count FROM papers WHERE EXTRACT(YEAR FROM publish_date)=2024 AND category ILIKE '%AI%' LIMIT 100;
+```
+
+**분석 결과**:
+
+### 1. 요약  
+2024년에 출판된 AI 관련 논문은 현재 **0건**으로 확인되었습니다. 아직 해당 연도의 논문이 데이터베이스에 등록되지 않았거나, 검색 조건에 맞는 결과가 없는 것으로 보입니다.  
+
+---
+
+### 2. 통계 표  
+| 통계 항목         | 값  | 설명                          |
+|-------------------|-----|-------------------------------|
+**2024년 AI 논문 수** | 0   | `publish_date`가 2024년이고, 제목에 "AI"가

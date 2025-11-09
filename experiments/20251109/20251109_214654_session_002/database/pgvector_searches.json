@@ -1,0 +1,62 @@
+[
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "\"Attention Is All You Need\" 논문 요약해줘",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4470,
+    "timestamp": "2025-11-09T21:47:15.316515"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "\"Attention Is All You Need\" limitations",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4318,
+    "timestamp": "2025-11-09T21:50:31.787541"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "2024년 BERT 계열 논문 통계 보여주고 대표 논문 하나 요약해줘",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4450,
+    "timestamp": "2025-11-09T21:52:30.264669"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "BERT vs GPT for financial engineering 후속 연구 OR improved follow-up studies on BERT models in finance 2023-2024",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4405,
+    "timestamp": "2025-11-09T21:53:40.891479"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "Attention mechanism year:2022-2024 type:article sort:year",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4477,
+    "timestamp": "2025-11-09T21:55:00.505595"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "SELECT title, citation_count FROM papers WHERE publication_year = 2024 ORDER BY citation_count DESC LIMIT 10",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4463,
+    "timestamp": "2025-11-09T21:57:14.014516"
+  }
+]
