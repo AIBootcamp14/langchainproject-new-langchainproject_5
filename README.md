@@ -2260,6 +2260,203 @@ CREATE TABLE glossary (
 
 ---
 
+#### 7-2. RAG 논문 검색 도구
+
+**위치**: `src/tools/search_paper.py`
+
+PostgreSQL + pgvector 기반의 **하이브리드 검색**(벡터 검색 + 키워드 검색)으로 논문 데이터베이스에서 관련 논문을 검색하는 도구입니다.
+
+##### 논문 검색 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 RAG 논문 검색 도구 전체 흐름"]
+        direction TB
+
+        subgraph Input["🔸 입력 & 라우팅"]
+            direction LR
+            Start([▶️ 사용자 질문]) --> KeywordCheck{시간 키워드<br/>검출?}
+            KeywordCheck -->|최신/최근 있음| SkipRAG[❌ RAG 건너뜀<br/>→ Web 검색]
+            KeywordCheck -->|시간 키워드 없음| PatternMatch[패턴 매칭<br/>논문+찾]
+            PatternMatch --> ToolSelect[🔧 search_paper<br/>도구 선택]
+        end
+
+        subgraph Search["🔹 하이브리드 검색"]
+            direction LR
+            VectorSearch[벡터 검색 70%<br/>paper_chunks<br/>MultiQuery] --> Merge[점수 병합<br/>가중치 적용]
+            KeywordSearch[키워드 검색 30%<br/>papers 테이블<br/>Full-Text Search] --> Merge
+            Merge --> TopK[Top-5 논문<br/>선정]
+        end
+
+        subgraph Generation["🔺 답변 생성"]
+            direction LR
+            PromptLoad[난이도별<br/>프롬프트 로드<br/>2개 수준] --> LLMCall[LLM 호출<br/>OpenAI/Solar]
+            LLMCall --> FinalAnswer[✅ 최종 답변<br/>+ 논문 메타데이터]
+        end
+
+        subgraph Fallback["🔶 Fallback 처리"]
+            direction LR
+            CheckResult{검색<br/>성공?<br/>유사도 ≤ 0.5}
+            CheckResult -->|실패| WebSearch[Web 논문 검색<br/>web_search]
+            WebSearch --> CheckWeb{성공?}
+            CheckWeb -->|실패| GeneralAnswer[일반 답변<br/>general]
+            CheckWeb -->|성공| End2([✅ 완료])
+            GeneralAnswer --> End3([✅ 완료])
+        end
+
+        %% 단계 간 연결
+        Input --> Search
+        Search --> CheckResult
+        CheckResult -->|성공| Generation
+        Generation --> End1([✅ 완료])
+        CheckResult -->|실패 감지| Fallback
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Input fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Search fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Generation fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Fallback fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (입력 - 청록 계열)
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
+    style KeywordCheck fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style SkipRAG fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style PatternMatch fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style ToolSelect fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (검색 - 보라 계열)
+    style VectorSearch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style KeywordSearch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style Merge fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style TopK fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (생성 - 녹색 계열)
+    style PromptLoad fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style LLMCall fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style FinalAnswer fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (Fallback - 주황 계열)
+    style CheckResult fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style WebSearch fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style CheckWeb fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style GeneralAnswer fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% 종료 노드
+    style End1 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style End2 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style End3 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% 연결선 스타일 (단계 간 - 회색)
+    linkStyle 0,1,2,3 stroke:#006064,stroke-width:2px
+    linkStyle 4,5,6 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 7,8,9 stroke:#2e7d32,stroke-width:2px
+    linkStyle 10,11,12,13,14 stroke:#e65100,stroke-width:2px
+    linkStyle 15,16,17,18 stroke:#616161,stroke-width:3px
+```
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 방식 |
+|------|------|----------|
+| **하이브리드 검색** | 벡터 검색(70%) + 키워드 검색(30%) | pgvector similarity + PostgreSQL Full-Text Search |
+| **MultiQuery 확장** | 1개 쿼리 → 3-5개 변형 쿼리 생성 | LangChain MultiQueryRetriever + LLM |
+| **유사도 임계값** | 검색 품질 보장 (score ≤ 0.5) | Cosine distance 기반 필터링 |
+| **메타데이터 조회** | 논문 상세 정보 제공 | PostgreSQL papers 테이블 JOIN |
+| **Fallback Chain** | 실패 시 자동 전환 | search_paper → web_search → general |
+| **난이도별 답변** | Easy/Hard 2개 수준 답변 생성 | tool_prompts.json 프롬프트 |
+
+##### 데이터베이스 스키마
+
+**papers 테이블** (PostgreSQL):
+```sql
+CREATE TABLE papers (
+    paper_id SERIAL PRIMARY KEY,
+    arxiv_id VARCHAR(64),
+    title TEXT NOT NULL,
+    authors TEXT,
+    publish_date DATE,
+    source VARCHAR(32),
+    url TEXT UNIQUE,
+    category TEXT,
+    citation_count INT,
+    abstract TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 인덱스
+CREATE INDEX idx_papers_title ON papers USING gin (to_tsvector('simple', title));
+CREATE INDEX idx_papers_category ON papers (category);
+CREATE INDEX idx_papers_date ON papers (publish_date);
+```
+
+**paper_chunks 컬렉션** (pgvector):
+- **벡터 차원**: 1536 (OpenAI text-embedding-3-small)
+- **메타데이터**: paper_id, title, authors, section, publish_date
+- **검색 방식**: Cosine distance (L2 norm)
+
+##### 검색 전략 비교
+
+| 구분 | 벡터 검색 (70%) | 키워드 검색 (30%) |
+|------|----------------|------------------|
+| **검색 대상** | paper_chunks (논문 본문 청크) | papers (제목, 초록) |
+| **검색 방식** | pgvector similarity/MMR | PostgreSQL ILIKE |
+| **장점** | 의미적 유사도, 동의어 감지 | 정확한 용어 매칭 |
+| **단점** | 모호한 결과 가능 | 동의어 감지 불가 |
+| **점수 계산** | 1.0 / (1.0 + distance) | title 2.0 + abstract 1.0 |
+
+##### 난이도별 답변 예시
+
+**사용자 질문**: "RAG 관련 논문 찾아줘"
+
+**Easy 모드**:
+> RAG(Retrieval-Augmented Generation)는 대규모 언어 모델의 한계를 극복하기 위한 방법입니다.
+>
+> 검색된 주요 논문:
+> 1. **Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks** (Lewis et al., 2020)
+>    - RAG의 기본 개념을 제시한 논문
+>    - 외부 지식 베이스 활용으로 답변 정확성 향상
+>
+> 2. **In-Context Retrieval-Augmented Language Models** (Ram et al., 2023)
+>    - 문맥 내 정보 검색 방식으로 RAG 개선
+
+**Hard 모드**:
+> RAG는 parametric knowledge(모델 가중치)와 non-parametric knowledge(외부 데이터베이스)를 결합한 하이브리드 접근법입니다.
+>
+> 핵심 아키텍처:
+> - **Retriever**: DPR(Dense Passage Retrieval)로 관련 문서 검색
+> - **Generator**: BART/T5 기반 seq2seq 모델
+> - **End-to-End 학습**: Retriever와 Generator 동시 학습
+>
+> 검색 결과:
+> 1. **Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks**
+>    - 인용수: 1250회
+>    - 카테고리: cs.CL
+>    - URL: https://arxiv.org/abs/2005.11401
+
+##### Fallback Chain 동작
+
+**검색 실패 조건**:
+- 모든 검색 결과의 유사도 점수 > 0.5 (낮은 유사도)
+- 실패 메시지: "데이터베이스에서 관련 논문을 찾지 못했습니다."
+
+**Fallback 순서**:
+1. **search_paper** (RAG DB 검색) → 실패
+2. **web_search** (Tavily 웹 검색) → arXiv/Google Scholar 검색
+3. **general** (LLM 지식 기반) → 최종 답변
+
+**도구별 참조 문서**:
+- [RAG 논문 검색 시나리오](docs/scenarios/02_RAG_논문_검색.md)
+- [RAG 논문 검색 도구 아키텍처](docs/architecture/single_request/01_RAG_논문_검색.md)
+- [RAG 논문 검색 Fallback 실패 문제](docs/issues/02-3_RAG_논문검색_Fallback_실패_문제.md)
+- [논문 데이터 수집 및 DB 구축](docs/issues/03_논문데이터_수집_및_DB_구축.md)
+- [박재홍 논문 데이터 수집](docs/roles/03_박재홍_논문데이터수집.md)
+
+---
+
 ### 8. Streamlit UI 시스템
 
 #### 주요 기능
