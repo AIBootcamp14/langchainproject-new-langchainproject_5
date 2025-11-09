@@ -409,9 +409,15 @@ def text2sql_node(state: AgentState, exp_manager=None):
     # -------------- 상태에서 질문 추출 -------------- #
     question = state["question"]                # 사용자 질문
 
+    # -------------- 도구별 로거 생성 -------------- #
+    tool_logger = exp_manager.get_tool_logger('text2sql') if exp_manager else None
+
     # -------------- 로깅 -------------- #
     if exp_manager:
         exp_manager.logger.write(f"Text-to-SQL 노드 실행: {question}")
+    if tool_logger:
+        tool_logger.write(f"Text2SQL 도구 실행 시작")
+        tool_logger.write(f"질문: {question}")
 
     # -------------- Text-to-SQL 도구 호출 -------------- #
     try:
@@ -420,6 +426,10 @@ def text2sql_node(state: AgentState, exp_manager=None):
         # -------------- 로깅 -------------- #
         if exp_manager:
             exp_manager.logger.write(f"SQL 실행 완료: {len(result)} 글자")
+        if tool_logger:
+            tool_logger.write(f"SQL 실행 완료")
+            tool_logger.write(f"결과 길이: {len(result)} 글자")
+            tool_logger.write(f"결과 미리보기:\n{result[:500]}")
 
         # -------------- 최종 답변 저장 -------------- #
         state["final_answer"] = result          # 통계 조회 결과 저장
@@ -428,6 +438,8 @@ def text2sql_node(state: AgentState, exp_manager=None):
         # -------------- 오류 처리 -------------- #
         if exp_manager:
             exp_manager.logger.write(f"Text-to-SQL 실행 오류: {e}", print_error=True)
+        if tool_logger:
+            tool_logger.write(f"Text2SQL 실행 오류: {e}", print_error=True)
 
         state["final_answer"] = f"논문 통계 조회 중 오류가 발생했습니다: {str(e)}"
 

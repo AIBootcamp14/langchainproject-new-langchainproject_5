@@ -29,10 +29,17 @@ def general_answer_node(state: AgentState, exp_manager=None):
     question = state["question"]                # 사용자 질문
     difficulty = state.get("difficulty", "easy")  # 난이도 (기본값: easy)
 
+    # -------------- 도구별 로거 생성 -------------- #
+    tool_logger = exp_manager.get_tool_logger('general_answer') if exp_manager else None
+
     # -------------- 로깅 -------------- #
     if exp_manager:
         exp_manager.logger.write(f"일반 답변 노드 실행: {question}")
         exp_manager.logger.write(f"난이도: {difficulty}")
+    if tool_logger:
+        tool_logger.write(f"일반 답변 도구 실행 시작")
+        tool_logger.write(f"질문: {question}")
+        tool_logger.write(f"난이도: {difficulty}")
 
     # -------------- 두 수준의 답변 생성 -------------- #
     # easy -> elementary + beginner, hard -> intermediate + advanced
@@ -54,6 +61,8 @@ def general_answer_node(state: AgentState, exp_manager=None):
     for level in levels:
         if exp_manager:
             exp_manager.logger.write(f"수준 '{level}' 답변 생성 시작")
+        if tool_logger:
+            tool_logger.write(f"수준 '{level}' 답변 생성 시작")
 
         # 프롬프트 로드
         system_content = get_tool_prompt("general_answer", level)
@@ -94,6 +103,12 @@ def general_answer_node(state: AgentState, exp_manager=None):
             exp_manager.logger.write(f"[{level} 답변 전체 내용]")
             exp_manager.logger.write(response.content)
             exp_manager.logger.write("=" * 80)
+        if tool_logger:
+            tool_logger.write(f"수준 '{level}' 답변 생성 완료: {len(response.content)} 글자")
+            tool_logger.write("=" * 80)
+            tool_logger.write(f"[{level} 답변 전체 내용]")
+            tool_logger.write(response.content)
+            tool_logger.write("=" * 80)
 
     # -------------- 최종 답변 저장 -------------- #
     state["final_answers"] = final_answers

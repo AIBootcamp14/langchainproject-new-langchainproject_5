@@ -27,9 +27,15 @@ def save_file_node(state: AgentState, exp_manager=None):
     # -------------- 상태에서 질문 추출 -------------- #
     question = state["question"]                # 사용자 질문
 
+    # -------------- 도구별 로거 생성 -------------- #
+    tool_logger = exp_manager.get_tool_logger('save_file') if exp_manager else None
+
     # -------------- 로깅 -------------- #
     if exp_manager:
         exp_manager.logger.write(f"파일 저장 노드 실행: {question}")
+    if tool_logger:
+        tool_logger.write(f"파일 저장 도구 실행 시작")
+        tool_logger.write(f"질문: {question}")
 
     # -------------- 저장 모드 결정 -------------- #
     # "전체"와 "저장" 키워드가 동시에 있으면 전체 대화 저장, 아니면 단일 답변만 저장
@@ -37,6 +43,8 @@ def save_file_node(state: AgentState, exp_manager=None):
 
     if exp_manager:
         exp_manager.logger.write(f"저장 모드: {'전체 대화 저장' if is_full_save else '단일 답변 저장'}")
+    if tool_logger:
+        tool_logger.write(f"저장 모드: {'전체 대화 저장' if is_full_save else '단일 답변 저장'}")
 
     # -------------- 저장할 내용 확인 -------------- #
     messages = state.get("messages", [])
@@ -72,6 +80,8 @@ def save_file_node(state: AgentState, exp_manager=None):
             # final_answers가 있으면 각 수준별로 별도 파일 저장
             if exp_manager:
                 exp_manager.logger.write(f"저장 출처: final_answers ({len(final_answers)}개 수준)")
+            if tool_logger:
+                tool_logger.write(f"저장 출처: final_answers ({len(final_answers)}개 수준)")
 
             # 저장 카운터 증가 (세션별 누적 번호)
             save_counter = state.get("save_counter", 0) + 1
@@ -100,6 +110,8 @@ def save_file_node(state: AgentState, exp_manager=None):
                     # ExperimentManager의 save_output 메서드 사용
                     file_path = exp_manager.save_output(filename, content)
                     exp_manager.logger.write(f"파일 저장 완료: {file_path} ({level_labels.get(level, level)})")
+                    if tool_logger:
+                        tool_logger.write(f"파일 저장 완료: {file_path} ({level_labels.get(level, level)})")
                     saved_files.append(f"- {level_labels.get(level, level)}: {file_path}")
                 else:
                     # ExperimentManager 없을 때 (테스트 환경)
@@ -122,6 +134,8 @@ def save_file_node(state: AgentState, exp_manager=None):
             content_to_save = tool_result
             if exp_manager:
                 exp_manager.logger.write(f"저장 출처: tool_result")
+            if tool_logger:
+                tool_logger.write(f"저장 출처: tool_result")
 
         # 우선순위 2: final_answer
         if not content_to_save:
@@ -130,6 +144,8 @@ def save_file_node(state: AgentState, exp_manager=None):
                 content_to_save = final_answer
                 if exp_manager:
                     exp_manager.logger.write(f"저장 출처: final_answer")
+                if tool_logger:
+                    tool_logger.write(f"저장 출처: final_answer")
 
         # 우선순위 3: messages에서 마지막 assistant 답변
         if not content_to_save and messages:
@@ -140,6 +156,8 @@ def save_file_node(state: AgentState, exp_manager=None):
                         content_to_save = content
                         if exp_manager:
                             exp_manager.logger.write(f"저장 출처: messages")
+                        if tool_logger:
+                            tool_logger.write(f"저장 출처: messages")
                         break
 
         # 저장할 내용이 없는 경우
@@ -147,9 +165,13 @@ def save_file_node(state: AgentState, exp_manager=None):
             content_to_save = "저장할 내용이 없습니다."
             if exp_manager:
                 exp_manager.logger.write(f"경고: 저장할 내용을 찾지 못함")
+            if tool_logger:
+                tool_logger.write(f"경고: 저장할 내용을 찾지 못함")
 
     if exp_manager:
         exp_manager.logger.write(f"저장할 내용 길이: {len(content_to_save)} 글자")
+    if tool_logger:
+        tool_logger.write(f"저장할 내용 길이: {len(content_to_save)} 글자")
 
     # -------------- 파일명 생성 -------------- #
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 타임스탬프 생성
@@ -163,6 +185,8 @@ def save_file_node(state: AgentState, exp_manager=None):
 
     if exp_manager:
         exp_manager.logger.write(f"파일명: {filename}")
+    if tool_logger:
+        tool_logger.write(f"파일명: {filename}")
 
     # -------------- 파일 저장 -------------- #
     if exp_manager:
@@ -170,6 +194,8 @@ def save_file_node(state: AgentState, exp_manager=None):
         file_path = exp_manager.save_output(filename, content_to_save)  # 파일 저장
 
         exp_manager.logger.write(f"파일 저장 완료: {file_path}")
+        if tool_logger:
+            tool_logger.write(f"파일 저장 완료: {file_path}")
 
         # 성공 메시지 구성
         answer = f"파일이 성공적으로 저장되었습니다.\n파일 경로: {file_path}"
