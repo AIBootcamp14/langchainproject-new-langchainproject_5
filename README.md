@@ -4787,16 +4787,293 @@ graph TB
 
 ### 9. 프롬프트 엔지니어링
 
-#### 난이도별 프롬프트
-- **Easy**: 초등학생 수준, 비유/예시 활용
-- **Hard**: 전문가 수준, 기술 용어 사용
+**파일**: `prompts/` (5개 JSON 파일), `src/prompts/loader.py`
 
-#### 관리
-- `prompts/` 폴더 JSON 형식
-- 실험 폴더 자동 저장
-- 버전 관리
+AI Agent의 행동을 제어하는 프롬프트를 **JSON 파일로 중앙 관리**하는 시스템입니다.
 
-**구현**: `src/prompts/loader.py`, `prompts/`
+코드에 하드코딩된 프롬프트를 제거하고, 프롬프트 엔지니어가 독립적으로 프롬프트를 수정하고 실험할 수 있도록 설계되었습니다.
+
+#### 프롬프트 시스템 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📝 프롬프트 관리 시스템"]
+        direction TB
+
+        subgraph Stage1["🔸 1단계: JSON 파일 관리"]
+            direction LR
+            A[routing_prompts.json<br/>라우팅 프롬프트] --> B[tool_prompts.json<br/>7개 도구 프롬프트]
+            B --> C[evaluation_prompts.json<br/>평가 프롬프트]
+            C --> D[question_generation<br/>질문 생성]
+        end
+
+        subgraph Stage2["🔹 2단계: 프롬프트 로더"]
+            direction LR
+            E[loader.py<br/>로더 모듈] --> F[load_routing_prompts<br/>라우팅 로드]
+            F --> G[load_tool_prompts<br/>도구 로드]
+            G --> H[load_evaluation_prompts<br/>평가 로드]
+        end
+
+        subgraph Stage3["🔺 3단계: 난이도 선택"]
+            direction LR
+            I[사용자<br/>난이도 선택<br/>Easy/Hard] --> J{난이도<br/>분기}
+            J -->|Easy| K[Easy 모드<br/>프롬프트<br/>쉬운 용어/비유]
+            J -->|Hard| L[Hard 모드<br/>프롬프트<br/>기술 용어/수식]
+        end
+
+        subgraph Stage4["🔶 4단계: 프롬프트 구성"]
+            direction LR
+            M[System Prompt<br/>로드] --> N[Few-shot 예제<br/>추가<br/>13개 라우팅]
+            N --> O[User Prompt<br/>템플릿<br/>변수 바인딩]
+            O --> P[최종 프롬프트<br/>완성]
+        end
+
+        subgraph Stage5["🔷 5단계: LLM 호출"]
+            direction LR
+            Q[Solar Pro2<br/>라우팅] --> R[GPT-5<br/>답변 생성]
+            R --> S[GPT-5<br/>평가]
+        end
+
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+        Stage4 --> Stage5
+    end
+
+    %% MainFlow 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일 (5단계 색상)
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Stage5 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (1단계 - 청록)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style C fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
+    style D fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (2단계 - 파랑)
+    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style F fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style G fill:#42a5f5,stroke:#1565c0,stroke-width:2px,color:#000
+    style H fill:#2196f3,stroke:#0d47a1,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (3단계 - 보라)
+    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
+    style K fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
+    style L fill:#9c27b0,stroke:#4a148c,stroke-width:2px,color:#fff
+
+    %% 노드 스타일 (4단계 - 주황)
+    style M fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style N fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style O fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
+    style P fill:#fb8c00,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (5단계 - 녹색)
+    style Q fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
+    style R fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style S fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#fff
+
+    %% 연결선 스타일 (1단계 - 청록 0~2)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (2단계 - 파랑 3~5)
+    linkStyle 3 stroke:#1976d2,stroke-width:2px
+    linkStyle 4 stroke:#1976d2,stroke-width:2px
+    linkStyle 5 stroke:#1976d2,stroke-width:2px
+
+    %% 연결선 스타일 (3단계 - 보라 6~8)
+    linkStyle 6 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
+
+    %% 연결선 스타일 (4단계 - 주황 9~11)
+    linkStyle 9 stroke:#e65100,stroke-width:2px
+    linkStyle 10 stroke:#e65100,stroke-width:2px
+    linkStyle 11 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (5단계 - 녹색 12~13)
+    linkStyle 12 stroke:#2e7d32,stroke-width:2px
+    linkStyle 13 stroke:#2e7d32,stroke-width:2px
+
+    %% 단계 간 연결 (회색 14~17)
+    linkStyle 14 stroke:#616161,stroke-width:3px
+    linkStyle 15 stroke:#616161,stroke-width:3px
+    linkStyle 16 stroke:#616161,stroke-width:3px
+    linkStyle 17 stroke:#616161,stroke-width:3px
+```
+
+#### 핵심 기능
+
+**1. JSON 기반 중앙 관리**:
+- 5개 JSON 파일로 모든 프롬프트 관리
+- 코드 재배포 없이 프롬프트 수정 가능
+- Git으로 버전 관리 및 변경 이력 추적
+
+**2. 난이도별 프롬프트**:
+- Easy 모드: 쉬운 용어, 비유/예시, 간단 설명
+- Hard 모드: 기술 용어, 수식/알고리즘, 복잡도 분석
+
+**3. Few-shot 학습**:
+- 라우팅 프롬프트: 13개 Few-shot 예제
+- 도구 선택 정확도 향상
+
+**4. 프롬프트 로더**:
+- `src/prompts/loader.py`에서 JSON 로드
+- 각 노드에서 로더 함수 호출하여 사용
+
+#### 프롬프트 파일 구조
+
+**디렉토리 구조**:
+```
+prompts/
+├── routing_prompts.json              # 라우팅 프롬프트 + Few-shot 예제
+├── tool_prompts.json                 # 7개 도구 난이도별 프롬프트
+├── evaluation_prompts.json           # 평가 프롬프트 (4가지 기준)
+├── question_generation_prompts.json  # 질문 생성 프롬프트
+└── golden_dataset.json               # 테스트 데이터셋
+```
+
+#### 5가지 JSON 파일 설명
+
+| 파일명 | 용도 | 주요 내용 |
+|--------|------|----------|
+| **routing_prompts.json** | AI Agent 라우팅 | 7개 도구 설명, 13개 Few-shot 예제, 라우팅 규칙 |
+| **tool_prompts.json** | 7개 도구 프롬프트 | 도구별 Easy/Hard 시스템 프롬프트, 사용자 템플릿 |
+| **evaluation_prompts.json** | 답변 평가 | 4가지 평가 기준 (정확도/관련성/난이도/출처), 평가 예제 |
+| **question_generation_prompts.json** | 테스트 질문 생성 | 난이도별 질문 생성 규칙, 도구 분포 보장 |
+| **golden_dataset.json** | 테스트 데이터셋 | Ground Truth 질문-답변 쌍 |
+
+#### 난이도별 프롬프트 전략
+
+**Easy 모드 (초심자용)**:
+
+| 항목 | 설명 | 예시 |
+|------|------|------|
+| 설명 수준 | 초등학생~중학생 이해 가능 | "마치 ~처럼" 비유 사용 |
+| 용어 사용 | 전문 용어 최소화, 쉬운 한글 | "신경망" → "뇌를 본뜬 컴퓨터 구조" |
+| 설명 기법 | 비유, 예시, 연결어 활용 | "예를 들어", "즉" 사용 |
+| 문장 길이 | 짧고 간결 (20자 이내) | 한 문장에 하나의 개념만 |
+| 톤 | 친절하고 이해하기 쉬운 톤 | "~입니다", "~해요" |
+
+**Hard 모드 (전문가용)**:
+
+| 항목 | 설명 | 예시 |
+|------|------|------|
+| 용어 사용 | 기술 용어 그대로 사용 | "Self-Attention Mechanism" |
+| 기술 내용 | 알고리즘, 수식 포함 | "Attention(Q,K,V) = softmax(...)" |
+| 분석 수준 | 시간/공간 복잡도 분석 | "O(n²) 복잡도" |
+| 방법론 | 연구 방법론, 한계점 언급 | "실험 결과 비교", "Limitation" |
+| 비교 분석 | 관련 연구와 비교 | "BERT vs GPT 아키텍처" |
+
+#### 라우팅 프롬프트 핵심 규칙
+
+**도구 선택 우선순위**:
+
+| 질문 패턴 | 선택 도구 | 예시 |
+|----------|----------|------|
+| 비교 질문 ("차이", "vs", "비교") | `general` | "BERT와 GPT의 차이는?" |
+| 최신 정보 ("최신", "2024년", "최근") | `web_search` | "2024년 최신 LLM은?" |
+| 특정 논문 ("논문 찾아줘", "검색") | `search_paper` | "Transformer 논문 찾아줘" |
+| 단일 용어 정의 ("~가 뭐야") | `glossary` | "BERT가 뭐야?" |
+| 요약 ("요약해줘", "핵심 내용") | `summarize` | "이 논문 요약해줘" |
+| 통계/개수 ("몇 편", "순위", "평균") | `text2sql` | "2024년 논문 몇 편?" |
+| 파일 저장 ("저장", "다운로드") | `save_file` | "파일로 저장해줘" |
+
+**중요**: 두 개 이상의 용어를 포함하는 질문은 `general` 도구 선택 (glossary는 단일 용어만 처리)
+
+#### Few-Shot 학습 예제
+
+**라우팅 프롬프트 Few-shot 예제** (13개):
+
+| 질문 | 도구 | 선택 이유 |
+|------|------|----------|
+| "BERT가 뭐야?" | `glossary` | 단일 용어(BERT) 정의 질문 |
+| "Transformer 논문 찾아줘" | `search_paper` | 특정 논문 검색 요청 |
+| "2024년 최신 LLM은?" | `web_search` | 최신 정보 ("2024년", "최신") |
+| "이 논문 요약해줘" | `summarize` | 요약 키워드 포함 |
+| "2024년 논문 몇 편?" | `text2sql` | 통계/개수 질문 |
+| "파일로 저장해줘" | `save_file` | 저장 요청 |
+| "BERT와 GPT의 차이는?" | `general` | 비교 질문 (두 개 용어) |
+
+#### 프롬프트 로더 함수
+
+**src/prompts/loader.py 주요 함수**:
+
+| 함수명 | 반환 타입 | 설명 |
+|--------|----------|------|
+| `get_routing_prompt()` | `str` | 라우팅 프롬프트 + Few-shot 예제 반환 |
+| `load_tool_prompts()` | `dict` | 7개 도구의 난이도별 프롬프트 반환 |
+| `load_evaluation_prompts()` | `dict` | 평가 프롬프트 및 기준 반환 |
+| `get_general_template(difficulty)` | `str` | 일반 답변 도구 프롬프트 반환 |
+| `get_search_paper_template(difficulty)` | `str` | 논문 검색 도구 프롬프트 반환 |
+| `get_summarize_template(difficulty)` | `str` | 요약 도구 프롬프트 반환 |
+
+#### 프롬프트 적용 프로세스
+
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | JSON 로드 | loader.py가 JSON 파일을 파이썬 딕셔너리로 변환 |
+| 2 | 난이도 선택 | 사용자가 Easy/Hard 선택 |
+| 3 | 프롬프트 선택 | 도구와 난이도에 맞는 프롬프트 선택 |
+| 4 | 변수 바인딩 | {question}, {context} 등 변수에 실제 값 대입 |
+| 5 | LLM 호출 | 완성된 프롬프트를 LLM에 전달 |
+
+#### 버전 관리 및 실험 추적
+
+**버전 관리**:
+- Git으로 프롬프트 변경 이력 추적
+- 각 실험 폴더에 사용된 프롬프트 자동 저장
+- 프롬프트 A/B 테스트 가능
+
+**실험 폴더 구조**:
+```
+experiments/20251105/20251105_143022_session_001/
+├── chatbot.log                  # 전체 실행 로그
+├── config.json                  # 실험 설정 (난이도, 모델 등)
+└── prompts_snapshot/            # 사용된 프롬프트 스냅샷
+    ├── routing_prompts.json
+    └── tool_prompts.json
+```
+
+#### 주요 특징
+
+**1. 코드-프롬프트 분리**:
+- 프롬프트 수정 시 코드 재배포 불필요
+- 프롬프트 엔지니어가 독립적으로 작업 가능
+
+**2. 일관성 보장**:
+- 모든 도구가 동일한 난이도 기준 사용
+- 평가 기준도 프롬프트로 관리되어 일관성 유지
+
+**3. 실험 재현성**:
+- 각 실험에 사용된 프롬프트 스냅샷 저장
+- 실험 결과 재현 가능
+
+**4. 확장 용이성**:
+- 새 도구 추가 시 JSON에 프롬프트만 추가
+- Few-shot 예제 추가로 정확도 개선 가능
+
+#### 참조 문서
+
+**시스템 설계**:
+- [`docs/modularization/13_프롬프트_엔지니어링.md`](docs/modularization/13_프롬프트_엔지니어링.md) - 프롬프트 시스템 전체 구조
+- [`docs/PRD/15_프롬프트_엔지니어링.md`](docs/PRD/15_프롬프트_엔지니어링.md) - 프롬프트 설계 기준
+
+**구현 및 개선**:
+- [`docs/issues/04_프롬프트_엔지니어링_구현.md`](docs/issues/04_프롬프트_엔지니어링_구현.md) - 초기 구현
+- [`docs/issues/04-1_프롬프트_엔지니어링_통합_보고서.md`](docs/issues/04-1_프롬프트_엔지니어링_통합_보고서.md) - 통합 보고서
+
+**담당자 문서**:
+- [`docs/roles/04_임예슬_프롬프트_엔지니어링.md`](docs/roles/04_임예슬_프롬프트_엔지니어링.md) - 프롬프트 엔지니어링 담당
 
 ---
 
