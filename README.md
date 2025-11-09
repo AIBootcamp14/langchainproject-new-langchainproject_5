@@ -2457,6 +2457,227 @@ CREATE INDEX idx_papers_date ON papers (publish_date);
 
 ---
 
+#### 7-3. WEB 논문 검색 도구
+
+**위치**: `src/tools/web_search.py`
+
+Tavily Search API를 사용하여 **최신 논문 정보**를 실시간 웹에서 검색하고, **arXiv 논문 자동 저장** 기능을 제공하는 도구입니다.
+
+##### Web 검색 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 Web 논문 검색 도구 전체 흐름"]
+        direction TB
+
+        subgraph Input["🔸 입력 & 라우팅"]
+            direction LR
+            Start([▶️ 사용자 질문]) --> TimeKeyword{시간 키워드<br/>검출?}
+            TimeKeyword -->|최신/최근<br/>있음| SkipRAG[✅ RAG 건너뜀<br/>Web 검색 우선]
+            TimeKeyword -->|키워드 없음| RAGFirst[RAG 검색<br/>우선 실행]
+            SkipRAG --> WebTool[🔧 web_search<br/>도구 선택]
+            RAGFirst --> RAGFail{RAG<br/>실패?}
+            RAGFail -->|실패| FallbackWeb[Fallback:<br/>web_search]
+            RAGFail -->|성공| End1([✅ 완료])
+            FallbackWeb --> WebTool
+        end
+
+        subgraph Search["🔹 Web 검색"]
+            direction LR
+            TavilyInit[Tavily API<br/>초기화] --> TavilySearch[검색 실행<br/>max_results=5]
+            TavilySearch --> CheckArxiv{arXiv<br/>논문?}
+            CheckArxiv -->|Yes| SaveArxiv[arXiv 처리<br/>PDF 다운로드<br/>+ DB 저장]
+            CheckArxiv -->|No| Format[결과 포맷팅<br/>Markdown]
+            SaveArxiv --> Format
+        end
+
+        subgraph Generation["🔺 답변 생성"]
+            direction LR
+            PromptLoad[난이도별<br/>프롬프트 로드<br/>템플릿 사용] --> LLMCall[LLM 호출<br/>OpenAI/Solar]
+            LLMCall --> FinalAnswer[✅ 최종 답변<br/>+ 검색 결과]
+        end
+
+        subgraph Fallback["🔶 Fallback 처리"]
+            direction LR
+            CheckResult{검색<br/>성공?<br/>결과 존재}
+            CheckResult -->|실패| GeneralAnswer[일반 답변<br/>general]
+            CheckResult -->|성공| End2([✅ 완료])
+            GeneralAnswer --> End3([✅ 완료])
+        end
+
+        %% 단계 간 연결
+        WebTool --> Search
+        Search --> CheckResult
+        CheckResult --> Generation
+        Generation --> End4([✅ 완료])
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Input fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Search fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Generation fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Fallback fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (입력 - 청록 계열)
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
+    style TimeKeyword fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style SkipRAG fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
+    style RAGFirst fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style WebTool fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style RAGFail fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style FallbackWeb fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (검색 - 보라 계열)
+    style TavilyInit fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style TavilySearch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style CheckArxiv fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style SaveArxiv fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style Format fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (생성 - 녹색 계열)
+    style PromptLoad fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style LLMCall fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style FinalAnswer fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (Fallback - 주황 계열)
+    style CheckResult fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style GeneralAnswer fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% 종료 노드
+    style End1 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style End2 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style End3 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style End4 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% 연결선 스타일
+    linkStyle 0,1,2,3,4,5,6,7 stroke:#006064,stroke-width:2px
+    linkStyle 8,9,10,11,12 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 13,14,15 stroke:#2e7d32,stroke-width:2px
+    linkStyle 16,17,18,19 stroke:#e65100,stroke-width:2px
+    linkStyle 20,21,22,23 stroke:#616161,stroke-width:3px
+```
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 방식 |
+|------|------|----------|
+| **실시간 웹 검색** | 최신 논문 정보 검색 (RAG DB에 없는 논문) | Tavily Search API (max_results=5) |
+| **시간 키워드 감지** | "최신", "최근" 키워드 우선 매칭 | multi_request_patterns.yaml (priority: 140) |
+| **arXiv 자동 저장** | arXiv 논문 자동 다운로드 및 DB 저장 | ArxivPaperHandler + PostgreSQL |
+| **다양한 소스 커버** | 학회, 컨퍼런스, 뉴스, 블로그 | Tavily 웹 크롤링 |
+| **Fallback Chain** | RAG 실패 시 자동 전환 | search_paper → web_search → general |
+| **난이도별 답변** | Easy/Hard 2개 수준 템플릿 사용 | tool_prompts.json + 템플릿 |
+
+##### RAG vs Web 검색 비교
+
+| 항목 | RAG 논문 검색 | Web 논문 검색 |
+|------|-------------|-------------|
+| **데이터 소스** | PostgreSQL + pgvector (정적 DB) | Tavily API (실시간 웹) |
+| **논문 수** | ~1000편 (제한) | 무제한 |
+| **최신성** | 낮음 (DB 업데이트 주기 의존) | 높음 (실시간) |
+| **정확도** | 높음 (임베딩 유사도 기반) | 중간 (키워드 매칭) |
+| **속도** | 빠름 (로컬 DB 조회) | 느림 (API HTTP 요청) |
+| **비용** | 무료 | 유료 (Tavily API: 1000 req/month 무료) |
+| **Fallback Chain** | web_search → general | general만 |
+
+##### 두 가지 실행 경로
+
+**경로 1: 시간 키워드 감지 (최우선 실행)**
+
+시간 키워드("최신", "최근", "latest", "2024년" 등) 포함 시 RAG 검색을 건너뛰고 Web 검색이 첫 번째로 실행
+
+```yaml
+# configs/multi_request_patterns.yaml
+- keywords: [최신]
+  exclude_keywords: [정보, 정리, 저장, 분석, 논문, 찾]
+  tools: [web_search, general]
+  priority: 140
+```
+
+**경로 2: Fallback 실행**
+
+시간 키워드 없이 일반 논문 검색 → RAG 검색 실패 → Web 검색으로 자동 전환
+
+```yaml
+# configs/model_config.yaml
+fallback_chain:
+  priorities:
+    paper_search:
+      - search_paper   # 1순위: RAG DB 검색
+      - web_search     # 2순위: Web 검색 (Fallback)
+      - general        # 3순위: 일반 답변
+```
+
+##### arXiv 자동 저장 프로세스
+
+**동작 방식**:
+1. Tavily 검색 결과에서 URL에 `'arxiv.org'` 포함 여부 확인
+2. arXiv 논문이면 `ArxivPaperHandler.process_arxiv_paper()` 호출
+3. arXiv API로 메타데이터 조회 (제목, 저자, 초록, 카테고리)
+4. PostgreSQL `papers` 테이블에 자동 저장
+5. (선택) PDF 다운로드 및 파싱
+
+**효과**:
+- 다음번 동일 논문 검색 시 RAG DB에서 빠르게 조회 가능
+- DB 자동 확장으로 검색 품질 향상
+- PDF 저장으로 논문 요약 기능 지원
+
+##### 사용 예시
+
+**사용자 질문**: "최신 RAG 논문 찾아줘"
+
+**실행 흐름**:
+1. 패턴 매칭: `keywords: [최신]` → `web_search` 도구 선택 (RAG 건너뜀)
+2. Tavily API 초기화 및 웹 검색 실행
+3. 검색 결과 5개 수신
+4. arXiv 논문 2개 발견 → 자동 저장
+5. 결과 Markdown 포맷팅
+6. LLM 답변 생성 (easy 난이도)
+
+**검색 결과 예시**:
+```markdown
+[결과 1]
+제목: Retrieval-Augmented Generation for Large Language Models: A Survey
+내용: This paper provides a comprehensive survey of RAG methods, including recent advancements in 2024...
+URL: https://arxiv.org/abs/2312.10997
+
+[결과 2]
+제목: Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection
+내용: Self-RAG is a new framework that enhances the quality and factuality of LLMs...
+URL: https://arxiv.org/abs/2310.11511
+```
+
+##### Fallback Chain 동작
+
+**검색 실패 조건**:
+- 빈 검색 결과 (`if not search_results`)
+- Tavily API 오류 (API 키 없음, 호출 제한 초과)
+- 실패 메시지: "웹에서 관련 정보를 찾을 수 없습니다."
+
+**Fallback 순서**:
+1. **web_search** (Tavily 웹 검색) → 실패
+2. **general** (LLM 지식 기반) → 최종 답변
+
+**환경변수 설정**:
+```bash
+# Tavily API 키 (필수)
+TAVILY_API_KEY=tvly-xxxxxxxxxxxxxxxxxxxxx
+
+# OpenAI/Solar API 키 (LLM용)
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxx
+SOLAR_API_KEY=xxxxxxxxxxxxxxxxxxxxx
+```
+
+**도구별 참조 문서**:
+- [Web 논문 검색 도구 아키텍처](docs/architecture/single_request/03_Web_논문_검색.md)
+- [웹 검색 논문 추가 청킹 불일치 문제](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md)
+- [이중 요청 Web 논문 검색 저장](docs/architecture/multiple_request/06_이중요청_Web논문검색_저장.md)
+
+---
+
 ### 8. Streamlit UI 시스템
 
 #### 주요 기능
