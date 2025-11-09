@@ -2949,6 +2949,441 @@ for level in levels:
 
 ---
 
+#### 7-5. Text2SQL 통계 도구
+
+**도구명**: `text2sql`
+**목적**: 자연어 질문을 SQL 쿼리로 변환하여 논문 데이터베이스 통계 정보 제공
+
+##### 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📊 Text2SQL 통계 도구 파이프라인"]
+        direction TB
+
+        subgraph UserInput["🔸 사용자 입력"]
+            direction LR
+            A[사용자 질문<br/>자연어] --> B{통계<br/>키워드<br/>감지?}
+            B -->|Yes| C[라우터<br/>text2sql 선택]
+            B -->|No| D[❌ 다른 도구로<br/>라우팅]
+        end
+
+        subgraph SQLGeneration["🔹 SQL 생성"]
+            direction LR
+            E[LLM<br/>Solar Pro2] --> F[Few-shot<br/>Prompting]
+            F --> G[SQL 쿼리<br/>생성]
+            G --> H[보안 검증<br/>_sanitize]
+            H --> I{안전한<br/>쿼리?}
+            I -->|No| J[❌ 에러<br/>반환]
+        end
+
+        subgraph Execution["🔺 쿼리 실행"]
+            direction LR
+            I -->|Yes| K[PostgreSQL<br/>papers 테이블]
+            K --> L[쿼리 실행<br/>READ ONLY]
+            L --> M{결과<br/>존재?}
+            M -->|No| N[빈 결과<br/>처리]
+        end
+
+        subgraph AnswerGen["🔶 답변 생성"]
+            direction LR
+            M -->|Yes| O[쿼리 결과<br/>데이터]
+            O --> P[LLM<br/>GPT-5]
+            P --> Q[난이도별<br/>답변 생성]
+            Q --> R[✅ 최종 답변<br/>통계 + 해석]
+        end
+
+        subgraph Logging["💾 쿼리 로깅"]
+            direction LR
+            L --> S[ExperimentManager]
+            S --> T[query_logs<br/>테이블]
+            T --> U[쿼리 이력<br/>저장]
+        end
+
+        subgraph FallbackChain["⚠️ Fallback 경로"]
+            direction LR
+            J --> V{Fallback<br/>체인?}
+            N --> V
+            V -->|1차| W[search_paper<br/>도구]
+            V -->|2차| X[web_search<br/>도구]
+            V -->|3차| Y[general<br/>도구]
+        end
+
+        C --> E
+        R --> S
+    end
+
+    %% Subgraph 스타일
+    style MainFlow fill:#fffde7,stroke:#f57f17,stroke-width:4px,color:#000
+
+    style UserInput fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style SQLGeneration fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Execution fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style AnswerGen fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Logging fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000
+    style FallbackChain fill:#efebe9,stroke:#3e2723,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (Input 단계)
+    style A fill:#80deea,stroke:#00838f,color:#000
+    style B fill:#4dd0e1,stroke:#00838f,color:#000
+    style C fill:#26c6da,stroke:#00838f,color:#000
+    style D fill:#ef9a9a,stroke:#c62828,color:#000
+
+    %% 노드 스타일 (SQL Generation 단계)
+    style E fill:#ce93d8,stroke:#6a1b9a,color:#000
+    style F fill:#ba68c8,stroke:#6a1b9a,color:#000
+    style G fill:#ab47bc,stroke:#6a1b9a,color:#000
+    style H fill:#9c27b0,stroke:#6a1b9a,color:#fff
+    style I fill:#8e24aa,stroke:#6a1b9a,color:#fff
+    style J fill:#ef9a9a,stroke:#c62828,color:#000
+
+    %% 노드 스타일 (Execution 단계)
+    style K fill:#81c784,stroke:#2e7d32,color:#000
+    style L fill:#66bb6a,stroke:#2e7d32,color:#000
+    style M fill:#4caf50,stroke:#2e7d32,color:#fff
+    style N fill:#ffcc80,stroke:#f57c00,color:#000
+
+    %% 노드 스타일 (Answer Gen 단계)
+    style O fill:#ffcc80,stroke:#ef6c00,color:#000
+    style P fill:#ffb74d,stroke:#ef6c00,color:#000
+    style Q fill:#ffa726,stroke:#ef6c00,color:#000
+    style R fill:#66bb6a,stroke:#2e7d32,color:#000
+
+    %% 노드 스타일 (Logging 단계)
+    style S fill:#f48fb1,stroke:#ad1457,color:#000
+    style T fill:#f06292,stroke:#ad1457,color:#000
+    style U fill:#ec407a,stroke:#ad1457,color:#fff
+
+    %% 노드 스타일 (Fallback 단계)
+    style V fill:#bcaaa4,stroke:#4e342e,color:#000
+    style W fill:#a1887f,stroke:#4e342e,color:#000
+    style X fill:#8d6e63,stroke:#4e342e,color:#fff
+    style Y fill:#795548,stroke:#4e342e,color:#fff
+
+    %% 연결선 스타일 (Input 단계: 0-3)
+    linkStyle 0,1,2,3 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (SQL Generation 단계: 4-9)
+    linkStyle 4,5,6,7,8,9 stroke:#6a1b9a,stroke-width:2px
+
+    %% 연결선 스타일 (Execution 단계: 10-13)
+    linkStyle 10,11,12,13 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (Answer Gen 단계: 14-17)
+    linkStyle 14,15,16,17 stroke:#ef6c00,stroke-width:2px
+
+    %% 연결선 스타일 (Logging 단계: 18-20)
+    linkStyle 18,19,20 stroke:#ad1457,stroke-width:2px
+
+    %% 연결선 스타일 (Fallback 단계: 21-24)
+    linkStyle 21,22,23,24 stroke:#4e342e,stroke-width:2px
+
+    %% 연결선 스타일 (단계 간 연결: 25-26)
+    linkStyle 25,26 stroke:#616161,stroke-width:3px
+```
+
+**Text2SQL 파이프라인 설명:**
+- 사용자가 통계 관련 자연어 질문을 입력하면 라우터가 통계 키워드(개수, 몇 편, 통계 등)를 감지하여 text2sql 도구를 선택
+- LLM(Solar Pro2)이 Few-shot Prompting 기법을 사용하여 자연어 질문을 SQL 쿼리로 변환하고, 보안 검증(_sanitize)을 통해 안전한 쿼리인지 확인
+- 안전한 쿼리만 PostgreSQL의 papers 테이블에서 READ ONLY 모드로 실행되며, 쿼리 실행 결과가 있는지 확인
+- 쿼리 결과가 있으면 LLM(GPT-5)이 난이도별로 통계 데이터를 해석하여 최종 답변을 생성
+- ExperimentManager가 실행된 모든 쿼리를 query_logs 테이블에 기록하여 이력을 추적
+- 쿼리가 불안전하거나 결과가 없으면 Fallback 체인을 통해 search_paper → web_search → general 도구로 순차적으로 전환
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 |
+|------|------|------|
+| **자연어 → SQL 변환** | "2023년 논문 몇 편?" → SQL | Few-shot Prompting (3개 예제) |
+| **보안 검증** | SQL Injection 방지 | Whitelist 테이블/컬럼 + 금지 패턴 |
+| **쿼리 실행** | PostgreSQL papers 테이블 조회 | READ ONLY + LIMIT 100 강제 |
+| **통계 해석** | 쿼리 결과 → 자연어 답변 | LLM 기반 난이도별 설명 |
+| **Fallback 체인** | text2sql 실패 시 자동 전환 | 4단계 체인 (text2sql → search_paper → web_search → general) |
+| **쿼리 로깅** | 실행 쿼리 이력 저장 | query_logs 테이블 + ExperimentManager |
+
+##### 보안 기능
+
+| 보안 기능 | 설명 | 구현 내용 |
+|----------|------|-----------|
+| **Whitelist 테이블** | 조회 가능 테이블 제한 | `papers` 테이블만 허용 |
+| **Whitelist 컬럼** | 조회 가능 컬럼 제한 | `id, title, authors, affiliations, publish_year, venue, citation_count, field_of_study, abstract, full_text, published_at` (11개) |
+| **Forbidden 패턍** | 위험 SQL 패턴 차단 | `DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE, CREATE, EXEC, GRANT, REVOKE` |
+| **READ ONLY** | 읽기 전용 강제 | PostgreSQL 트랜잭션 격리 |
+| **LIMIT 강제** | 결과 개수 제한 | 자동으로 `LIMIT 100` 추가 |
+| **EXPLAIN 검증** | 쿼리 실행 전 검증 | `EXPLAIN` 명령으로 안전성 확인 |
+
+##### DB 스키마
+
+**papers 테이블 (조회 대상)**:
+| 컬럼명 | 타입 | 설명 | 인덱스 |
+|--------|------|------|--------|
+| `id` | UUID | 논문 고유 ID | PK |
+| `title` | TEXT | 논문 제목 | - |
+| `authors` | TEXT[] | 저자 목록 | GIN |
+| `affiliations` | TEXT[] | 소속 기관 | GIN |
+| `publish_year` | INTEGER | 발표 연도 | B-tree |
+| `venue` | TEXT | 학회/저널명 | - |
+| `citation_count` | INTEGER | 인용 횟수 | B-tree |
+| `field_of_study` | TEXT[] | 연구 분야 | GIN |
+| `abstract` | TEXT | 초록 | - |
+| `full_text` | TEXT | 전문 | - |
+| `published_at` | TIMESTAMP | 등록 시각 | - |
+
+**query_logs 테이블 (쿼리 이력)**:
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| `id` | UUID | 로그 ID |
+| `user_question` | TEXT | 사용자 질문 |
+| `generated_sql` | TEXT | 생성된 SQL |
+| `execution_result` | JSONB | 쿼리 결과 |
+| `success` | BOOLEAN | 성공 여부 |
+| `error_message` | TEXT | 에러 메시지 |
+| `created_at` | TIMESTAMP | 실행 시각 |
+
+##### SQL 생성 예제
+
+**1. 단순 집계 (COUNT)**
+
+사용자 질문:
+```
+"2023년에 발표된 논문은 몇 편이야?"
+```
+
+생성된 SQL:
+```sql
+SELECT COUNT(*) as count
+FROM papers
+WHERE publish_year = 2023;
+```
+
+**2. 그룹별 집계 (GROUP BY)**
+
+사용자 질문:
+```
+"연도별 논문 발표 수를 알려줘"
+```
+
+생성된 SQL:
+```sql
+SELECT publish_year, COUNT(*) as count
+FROM papers
+GROUP BY publish_year
+ORDER BY publish_year DESC
+LIMIT 100;
+```
+
+**3. 복합 조건 (WHERE + ORDER BY)**
+
+사용자 질문:
+```
+"인용 횟수가 100 이상인 Transformer 관련 논문은?"
+```
+
+생성된 SQL:
+```sql
+SELECT title, authors, citation_count
+FROM papers
+WHERE citation_count >= 100
+  AND (title ILIKE '%transformer%' OR abstract ILIKE '%transformer%')
+ORDER BY citation_count DESC
+LIMIT 100;
+```
+
+##### Few-shot Prompting 예제
+
+LLM에게 제공되는 3개의 Few-shot 예제:
+
+| 질문 | SQL |
+|------|-----|
+| "2023년 논문 몇 편?" | `SELECT COUNT(*) FROM papers WHERE publish_year = 2023;` |
+| "인용이 많은 논문 5개" | `SELECT title, citation_count FROM papers ORDER BY citation_count DESC LIMIT 5;` |
+| "Attention 관련 논문 개수" | `SELECT COUNT(*) FROM papers WHERE title ILIKE '%attention%';` |
+
+##### 난이도별 답변 스타일
+
+**Easy 모드 (초심자 + 입문자)**:
+```
+📊 2023년 논문 통계
+
+발표된 논문 수: 1,247편
+
+주요 분야:
+- Natural Language Processing: 523편 (41.9%)
+- Computer Vision: 412편 (33.0%)
+- Machine Learning: 312편 (25.1%)
+
+💡 2023년은 특히 대규모 언어 모델(LLM) 연구가 활발했던 해입니다!
+```
+
+**Hard 모드 (중급자 + 전문가)**:
+```
+📊 2023년 논문 통계 분석
+
+Query Results:
+- Total Papers: 1,247
+- Average Citation Count: 12.3
+- Median Citation Count: 4
+- Top Venue: NeurIPS 2023 (187 papers)
+
+Distribution by Field:
+┌─────────────────────────────┬───────┬─────────┐
+│ Field of Study              │ Count │ Ratio   │
+├─────────────────────────────┼───────┼─────────┤
+│ Natural Language Processing │ 523   │ 41.9%   │
+│ Computer Vision             │ 412   │ 33.0%   │
+│ Machine Learning            │ 312   │ 25.1%   │
+└─────────────────────────────┴───────┴─────────┘
+
+Key Insights:
+- LLM papers (GPT-4, Claude, Llama 2) dominated citations
+- Multimodal models showed 45% YoY growth
+- Transformer architecture remains predominant (87% of papers)
+
+Generated SQL:
+SELECT
+  field_of_study,
+  COUNT(*) as count,
+  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 1) as ratio
+FROM papers
+WHERE publish_year = 2023
+GROUP BY field_of_study
+ORDER BY count DESC;
+```
+
+##### 사용 예시
+
+**예시 1: 연도별 통계**
+
+사용자: "2020년부터 2024년까지 연도별 논문 수를 알려줘"
+
+Agent 동작:
+1. Router가 "연도별", "논문 수" 키워드로 `text2sql` 선택
+2. LLM이 SQL 생성:
+   ```sql
+   SELECT publish_year, COUNT(*) as count
+   FROM papers
+   WHERE publish_year BETWEEN 2020 AND 2024
+   GROUP BY publish_year
+   ORDER BY publish_year;
+   ```
+3. 보안 검증 통과 (Whitelist 테이블/컬럼, 금지 패턴 없음)
+4. PostgreSQL 실행 → 결과: `[(2020, 823), (2021, 1042), ...]`
+5. LLM이 난이도별 답변 생성
+6. ExperimentManager가 query_logs에 기록
+
+**예시 2: Fallback 체인**
+
+사용자: "Attention 논문의 평균 페이지 수는?"
+
+Agent 동작:
+1. `text2sql` 시도 → 실패 (papers 테이블에 `page_count` 컬럼 없음)
+2. Fallback 1차: `search_paper` 도구로 전환 → Attention 논문 검색
+3. Fallback 2차: `web_search` 도구로 전환 → 웹에서 정보 검색
+4. Fallback 3차: `general` 도구로 전환 → 일반 지식으로 답변
+
+##### 내부 프로세스
+
+**1. SQL 생성 단계**
+```python
+# Few-shot Prompting
+system_prompt = """당신은 PostgreSQL 전문가입니다.
+자연어 질문을 SQL 쿼리로 변환하세요.
+
+사용 가능 테이블: papers
+사용 가능 컬럼: id, title, authors, publish_year, citation_count, ...
+
+예시:
+Q: "2023년 논문 몇 편?"
+A: SELECT COUNT(*) FROM papers WHERE publish_year = 2023;
+"""
+
+messages = [
+    SystemMessage(content=system_prompt),
+    HumanMessage(content=user_question)
+]
+sql = llm_solar.invoke(messages)
+```
+
+**2. 보안 검증 단계**
+```python
+def _sanitize(sql: str) -> bool:
+    """SQL Injection 방지"""
+
+    # 1. Whitelist 테이블 확인
+    if "papers" not in sql.lower():
+        return False
+
+    # 2. Forbidden 패턴 확인
+    forbidden = ["DROP", "DELETE", "UPDATE", "INSERT", ...]
+    for pattern in forbidden:
+        if pattern in sql.upper():
+            return False
+
+    # 3. Whitelist 컬럼 확인
+    allowed_columns = ["id", "title", "authors", ...]
+    # ... 컬럼 검증 로직
+
+    return True
+```
+
+**3. 쿼리 실행 단계**
+```python
+def execute_query(sql: str) -> List[Tuple]:
+    """PostgreSQL 쿼리 실행"""
+
+    # LIMIT 강제 추가
+    if "LIMIT" not in sql.upper():
+        sql = sql.rstrip(";") + " LIMIT 100;"
+
+    # EXPLAIN으로 안전성 검증
+    explain_result = db.execute(f"EXPLAIN {sql}")
+
+    # READ ONLY 실행
+    result = db.execute(sql)
+
+    return result
+```
+
+**4. 답변 생성 단계**
+```python
+# 난이도별 프롬프트
+if difficulty == "Easy":
+    system_prompt = """통계 결과를 쉽게 설명하세요.
+    - 숫자는 천 단위 콤마 표시
+    - 비율은 백분율로 표시
+    - 핵심 인사이트 1-2문장"""
+else:  # Hard
+    system_prompt = """통계 결과를 전문적으로 분석하세요.
+    - 테이블 형식 출력
+    - 생성된 SQL 쿼리 표시
+    - 상세한 인사이트 제공"""
+
+answer = llm_gpt5.invoke([
+    SystemMessage(content=system_prompt),
+    HumanMessage(content=f"쿼리 결과: {result}")
+])
+```
+
+##### 성능 지표
+
+**응답 시간**:
+- SQL 생성: 1-2초 (Solar Pro2)
+- 쿼리 실행: 0.1-0.5초 (PostgreSQL 인덱스 활용)
+- 답변 생성: 2-3초 (GPT-5)
+- **총 응답 시간**: 3-6초
+
+**비용**:
+- LLM 호출: 2회 (SQL 생성 1회 + 답변 생성 1회)
+- PostgreSQL 쿼리: 1회
+- pgvector 검색: 0회 (벡터 검색 불필요)
+
+**도구별 참조 문서**:
+- [Text2SQL 시나리오](docs/scenarios/04_Text2SQL.md)
+- [Text2SQL 도구 아키텍처](docs/architecture/single_request/04_Text2SQL.md)
+- [Text2SQL 구현 검증 보고서](docs/issues/05-1_text2sql_구현_검증_보고서.md)
+
+---
+
 ### 8. Streamlit UI 시스템
 
 #### 주요 기능
