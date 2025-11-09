@@ -352,12 +352,8 @@ experiments/20251109/20251109_143520_session_001/
 [2025-11-09 14:35:22] SQL 실행 완료
 [2025-11-09 14:35:22] 결과 길이: 285 글자
 [2025-11-09 14:35:22] 결과 미리보기:
-**질문**: 2024년에 발표된 논문 개수는?
-
-**생성된 SQL**:
-```sql
-SELECT COUNT(*) AS paper_count FROM papers WHERE EXTRACT(YEAR FROM publish_date)=2024;
-```
+질문: 2024년에 발표된 논문 개수는?
+생성된 SQL: SELECT COUNT(*) AS paper_count FROM papers WHERE EXTRACT(YEAR FROM publish_date)=2024;
 ```
 
 ### 2. 일반 답변 도구 로그 기록 구현 (src/tools/general_answer.py)
