@@ -2064,7 +2064,63 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 
 ---
 
-### 7. Streamlit UI 시스템
+### 7. 도구 시스템 (7가지 Agent 도구)
+
+**위치**: `src/tools/` (7개 파일)
+
+도구 시스템은 **AI Agent가 다양한 질문 유형에 대응하기 위해 호출할 수 있는 7가지 도구**를 제공합니다. LangGraph의 Router 노드가 질문을 분석하여 적절한 도구를 자동으로 선택하고 실행합니다.
+
+#### 7가지 도구 개요
+
+| 순번 | 도구명 | 파일 | 주요 기능 | DB 연동 | 난이도 지원 |
+|------|--------|------|----------|---------|-------------|
+| 1 | **RAG 용어집 검색** | `glossary.py` | 용어 정의 조회 (Easy/Hard 설명) | PostgreSQL | ✅ |
+| 2 | **RAG 논문 검색** | `search_paper.py` | 논문 DB 검색 (Top-5) | PostgreSQL + pgvector | ✅ |
+| 3 | **WEB 논문 검색** | `web_search.py` | Tavily API 웹 검색 + arXiv 자동 저장 | 없음 | ✅ |
+| 4 | **논문 요약** | `summarize.py` | 논문 전체 요약 | PostgreSQL + pgvector | ✅ |
+| 5 | **Text2SQL 통계** | `text2sql.py` | 자연어 → SQL 변환 (논문 통계) | PostgreSQL | ✅ |
+| 6 | **일반 답변** | `general_answer.py` | LLM 직접 호출 (일반 질문) | 없음 | ✅ |
+| 7 | **파일 저장** | `save_file.py` | 대화 내용 저장 | ExperimentManager | ❌ |
+
+#### 도구 선택 라우팅 패턴
+
+| 사용자 질문 예시 | 선택되는 도구 | 선택 이유 |
+|-----------------|---------------|----------|
+| "Attention이 뭐야?" | RAG 용어집 검색 | 용어 정의 질문 |
+| "Transformer 논문 설명해줘" | RAG 논문 검색 | 로컬 DB 논문 검색 |
+| "2025년 최신 LLM 논문은?" | WEB 논문 검색 | 최신 정보 필요 |
+| "BERT 논문 요약해줘" | 논문 요약 | 특정 논문 요약 |
+| "2024년 논문 몇 편?" | Text2SQL 통계 | 통계 조회 |
+| "안녕하세요" | 일반 답변 | 일반 질문/인사 |
+| "이 내용 저장해줘" | 파일 저장 | 파일 저장 요청 |
+
+#### 도구별 특성 비교
+
+| 도구 | 평균 응답 시간 | LLM 호출 | 비용 (1회) | 복잡도 |
+|------|----------------|----------|-----------|--------|
+| RAG 용어집 검색 | 3초 | 2회 | $0.005 | 중간 |
+| RAG 논문 검색 | 5초 | 1회 | $0.015 | 높음 |
+| WEB 논문 검색 | 4초 | 1회 | $0.005 | 중간 |
+| 논문 요약 | 10초 | 1회 | $0.08 | 높음 |
+| Text2SQL 통계 | 3초 | 2회 | $0.002 | 중간 |
+| 일반 답변 | 2초 | 1회 | $0.003 | 낮음 |
+| 파일 저장 | 0.1초 | 0회 | $0 | 낮음 |
+
+**공통 참조 문서**:
+- [AI Agent 시스템](docs/modularization/06_AI_Agent_시스템.md)
+- [도구 시스템 전체](docs/modularization/09_도구_시스템.md)
+- [도구 자동전환 기능](docs/modularization/09-1_도구_자동전환_기능.md)
+- [하이브리드 도구 패턴](docs/modularization/10_하이브리드_도구_패턴.md)
+- [AI Agent 설계](docs/PRD/12_AI_Agent_설계.md)
+- [최현화 AI Agent 메인](docs/roles/01_최현화_AI_Agent_메인.md)
+- [AI Agent 메인 구현](docs/issues/01_AI_Agent_메인_구현.md)
+- [도구 자동전환 및 Fallback 메커니즘](docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md)
+- [에이전트 실행 오류 수정 및 시스템 안정화](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md)
+- [다중요청 저장기능 개선](docs/issues/01-5_다중요청_저장기능_개선.md)
+
+---
+
+### 8. Streamlit UI 시스템
 
 #### 주요 기능
 - ChatGPT 스타일 채팅 인터페이스
