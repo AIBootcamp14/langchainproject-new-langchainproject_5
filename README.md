@@ -4288,12 +4288,58 @@ python main.py
 
 ```mermaid
 graph LR
-    A[사용자 질문] --> B[임베딩 생성<br/>100ms]
-    B --> C[pgvector 검색<br/>45ms]
-    C --> D[메타데이터 조회<br/>12ms]
-    D --> E[컨텍스트 구성<br/>50ms]
-    E --> F[LLM 답변 생성<br/>2000ms]
+    subgraph MainFlow["📋 RAG 시스템 최적화 흐름"]
+        direction LR
 
+        subgraph Init["🔸 초기화"]
+            direction LR
+            A[사용자 질문]
+        end
+
+        subgraph Step1["🔹 1단계: 임베딩"]
+            direction LR
+            B[임베딩 생성<br/>100ms]
+        end
+
+        subgraph Step2["🔺 2단계: 벡터 검색"]
+            direction LR
+            C[pgvector 검색<br/>45ms]
+        end
+
+        subgraph Step3["🔶 3단계: 메타데이터"]
+            direction LR
+            D[메타데이터 조회<br/>12ms]
+        end
+
+        subgraph Step4["✨ 4단계: 컨텍스트"]
+            direction LR
+            E[컨텍스트 구성<br/>50ms]
+        end
+
+        subgraph Output["💡 5단계: 답변 생성"]
+            direction LR
+            F[LLM 답변 생성<br/>2000ms]
+        end
+
+        Init --> Step1
+        Step1 --> Step2
+        Step2 --> Step3
+        Step3 --> Step4
+        Step4 --> Output
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Step1 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Step2 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Step3 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Step4 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일
     style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
     style B fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
     style C fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
@@ -4301,11 +4347,12 @@ graph LR
     style E fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
     style F fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
 
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#1976d2,stroke-width:2px
-    linkStyle 2 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 3 stroke:#f57c00,stroke-width:2px
-    linkStyle 4 stroke:#c62828,stroke-width:2px
+    %% 단계 간 연결
+    linkStyle 0 stroke:#616161,stroke-width:3px
+    linkStyle 1 stroke:#616161,stroke-width:3px
+    linkStyle 2 stroke:#616161,stroke-width:3px
+    linkStyle 3 stroke:#616161,stroke-width:3px
+    linkStyle 4 stroke:#616161,stroke-width:3px
 ```
 
 **최적화 기법**:
