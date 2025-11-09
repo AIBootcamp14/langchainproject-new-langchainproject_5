@@ -141,11 +141,13 @@ def router_node(state: AgentState, exp_manager=None):
                     if exp_manager:
                         exp_manager.logger.write(f"맥락 참조 감지: LLM 호출하여 질문 재작성")
 
-                    # 이전 대화 컨텍스트 추출
+                    # 이전 대화 컨텍스트 추출 (동적 윈도우)
                     messages = state.get("messages", [])
                     context = ""
                     if len(messages) > 1:
-                        recent_messages = messages[-3:]  # 최근 3개 메시지
+                        # 최근 5개 메시지 사용 (이전 3개 → 5개로 확장)
+                        # 각 메시지는 200자로 제한하여 토큰 사용량 관리
+                        recent_messages = messages[-5:]  # 최근 5개 메시지
                         context = "\n\n[이전 대화 컨텍스트]\n"
                         for msg in recent_messages[:-1]:  # 마지막 메시지(현재 질문)는 제외
                             role = "사용자" if hasattr(msg, 'type') and msg.type == "human" else "AI"
@@ -236,11 +238,13 @@ def router_node(state: AgentState, exp_manager=None):
         # JSON 프롬프트 로드
         routing_prompt_template = get_routing_prompt()    # JSON 파일에서 프롬프트 로드
 
-        # Multi-turn 지원: 이전 대화 컨텍스트 추출 (최근 3개 메시지)
+        # Multi-turn 지원: 이전 대화 컨텍스트 추출 (동적 윈도우)
         messages = state.get("messages", [])
         context = ""
         if len(messages) > 1:
-            recent_messages = messages[-3:]  # 최근 3개 메시지
+            # 최근 5개 메시지 사용 (이전 3개 → 5개로 확장)
+            # 각 메시지는 200자로 제한하여 토큰 사용량 관리
+            recent_messages = messages[-5:]  # 최근 5개 메시지
             context = "\n\n[이전 대화 컨텍스트]\n"
             for msg in recent_messages[:-1]:  # 마지막 메시지(현재 질문)는 제외
                 role = "사용자" if hasattr(msg, 'type') and msg.type == "human" else "AI"
