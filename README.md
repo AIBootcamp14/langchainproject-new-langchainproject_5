@@ -1467,65 +1467,65 @@ experiments/20251104/
 
 ```mermaid
 graph TB
-    subgraph MainFlow["📋 ExperimentManager 시스템 실행 흐름"]
+    subgraph MainFlow["📋 실험 폴더 자동 관리 시스템"]
         direction TB
 
         subgraph Init["🔸 초기화"]
             direction LR
-            A([▶️ 챗봇 실행]) --> B[Session ID 생성<br/>YYYYMMDD_HHMMSS_session_XXX]
-            B --> C[실험 폴더 생성<br/>experiments/날짜/세션ID/]
-            C --> D[7개 서브폴더 생성<br/>tools, database, prompts,<br/>ui, outputs, evaluation, configs]
-            D --> E[metadata.json 초기화]
-            E --> F[Logger 초기화<br/>chatbot.log]
+            A([▶️ 챗봇 시작]) --> B[세션 ID<br/>자동 부여]
+            B --> C[실험 폴더<br/>생성]
+            C --> D[7개 서브폴더<br/>자동 생성]
+            D --> E[메타데이터<br/>초기화]
+            E --> F[로그 시스템<br/>준비 완료]
         end
 
-        subgraph Tools["🔹 1단계: 도구 로깅"]
+        subgraph Tools["🔹 1단계: 도구 실행 기록"]
             direction LR
-            G[get_tool_logger 호출] --> H{도구명?}
-            H -->|rag_paper| I[tools/rag_paper.log]
-            H -->|web_search| J[tools/web_search.log]
-            H -->|text2sql| K[tools/text2sql.log]
-            H -->|기타| L[tools/도구명.log]
+            G[도구 선택] --> H{도구 종류}
+            H -->|RAG 논문| I[논문 검색<br/>로그 기록]
+            H -->|웹 검색| J[웹 검색<br/>로그 기록]
+            H -->|통계 조회| K[SQL 조회<br/>로그 기록]
+            H -->|기타| L[일반 도구<br/>로그 기록]
         end
 
-        subgraph Database["🔺 2단계: DB 기록"]
+        subgraph Database["🔺 2단계: 데이터베이스 작업 기록"]
             direction LR
-            M[DB 작업 실행] --> N{작업 유형?}
-            N -->|SQL 쿼리| O[log_sql_query<br/>database/queries.sql]
-            N -->|pgvector 검색| P[log_pgvector_search<br/>database/pgvector_searches.json]
-            O --> Q[save_db_performance<br/>성능 지표 기록]
+            M[DB 작업 실행] --> N{작업 유형}
+            N -->|SQL 쿼리| O[쿼리 내용<br/>자동 저장]
+            N -->|벡터 검색| P[검색 결과<br/>자동 저장]
+            O --> Q[성능 지표<br/>수집]
             P --> Q
         end
 
-        subgraph Prompts["🔶 3단계: 프롬프트 저장"]
+        subgraph Prompts["🔶 3단계: 프롬프트 보관"]
             direction LR
-            R[프롬프트 생성] --> S[save_system_prompt<br/>prompts/system_prompt.txt]
-            S --> T[save_user_prompt<br/>prompts/user_prompt.txt]
-            T --> U[save_final_prompt<br/>prompts/final_prompt.txt]
+            R[프롬프트 생성] --> S[시스템<br/>프롬프트 저장]
+            S --> T[사용자<br/>질문 저장]
+            T --> U[최종<br/>프롬프트 저장]
         end
 
-        subgraph Outputs["🔷 4단계: 출력 저장"]
+        subgraph Outputs["🔷 4단계: 답변 저장"]
             direction LR
-            V[답변 생성] --> W{난이도 모드?}
-            W -->|Easy| X[save_conversation<br/>outputs/conversation_easy_*.json]
-            W -->|Hard| Y[save_conversation<br/>outputs/conversation_hard_*.json]
-            X --> Z[save_output<br/>outputs/response.txt]
+            V[답변 완성] --> W{난이도 모드}
+            W -->|초보자| X[초보자용<br/>대화 저장]
+            W -->|전문가| Y[전문가용<br/>대화 저장]
+            X --> Z[최종 답변<br/>텍스트 저장]
             Y --> Z
         end
 
-        subgraph Evaluation["🔻 5단계: 평가 저장"]
+        subgraph Evaluation["🔻 5단계: 평가 결과 저장"]
             direction LR
-            AA[평가 수행] --> AB[save_evaluation_result<br/>evaluation/evaluation_*.json]
-            AB --> AC[save_rag_metrics<br/>RAG 지표]
-            AC --> AD[save_latency_report<br/>응답 시간]
+            AA[품질 평가<br/>수행] --> AB[평가 점수<br/>저장]
+            AB --> AC[RAG 성능<br/>지표 저장]
+            AC --> AD[응답 시간<br/>기록]
         end
 
-        subgraph Close["🔷 6단계: 종료"]
+        subgraph Close["🔷 6단계: 종료 및 정리"]
             direction LR
-            AE[챗봇 종료] --> AF[flush_queries_to_file<br/>쿼리 파일 저장]
-            AF --> AG[update_metadata<br/>메타데이터 업데이트]
-            AG --> AH[cleanup_empty_folders<br/>빈 폴더 삭제]
-            AH --> AI[logger.close<br/>로그 종료]
+            AE[대화 종료] --> AF[DB 쿼리<br/>파일 저장]
+            AF --> AG[메타데이터<br/>최종 업데이트]
+            AG --> AH[빈 폴더<br/>자동 삭제]
+            AH --> AI[로그 시스템<br/>종료]
             AI --> AJ[💾 실험 완료]
         end
 
