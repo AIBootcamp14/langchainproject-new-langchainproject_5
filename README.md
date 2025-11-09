@@ -4934,100 +4934,102 @@ ui/
     └── settings.py                 # 설정 페이지
 ```
 
-#### 🔧 핵심 컴포넌트 구현 상세
+#### 🔧 시스템별 구현 상세
 
-##### 1. app.py - 메인 애플리케이션
+##### 1. 애플리케이션 초기화 및 페이지 설정 시스템
 
-**역할 및 책임**:
-- Streamlit 앱의 진입점으로, 전체 애플리케이션의 시작점
-- 페이지 설정(제목, 아이콘, 레이아웃)을 구성하고 사용자 인증을 관리
-- 사이드바와 채팅 인터페이스를 통합하여 전체 UI를 조율
+**시스템 개요**:
+Streamlit 앱이 시작될 때 필요한 모든 초기 설정을 수행하고, 사용자에게 일관된 UI 환경을 제공하는 시스템입니다.
 
-**주요 구현 로직**:
-- `st.set_page_config()`를 통해 페이지 제목, 아이콘, 레이아웃(wide), 사이드바 상태를 설정
-- `initialize_session_state()`로 세션 상태 초기화 (채팅 세션, 사용자 정보 등)
-- 사용자 인증 상태 확인 후 미인증 시 로그인 페이지 표시, 인증 완료 시 메인 화면(사이드바 + 채팅) 렌더링
+**동작 방식**:
+- 앱 시작 시 `st.set_page_config()`로 페이지 제목("AI 논문 리뷰 챗봇"), 아이콘(🤖), 레이아웃 모드(wide), 사이드바 상태(expanded)를 설정
+- `st.session_state`를 활용하여 채팅 세션 목록, 현재 활성 세션 ID, 사용자 인증 정보, 난이도 설정 등을 초기화
+- 사용자 인증 상태를 확인하여 미인증 시 로그인 페이지, 인증 완료 시 메인 화면(사이드바 + 채팅)을 렌더링
+- 전체 UI 컴포넌트(사이드바, 채팅 인터페이스)를 통합 관리하며 일관된 사용자 경험 제공
 
-##### 2. sidebar.py - 채팅 세션 관리
+**주요 특징**:
+- 환경 변수 기반 간단한 인증 시스템(ID/비밀번호)으로 개인 대화 보호
+- 전체 너비 레이아웃(wide)으로 넓은 화면 활용
+- 사이드바 기본 열림 상태로 채팅 세션 목록 즉시 확인 가능
 
-**역할 및 책임**:
-- 왼쪽 사이드바에 채팅 세션 목록을 날짜별로 그룹화하여 표시
-- 새 채팅 생성, 세션 전환, 세션 삭제 등 CRUD 기능 제공
-- ChatGPT 스타일의 날짜별 그룹화(오늘/어제/지난 7일/그 이전)로 직관적인 탐색 지원
+##### 2. 멀티 세션 관리 시스템
 
-**주요 구현 로직**:
-- `initialize_chat_sessions()`: LocalStorage에서 기존 세션 복원, 없으면 기본 세션 생성
-- `group_chats_by_date()`: 현재 날짜 기준으로 세션 생성 날짜를 계산하여 4개 그룹으로 분류
-- `create_new_chat()`: UUID를 사용해 고유한 채팅 ID 생성, 현재 시간을 타임스탬프로 저장
-- `switch_chat(chat_id)`: `st.session_state`의 현재 세션 ID를 변경하고 UI 리렌더링
-- `delete_chat(chat_id)`: 확인 다이얼로그 후 세션 삭제, LocalStorage에서도 제거
+**시스템 개요**:
+ChatGPT처럼 여러 대화 세션을 독립적으로 생성, 관리, 전환할 수 있는 시스템입니다.
 
-**날짜 그룹화 상세**:
-- `datetime.now()`로 현재 시간 획득, `timedelta`로 날짜 경계 계산
-- 오늘: 세션 날짜 == 현재 날짜
-- 어제: 세션 날짜 == 현재 날짜 - 1일
-- 지난 7일: 세션 날짜 > 현재 날짜 - 7일
-- 그 이전: 나머지 모든 세션
+**동작 방식**:
+- **세션 생성**: 사용자가 "새 채팅" 버튼 클릭 시 UUID로 고유 채팅 ID 생성, 현재 시간을 ISO 포맷 타임스탬프로 저장
+- **날짜별 그룹화**: 현재 날짜 기준으로 세션 생성일을 계산하여 4개 그룹으로 자동 분류
+  - 오늘: 세션 날짜 == 현재 날짜
+  - 어제: 세션 날짜 == 현재 날짜 - 1일
+  - 지난 7일: 세션 날짜 > 현재 날짜 - 7일
+  - 그 이전: 나머지 모든 세션
+- **세션 전환**: 사이드바에서 다른 세션 클릭 시 `st.session_state`의 현재 세션 ID를 변경하고 해당 세션의 메시지 히스토리 로드
+- **세션 삭제**: 확인 다이얼로그 후 세션 삭제, LocalStorage와 메모리에서 모두 제거
 
-##### 3. chat_interface.py - 채팅 화면
+**주요 특징**:
+- ChatGPT 스타일 날짜 그룹화로 직관적인 세션 탐색
+- 각 세션은 독립적인 메시지 히스토리와 메타데이터(제목, 생성일, 난이도) 보유
+- LocalStorage 연동으로 브라우저 새로고침 시에도 세션 목록 유지
 
-**역할 및 책임**:
-- 메인 화면 오른쪽 영역에 채팅 메시지를 표시
-- 사용자 메시지와 AI 답변을 구분하여 말풍선 형태로 렌더링
-- 실시간 스트리밍 답변 출력, 도구 배지, 출처, 평가 결과 표시
-- 메시지 복사, 채팅 내보내기 등 사용자 편의 기능 제공
+##### 3. 채팅 인터페이스 시스템
 
-**주요 구현 로직**:
-- `render_chat_interface()`: 전체 채팅 화면 렌더링, 메시지 히스토리 순회하며 표시
-- `display_message(message)`: 메시지 타입(user/assistant) 확인 후 `st.chat_message()` 사용하여 말풍선 표시
-- `stream_response(agent_response)`: `st.empty()` placeholder에 토큰 단위로 누적하며 실시간 출력, 커서 효과("▌") 추가
-- `show_tool_badge(tool_name)`: Streamlit Badge 컴포넌트로 도구명 표시, 도구별 색상 코딩 적용
-- `show_sources(sources)`: `st.expander()`로 출처 목록 표시, 논문/웹/DB 아이콘 구분
-- `show_evaluation(eval_result)`: 평가 점수를 별점(⭐)으로 시각화, 평가 이유 함께 표시
+**시스템 개요**:
+사용자와 AI 간 대화를 시각적으로 표현하고, 메시지 입출력을 처리하는 시스템입니다.
 
-**스트리밍 구현 상세**:
-- `StreamlitCallbackHandler`를 통해 LLM 토큰이 생성될 때마다 `on_llm_new_token()` 이벤트 수신
-- 빈 placeholder를 생성하고 토큰을 누적하며 markdown으로 갱신
-- 마지막 토큰까지 출력 후 커서 효과 제거하고 최종 답변 표시
+**동작 방식**:
+- **메시지 표시**: 메시지 타입(user/assistant)을 구분하여 `st.chat_message()` 컴포넌트로 말풍선 형태 렌더링
+  - 사용자 메시지: 파란색 말풍선, 우측 정렬, 사용자 아바타
+  - AI 메시지: 회색 말풍선, 좌측 정렬, AI 아바타
+- **도구 배지 표시**: AI 답변 생성 시 사용된 도구를 색상별로 시각화
+  - 🔍 search_paper: 파란색
+  - 📖 glossary: 보라색
+  - 🌐 web_search: 주황색
+  - 📊 text2sql: 녹색
+- **출처 표시**: `st.expander()` 컴포넌트로 접었다 펼칠 수 있는 출처 목록 제공, 논문/웹/DB별 아이콘 구분
+- **평가 결과 표시**: LLM-as-a-Judge 평가 점수를 별점(⭐)으로 시각화, 평가 이유와 함께 표시
+- **메시지 복사**: JavaScript `navigator.clipboard` API로 메시지를 클립보드에 복사, 성공 알림 표시
 
-##### 4. chat_manager.py - 세션 데이터 관리
+**주요 특징**:
+- ChatGPT 스타일 말풍선 디자인으로 친숙한 사용자 경험
+- 도구별 색상 코딩으로 AI 작동 과정 한눈에 파악
+- 출처 Expander로 필요 시에만 상세 정보 확인 가능
 
-**역할 및 책임**:
-- 채팅 세션 데이터의 영속화를 담당
-- LocalStorage와 `st.session_state` 간 데이터 동기화
-- 채팅 내보내기(Markdown), 세션 초기화 등 데이터 관리 기능 제공
+##### 4. 실시간 스트리밍 시스템
 
-**주요 구현 로직**:
-- `ChatManager.load()`: JavaScript를 통해 브라우저 LocalStorage에서 세션 데이터 읽기, JSON 파싱 후 Python 딕셔너리로 변환
-- `ChatManager.save()`: 세션 데이터를 JSON으로 직렬화하여 LocalStorage에 저장
-- `ChatManager.export(format="markdown")`: 메시지 히스토리를 Markdown 포맷으로 변환, `st.download_button()`으로 다운로드 제공
-- `ChatManager.clear()`: 세션 데이터 초기화, LocalStorage와 `st.session_state` 모두 정리
+**시스템 개요**:
+AI Agent 실행 중 발생하는 모든 이벤트를 실시간으로 UI에 반영하여 사용자에게 즉각적인 피드백을 제공하는 시스템입니다.
 
-**LocalStorage 연동 상세**:
-- `st.components.v1.html()`을 사용하여 JavaScript 코드 실행
-- 저장: `localStorage.setItem(key, JSON.stringify(value))`로 데이터 저장
-- 로드: `localStorage.getItem(key)` 후 `window.parent.postMessage()`로 Python으로 전달
-- 브라우저 새로고침 시에도 세션 데이터가 유지되어 대화 연속성 보장
+**동작 방식**:
+- **LLM 토큰 스트리밍**: `StreamlitCallbackHandler`가 LLM 토큰 생성 이벤트(`on_llm_new_token`)를 수신할 때마다 토큰을 누적하여 실시간 출력
+- **Placeholder 업데이트**: `st.empty()` container를 생성하고 토큰 단위로 markdown을 갱신, 커서 효과("▌")와 함께 표시
+- **도구 실행 상태**: 도구 시작 시 `st.spinner()`로 "🔧 {도구명} 실행 중..." 표시, 완료 시 "✅ 도구 실행 완료" 메시지 표시
+- **Agent 액션 로깅**: Agent가 액션 실행 시 디버깅용 로그를 실시간으로 표시
+- **최종 답변 렌더링**: Agent 완료 시 커서 효과 제거하고 최종 답변을 확정하여 표시
 
-##### 5. StreamlitCallbackHandler - 실시간 이벤트 처리
+**주요 특징**:
+- LangChain `BaseCallbackHandler` 상속으로 이벤트 시스템과 긴밀히 통합
+- 토큰 단위 실시간 출력으로 ChatGPT와 동일한 사용자 경험
+- 도구별 아이콘과 색상 매핑으로 시각적 구분
+- AI 작동 과정을 투명하게 공개하여 신뢰도 향상
 
-**역할 및 책임**:
-- LangChain Agent 실행 중 발생하는 이벤트를 Streamlit UI에 실시간으로 반영
-- LLM 토큰 생성, 도구 실행 시작/종료, Agent 액션 등 모든 이벤트 핸들링
-- 사용자에게 AI 작동 과정을 투명하게 보여주어 신뢰도 향상
+##### 5. 데이터 영속화 시스템
 
-**주요 이벤트 및 처리**:
-- `on_llm_new_token(token)`: LLM이 새 토큰 생성 시 호출, 토큰 리스트에 추가하여 실시간 스트리밍 출력
-- `on_tool_start(tool, input)`: 도구 실행 시작 시 호출, `st.spinner()`로 "🔧 {도구명} 실행 중..." 표시
-- `on_tool_end(output)`: 도구 실행 완료 시 호출, "✅ 도구 실행 완료" 메시지와 도구 배지 표시
-- `on_agent_action(action)`: Agent가 액션 실행 시 호출, 디버깅용 로그 표시
-- `on_agent_finish(finish)`: Agent 완료 시 호출, 최종 답변을 화면에 렌더링
+**시스템 개요**:
+채팅 세션 데이터를 브라우저에 영구 저장하고, 앱 재시작 시에도 대화 내용을 복원하는 시스템입니다.
 
-**구현 핵심**:
-- `BaseCallbackHandler` 클래스를 상속하여 LangChain 이벤트 시스템과 통합
-- `st.empty()` container를 사용하여 동적으로 UI 업데이트
-- 토큰 리스트를 누적하며 커서 효과("▌")와 함께 markdown 렌더링
-- 각 도구별 아이콘과 색상을 매핑하여 시각적으로 구분 가능하게 표시
+**동작 방식**:
+- **LocalStorage 저장**: `st.components.v1.html()`을 통해 JavaScript 코드를 실행하여 `localStorage.setItem()`으로 세션 데이터를 JSON 형태로 저장
+- **데이터 로드**: 앱 시작 시 `localStorage.getItem()`으로 저장된 데이터를 읽고, `window.parent.postMessage()`로 Python으로 전달하여 `st.session_state`에 복원
+- **자동 동기화**: 메시지 추가, 세션 생성, 세션 삭제 등 모든 변경 사항이 즉시 LocalStorage에 반영
+- **채팅 내보내기**: 메시지 히스토리를 Markdown 포맷으로 변환하여 `st.download_button()`으로 다운로드 제공
+- **세션 초기화**: 사용자 요청 시 LocalStorage와 `st.session_state` 모두 정리
+
+**주요 특징**:
+- 브라우저 새로고침, 탭 닫기 후에도 대화 내용 보존
+- Python ↔ JavaScript 브릿지로 원활한 데이터 동기화
+- Markdown 내보내기로 대화 기록을 로컬에 보관 가능
+- JSON 직렬화로 복잡한 데이터 구조도 안전하게 저장
 
 #### 참조 문서
 
