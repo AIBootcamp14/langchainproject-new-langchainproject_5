@@ -1498,7 +1498,7 @@ papers DB (PostgreSQL 15+)
 
 **데이터베이스 관계도 (ERD)**
 
-![데이터베이스 관계도](docs/images/architecture/05_데이터베이스_스키마.png)
+![데이터베이스 관계도](docs/images/architecture/03_데이터베이스_스키마.png)
 
 
 **RDBMS vs VectorDB 구분**:
@@ -1827,7 +1827,7 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 
 #### Agent 아키텍처
 
-![AI Agent 아키텍처](docs/images/architecture/03_AI%20Agent.png)
+![AI Agent 아키텍처](docs/images/architecture/05_AI%20Agent.png)
 
 #### 시스템 구성
 
@@ -1921,7 +1921,7 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 | **final_answer** | str | 최종 답변 |
 | **messages** | Sequence[BaseMessage] | 대화 히스토리 (멀티턴 지원) |
 
-#### 4.5. 멀티턴 대화 시스템 (Multi-turn Conversation)
+#### 멀티턴 대화 시스템 (Multi-turn Conversation)
 
 사용자가 **"관련 논문 찾아줘"**, **"그거 요약해줘"**처럼 **대명사나 맥락 참조 표현**을 사용할 때, 시스템이 이전 대화 내용을 자동으로 파악하여 정확한 답변을 제공합니다. **맥락 참조 질문 성공률을 30%에서 95%로 향상**시킨 핵심 기능입니다.
 
@@ -1930,101 +1930,7 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 
 #### 아키텍처
 
-```mermaid
-graph TB
-    subgraph wrapper["📋 멀티턴 대화 시스템 아키텍처"]
-        direction TB
-
-        subgraph stage1["🔸 1단계: 대화 히스토리 수집"]
-            direction LR
-            A1["Streamlit<br/>Session State"]
-            A2["get_current_messages()"]
-            A3["messages 리스트<br/>BaseMessage[]"]
-
-            A1 -->|"st.session_state.messages"| A2
-            A2 -->|"변환"| A3
-        end
-
-        subgraph stage2["🔹 2단계: 맥락 참조 감지"]
-            direction LR
-            B1["사용자 질문<br/>분석"]
-            B2["맥락 키워드<br/>감지"]
-            B3["라우팅<br/>전략 선택"]
-
-            B1 -->|"관련, 그거, 이거..."| B2
-            B2 -->|"has_contextual_ref"| B3
-        end
-
-        subgraph stage3["🔺 3단계: 질문 재작성"]
-            direction LR
-            C1["Router Node<br/>LLM 분석"]
-            C2["query 필드<br/>추출"]
-            C3["refined_query<br/>저장"]
-
-            C1 -->|"맥락 고려"| C2
-            C2 -->|"JSON/Regex"| C3
-        end
-
-        subgraph stage4["🔻 4단계: 도구 실행"]
-            direction LR
-            D1["refined_query<br/>우선 사용"]
-            D2["Multi-Query<br/>검색"]
-            D3["정확한<br/>결과 반환"]
-
-            D1 -->|"명확한 쿼리"| D2
-            D2 -->|"여러 변형"| D3
-        end
-
-        subgraph stage5["🔶 5단계: 응답 저장"]
-            direction LR
-            E1["대화 메모리<br/>업데이트"]
-            E2["Session State<br/>추가"]
-            E3["파일 저장<br/>(선택)"]
-
-            E1 -->|"add_message()"| E2
-            E2 -->|"conversations/"| E3
-        end
-
-        stage1 -.->|"messages"| stage2
-        stage2 -.->|"전략"| stage3
-        stage3 -.->|"refined_query"| stage4
-        stage4 -.->|"응답"| stage5
-    end
-
-    style wrapper fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-    style stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
-    style stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style stage5 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
-
-    style A1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style A2 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style A3 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-
-    style B1 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style B2 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style B3 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-
-    style C1 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C2 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C3 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-
-    style D1 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style D2 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style D3 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-
-    style E1 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style E2 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style E3 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-
-    linkStyle 0,1 stroke:#006064,stroke-width:2px
-    linkStyle 2,3 stroke:#1976d2,stroke-width:2px
-    linkStyle 4,5 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 6,7 stroke:#f57c00,stroke-width:2px
-    linkStyle 8,9 stroke:#c62828,stroke-width:2px
-    linkStyle 10,11,12,13 stroke:#616161,stroke-width:3px
-```
+![멀티턴 대화 시스템](docs/images/architecture/05-1_멀티턴_대화_시스템.png)
 
 #### 개요
 
@@ -2439,99 +2345,7 @@ LLM(Solar Pro2)이 질문에서 용어를 자동 추출하여 검색하며, 용�
 
 ##### 용어집 검색 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📋 RAG 용어집 검색 파이프라인"]
-        direction TB
-
-        subgraph Init["🔸 초기화: 사용자 질문"]
-            direction LR
-            Start([▶️ 시작]) --> A[사용자 질문<br/>예: Attention이 뭐야?]
-        end
-
-        subgraph Step1["🔹 1단계: 용어 추출"]
-            direction LR
-            B[LLM<br/>Solar Pro2] --> C[용어 식별<br/>Attention]
-        end
-
-        subgraph Step2["🔺 2단계: DB 검색"]
-            direction LR
-            D[PostgreSQL<br/>glossary 테이블] --> E{용어<br/>존재?}
-            E -->|Yes| F[💾 용어 정보<br/>definition + easy/hard]
-            E -->|No| G[❌ 검색 실패]
-        end
-
-        subgraph Step3["🔶 3단계: 난이도별 설명 선택"]
-            direction LR
-            H{난이도?}
-            H -->|Easy| I[easy_explanation<br/>초보자용 쉬운 설명]
-            H -->|Hard| J[hard_explanation<br/>전문가용 상세 설명]
-        end
-
-        subgraph Output["💡 4단계: 답변 생성"]
-            direction LR
-            K[LLM<br/>GPT-5] --> L[최종 답변<br/>난이도 맞춤]
-            L --> End([✅ 완료])
-        end
-
-        Init --> Step1
-        Step1 --> Step2
-        Step2 --> Step3
-        Step2 --> Output
-        Step3 --> Output
-    end
-
-    %% MainFlow 래퍼 스타일
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Step1 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Step2 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Step3 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
-    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (초기화 - 청록 계열)
-    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
-    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (1단계 - 보라 계열)
-    style B fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (2단계 - 주황 계열)
-    style D fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style E fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style F fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
-    style G fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (3단계 - 빨강 계열)
-    style H fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style I fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style J fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (출력 - 녹색 계열)
-    style K fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style L fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-
-    %% 연결선 스타일
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 2 stroke:#e65100,stroke-width:2px
-    linkStyle 3 stroke:#e65100,stroke-width:2px
-    linkStyle 4 stroke:#e65100,stroke-width:2px
-    linkStyle 5 stroke:#c62828,stroke-width:2px
-    linkStyle 6 stroke:#c62828,stroke-width:2px
-    linkStyle 7 stroke:#2e7d32,stroke-width:2px
-    linkStyle 8 stroke:#2e7d32,stroke-width:2px
-
-    %% 단계 간 연결 (회색)
-    linkStyle 9 stroke:#616161,stroke-width:3px
-    linkStyle 10 stroke:#616161,stroke-width:3px
-    linkStyle 11 stroke:#616161,stroke-width:3px
-    linkStyle 12 stroke:#616161,stroke-width:3px
-```
+![용어집 도구 아키텍처](docs/images/architecture/08-1_RAG_용어집_도구.png)
 
 ##### 주요 기능
 
@@ -2609,95 +2423,7 @@ MultiQueryRetriever로 쿼리를 확장하여 검색 품질을 향상시키며, 
 
 ##### 논문 검색 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📋 RAG 논문 검색 도구 전체 흐름"]
-        direction TB
-
-        subgraph Input["🔸 입력 & 라우팅"]
-            direction LR
-            Start([▶️ 사용자 질문]) --> KeywordCheck{시간 키워드<br/>검출?}
-            KeywordCheck -->|최신/최근 있음| SkipRAG[❌ RAG 건너뜀<br/>→ Web 검색]
-            KeywordCheck -->|시간 키워드 없음| PatternMatch[패턴 매칭<br/>논문+찾]
-            PatternMatch --> ToolSelect[🔧 search_paper<br/>도구 선택]
-        end
-
-        subgraph Search["🔹 하이브리드 검색"]
-            direction LR
-            VectorSearch[벡터 검색 70%<br/>paper_chunks<br/>MultiQuery] --> Merge[점수 병합<br/>가중치 적용]
-            KeywordSearch[키워드 검색 30%<br/>papers 테이블<br/>Full-Text Search] --> Merge
-            Merge --> TopK[Top-5 논문<br/>선정]
-        end
-
-        subgraph Generation["🔺 답변 생성"]
-            direction LR
-            PromptLoad[난이도별<br/>프롬프트 로드<br/>2개 수준] --> LLMCall[LLM 호출<br/>OpenAI/Solar]
-            LLMCall --> FinalAnswer[✅ 최종 답변<br/>+ 논문 메타데이터]
-        end
-
-        subgraph Fallback["🔶 Fallback 처리"]
-            direction LR
-            CheckResult{검색<br/>성공?<br/>유사도 ≤ 0.5}
-            CheckResult -->|실패| WebSearch[Web 논문 검색<br/>web_search]
-            WebSearch --> CheckWeb{성공?}
-            CheckWeb -->|실패| GeneralAnswer[일반 답변<br/>general]
-            CheckWeb -->|성공| End2([✅ 완료])
-            GeneralAnswer --> End3([✅ 완료])
-        end
-
-        %% 단계 간 연결
-        Input --> Search
-        Search --> CheckResult
-        CheckResult -->|성공| Generation
-        Generation --> End1([✅ 완료])
-        CheckResult -->|실패 감지| Fallback
-    end
-
-    %% 메인 워크플로우 배경
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style Input fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Search fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Generation fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style Fallback fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (입력 - 청록 계열)
-    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
-    style KeywordCheck fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style SkipRAG fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style PatternMatch fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style ToolSelect fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (검색 - 보라 계열)
-    style VectorSearch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style KeywordSearch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style Merge fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style TopK fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (생성 - 녹색 계열)
-    style PromptLoad fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style LLMCall fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style FinalAnswer fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (Fallback - 주황 계열)
-    style CheckResult fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style WebSearch fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style CheckWeb fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style GeneralAnswer fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-
-    %% 종료 노드
-    style End1 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-    style End2 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-    style End3 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-
-    %% 연결선 스타일 (단계 간 - 회색)
-    linkStyle 0,1,2,3 stroke:#006064,stroke-width:2px
-    linkStyle 4,5,6 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 7,8,9 stroke:#2e7d32,stroke-width:2px
-    linkStyle 10,11,12,13,14 stroke:#e65100,stroke-width:2px
-    linkStyle 15,16,17,18 stroke:#616161,stroke-width:3px
-```
+![논문 검색 도구 아키텍처](docs/images/architecture/08-2_RAG_논문_검색_도구.png)
 
 ##### 주요 기능
 
@@ -2834,108 +2560,7 @@ Tavily Search API를 사용하여 **최신 논문 정보**를 실시간 웹에�
 
 ##### Web 검색 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📋 Web 논문 검색 도구 전체 흐름"]
-        direction TB
-
-        subgraph Input["🔸 입력 & 라우팅"]
-            direction LR
-            Start([▶️ 사용자 질문]) --> TimeKeyword{시간 키워드<br/>검출?}
-            TimeKeyword -->|최신/최근<br/>있음| SkipRAG[✅ RAG 건너뜀<br/>Web 검색 우선]
-            TimeKeyword -->|키워드 없음| RAGFirst[RAG 검색<br/>우선 실행]
-            SkipRAG --> WebTool[🔧 web_search<br/>도구 선택]
-            RAGFirst --> RAGFail{RAG<br/>실패?}
-            RAGFail -->|실패| FallbackWeb[Fallback:<br/>web_search]
-            RAGFail -->|성공| End1([✅ 완료])
-            FallbackWeb --> WebTool
-        end
-
-        subgraph Search["🔹 Web 검색"]
-            direction LR
-            TavilyInit[Tavily API<br/>초기화] --> TavilySearch[검색 실행<br/>max_results=5]
-            TavilySearch --> CheckArxiv{arXiv<br/>논문?}
-            CheckArxiv -->|Yes| SaveArxiv[arXiv 처리<br/>PDF 다운로드<br/>+ DB 저장]
-            CheckArxiv -->|No| Format[결과 포맷팅<br/>Markdown]
-            SaveArxiv --> Format
-        end
-
-        subgraph Generation["🔺 답변 생성"]
-            direction LR
-            PromptLoad[난이도별<br/>프롬프트 로드<br/>템플릿 사용] --> LLMCall[LLM 호출<br/>OpenAI/Solar]
-            LLMCall --> FinalAnswer[✅ 최종 답변<br/>+ 검색 결과]
-        end
-
-        subgraph Fallback["🔶 Fallback 처리"]
-            direction LR
-            CheckResult{검색<br/>성공?<br/>결과 존재}
-            CheckResult -->|실패| GeneralAnswer[일반 답변<br/>general]
-            CheckResult -->|성공| End2([✅ 완료])
-            GeneralAnswer --> End3([✅ 완료])
-        end
-
-        %% 단계 간 연결
-        WebTool --> Search
-        Search --> CheckResult
-        CheckResult --> Generation
-        Generation --> End4([✅ 완료])
-    end
-
-    %% 메인 워크플로우 배경
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style Input fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Search fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Generation fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style Fallback fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (입력 - 청록 계열)
-    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
-    style TimeKeyword fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style SkipRAG fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
-    style RAGFirst fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style WebTool fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style RAGFail fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style FallbackWeb fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (검색 - 보라 계열)
-    style TavilyInit fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style TavilySearch fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style CheckArxiv fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style SaveArxiv fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style Format fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (생성 - 녹색 계열)
-    style PromptLoad fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style LLMCall fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style FinalAnswer fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (Fallback - 주황 계열)
-    style CheckResult fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style GeneralAnswer fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-
-    %% 종료 노드
-    style End1 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-    style End2 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-    style End3 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-    style End4 fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-
-    %% 연결선 스타일 (Input 단계: 0-7)
-    linkStyle 0,1,2,3,4,5,6,7 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (Search 단계: 8-12)
-    linkStyle 8,9,10,11,12 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (Generation 단계: 13-14)
-    linkStyle 13,14 stroke:#2e7d32,stroke-width:2px
-
-    %% 연결선 스타일 (Fallback 단계: 15-17)
-    linkStyle 15,16,17 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (단계 간 연결: 18-21)
-    linkStyle 18,19,20,21 stroke:#616161,stroke-width:3px
-```
+![Web 논문 검색 도구 아키텍처](docs/images/architecture/08-3_Web_논문_검색_도구.png)
 
 ##### 주요 기능
 
@@ -3088,127 +2713,7 @@ Map-Reduce 방식으로 청크별 요약 후 통합하며, 요약 품질은 LLM-
 
 ##### 논문 요약 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📋 논문 요약 도구 실행 흐름"]
-        direction TB
-
-        subgraph UserInput["🔸 사용자 입력"]
-            direction LR
-            A([▶️ 사용자 질문<br/>논문 요약 요청]) --> B{패턴 매칭<br/>또는<br/>LLM 라우팅}
-            B -->|summarize 선택| C[도구 실행<br/>시작]
-        end
-
-        subgraph TitleExtraction["🔹 논문 제목 추출"]
-            direction LR
-            D[사용자 질문<br/>분석] --> E[LLM<br/>제목 추출]
-            E --> F[논문 제목<br/>획득]
-        end
-
-        subgraph PaperSearch["🔺 논문 검색"]
-            direction LR
-            G[PostgreSQL<br/>papers 테이블] --> H[ILIKE 검색<br/>제목 매칭]
-            H --> I{논문 발견?}
-            I -->|없음| J[오류 메시지<br/>반환]
-            I -->|발견| K[논문 메타데이터<br/>추출]
-        end
-
-        subgraph ChunkRetrieval["🔶 청크 조회"]
-            direction LR
-            L[pgvector<br/>paper_chunks] --> M[similarity_search<br/>k=50]
-            M --> N{청크 있음?}
-            N -->|없음| O[오류 메시지<br/>반환]
-            N -->|있음| P[청크 병합<br/>combined_text]
-        end
-
-        subgraph Summarization["💾 요약 생성"]
-            direction LR
-            Q[난이도별<br/>프롬프트 로드<br/>2개 수준] --> R[LLMClient<br/>초기화]
-            R --> S[두 수준<br/>요약 생성]
-            S --> T[final_answers<br/>저장]
-        end
-
-        subgraph FallbackChain["⚠️ Fallback 경로"]
-            direction LR
-            U[general] --> V([✅ 최종 답변])
-        end
-
-        %% 단계 간 연결
-        UserInput --> TitleExtraction
-        TitleExtraction --> PaperSearch
-        PaperSearch --> ChunkRetrieval
-        ChunkRetrieval --> Summarization
-        J --> FallbackChain
-        O --> FallbackChain
-        Summarization --> V
-    end
-
-    %% 메인 워크플로우 배경
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style UserInput fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style TitleExtraction fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style PaperSearch fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style ChunkRetrieval fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Summarization fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
-    style FallbackChain fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (사용자 입력 - 청록 계열)
-    style A fill:#4dd0e1,stroke:#006064,stroke-width:3px,color:#000
-    style B fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (제목 추출 - 보라 계열)
-    style D fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style E fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style F fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (논문 검색 - 녹색 계열)
-    style G fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style H fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style J fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style K fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (청크 조회 - 주황 계열)
-    style L fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style M fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style N fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style O fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style P fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (요약 생성 - 파랑 계열)
-    style Q fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style R fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style S fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
-    style T fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (Fallback - 빨강 계열)
-    style U fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style V fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-
-    %% 연결선 스타일 (UserInput: 0-1)
-    linkStyle 0,1 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (TitleExtraction: 2-3)
-    linkStyle 2,3 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (PaperSearch: 4-7)
-    linkStyle 4,5,6,7 stroke:#2e7d32,stroke-width:2px
-
-    %% 연결선 스타일 (ChunkRetrieval: 8-11)
-    linkStyle 8,9,10,11 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (Summarization: 12-14)
-    linkStyle 12,13,14 stroke:#1976d2,stroke-width:2px
-
-    %% 연결선 스타일 (Fallback: 15)
-    linkStyle 15 stroke:#c62828,stroke-width:2px
-
-    %% 단계 간 연결 (회색: 16-21)
-    linkStyle 16,17,18,19,20,21 stroke:#616161,stroke-width:3px
-```
+![논문 요약 도구 아키텍처](docs/images/architecture/08-4_논문_요약_도구.png)
 
 ##### 주요 기능
 
@@ -3371,133 +2876,9 @@ LLM이 질문을 분석하여 SELECT 쿼리를 생성하고, 안전하게 실행
 <details>
 <summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
-##### 아키텍처
+##### Text2SQL 통계 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📊 Text2SQL 통계 도구 파이프라인"]
-        direction TB
-
-        subgraph UserInput["🔸 사용자 입력"]
-            direction LR
-            A[사용자 질문<br/>자연어] --> B{통계<br/>키워드<br/>감지?}
-            B -->|Yes| C[라우터<br/>text2sql 선택]
-            B -->|No| D[❌ 다른 도구로<br/>라우팅]
-        end
-
-        subgraph SQLGeneration["🔹 SQL 생성"]
-            direction LR
-            E[LLM<br/>Solar Pro2] --> F[Few-shot<br/>Prompting]
-            F --> G[SQL 쿼리<br/>생성]
-            G --> H[보안 검증<br/>_sanitize]
-            H --> I{안전한<br/>쿼리?}
-            I -->|No| J[❌ 에러<br/>반환]
-        end
-
-        subgraph Execution["🔺 쿼리 실행"]
-            direction LR
-            I -->|Yes| K[PostgreSQL<br/>papers 테이블]
-            K --> L[쿼리 실행<br/>READ ONLY]
-            L --> M{결과<br/>존재?}
-            M -->|No| N[빈 결과<br/>처리]
-        end
-
-        subgraph AnswerGen["🔶 답변 생성"]
-            direction LR
-            M -->|Yes| O[쿼리 결과<br/>데이터]
-            O --> P[LLM<br/>GPT-5]
-            P --> Q[난이도별<br/>답변 생성]
-            Q --> R[✅ 최종 답변<br/>통계 + 해석]
-        end
-
-        subgraph Logging["💾 쿼리 로깅"]
-            direction LR
-            L --> S[ExperimentManager]
-            S --> T[query_logs<br/>테이블]
-            T --> U[쿼리 이력<br/>저장]
-        end
-
-        subgraph FallbackChain["⚠️ Fallback 경로"]
-            direction LR
-            J --> V{Fallback<br/>체인?}
-            N --> V
-            V -->|1차| W[search_paper<br/>도구]
-            V -->|2차| X[web_search<br/>도구]
-            V -->|3차| Y[general<br/>도구]
-        end
-
-        C --> E
-        R --> S
-    end
-
-    %% Subgraph 스타일
-    style MainFlow fill:#fffde7,stroke:#f57f17,stroke-width:4px,color:#000
-
-    style UserInput fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style SQLGeneration fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Execution fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style AnswerGen fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Logging fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000
-    style FallbackChain fill:#efebe9,stroke:#3e2723,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (Input 단계)
-    style A fill:#80deea,stroke:#00838f,color:#000
-    style B fill:#4dd0e1,stroke:#00838f,color:#000
-    style C fill:#26c6da,stroke:#00838f,color:#000
-    style D fill:#ef9a9a,stroke:#c62828,color:#000
-
-    %% 노드 스타일 (SQL Generation 단계)
-    style E fill:#ce93d8,stroke:#6a1b9a,color:#000
-    style F fill:#ba68c8,stroke:#6a1b9a,color:#000
-    style G fill:#ab47bc,stroke:#6a1b9a,color:#000
-    style H fill:#9c27b0,stroke:#6a1b9a,color:#fff
-    style I fill:#8e24aa,stroke:#6a1b9a,color:#fff
-    style J fill:#ef9a9a,stroke:#c62828,color:#000
-
-    %% 노드 스타일 (Execution 단계)
-    style K fill:#81c784,stroke:#2e7d32,color:#000
-    style L fill:#66bb6a,stroke:#2e7d32,color:#000
-    style M fill:#4caf50,stroke:#2e7d32,color:#fff
-    style N fill:#ffcc80,stroke:#f57c00,color:#000
-
-    %% 노드 스타일 (Answer Gen 단계)
-    style O fill:#ffcc80,stroke:#ef6c00,color:#000
-    style P fill:#ffb74d,stroke:#ef6c00,color:#000
-    style Q fill:#ffa726,stroke:#ef6c00,color:#000
-    style R fill:#66bb6a,stroke:#2e7d32,color:#000
-
-    %% 노드 스타일 (Logging 단계)
-    style S fill:#f48fb1,stroke:#ad1457,color:#000
-    style T fill:#f06292,stroke:#ad1457,color:#000
-    style U fill:#ec407a,stroke:#ad1457,color:#fff
-
-    %% 노드 스타일 (Fallback 단계)
-    style V fill:#bcaaa4,stroke:#4e342e,color:#000
-    style W fill:#a1887f,stroke:#4e342e,color:#000
-    style X fill:#8d6e63,stroke:#4e342e,color:#fff
-    style Y fill:#795548,stroke:#4e342e,color:#fff
-
-    %% 연결선 스타일 (Input 단계: 0-2)
-    linkStyle 0,1,2 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (SQL Generation 단계: 3-8)
-    linkStyle 3,4,5,6,7,8 stroke:#6a1b9a,stroke-width:2px
-
-    %% 연결선 스타일 (Execution 단계: 9-12)
-    linkStyle 9,10,11,12 stroke:#2e7d32,stroke-width:2px
-
-    %% 연결선 스타일 (Answer Gen 단계: 13-15)
-    linkStyle 13,14,15 stroke:#ef6c00,stroke-width:2px
-
-    %% 연결선 스타일 (Logging 단계: 16-18)
-    linkStyle 16,17,18 stroke:#ad1457,stroke-width:2px
-
-    %% 연결선 스타일 (Fallback 단계: 19-23)
-    linkStyle 19,20,21,22,23 stroke:#4e342e,stroke-width:2px
-
-    %% 연결선 스타일 (단계 간 연결: 24-25)
-    linkStyle 24,25 stroke:#616161,stroke-width:3px
-```
+![Text2SQL 통계 도구 아키텍처](docs/images/architecture/08-5_Text2SQL_통계_도구.png)
 
 **Text2SQL 파이프라인 설명:**
 - 사용자가 통계 관련 자연어 질문을 입력하면 라우터가 통계 키워드(개수, 몇 편, 통계 등)를 감지하여 text2sql 도구를 선택
@@ -3831,157 +3212,9 @@ LLM을 직접 호출하여 일반적인 질문이나 인사, DB/검색이 필요
 <summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 **목적**: LLM의 자체 지식으로 직접 답변을 생성하는 범용 답변 도구이자 모든 다른 도구의 Fallback 최종 단계
 
-##### 아키텍처
+##### 일반 답변 도구 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📋 일반 답변 도구 실행 흐름"]
-        direction TB
-
-        subgraph Path1["🔸 경로 1: 직접 실행"]
-            direction LR
-            A[사용자<br/>일반 질문] --> B{패턴 매칭}
-            B -->|매칭 실패| C[LLM 라우팅]
-            B -->|general 패턴| D[일반 답변<br/>도구 실행]
-            C -->|general 선택| D
-        end
-
-        subgraph Path2["🔹 경로 2: Fallback 실행"]
-            direction LR
-            E[다른 도구<br/>실행] --> F{실행 성공?}
-            F -->|실패| G[Fallback 체인<br/>조회]
-            G --> H{general이<br/>체인에 있음?}
-            H -->|Yes| I[일반 답변<br/>도구로 전환]
-        end
-
-        subgraph Execution["🔺 도구 실행"]
-            direction LR
-            J[난이도<br/>확인] --> K{easy or<br/>hard?}
-            K -->|easy| L[elementary +<br/>beginner]
-            K -->|hard| M[intermediate +<br/>advanced]
-            L --> N[LLM 프롬프트<br/>구성]
-            M --> N
-        end
-
-        subgraph LLMCall["🔶 LLM 호출"]
-            direction LR
-            O[System 프롬프트<br/>로드] --> P[User 프롬프트<br/>구성]
-            P --> Q[LLM 호출<br/>2회]
-            Q --> R[답변 생성<br/>완료]
-        end
-
-        subgraph Output["✅ 최종 응답"]
-            direction LR
-            S[final_answers<br/>저장] --> T[final_answer<br/>저장]
-            T --> U[tool_result<br/>저장]
-            U --> V[state 반환]
-        end
-
-        subgraph Fallback["⚠️ Fallback 체인"]
-            direction LR
-            W[glossary → general] --> X[search_paper →<br/>web_search → general]
-            X --> Y[web_search → general]
-            Y --> Z[text2sql → ... → general]
-        end
-
-        %% 경로 연결
-        Path1 --> Execution
-        Path2 --> Execution
-        Execution --> LLMCall
-        LLMCall --> Output
-        Path2 -.참조.-> Fallback
-    end
-
-    %% 메인 워크플로우 배경
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style Path1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Path2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
-    style Execution fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style LLMCall fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style Fallback fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (경로 1 - 청록 계열)
-    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style B fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style D fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (경로 2 - 파랑 계열)
-    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style F fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style G fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style H fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style I fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (실행 - 보라 계열)
-    style J fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style K fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style L fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style M fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style N fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (LLM 호출 - 주황 계열)
-    style O fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style P fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style Q fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
-    style R fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (최종 응답 - 녹색 계열)
-    style S fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style T fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style U fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style V fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (Fallback - 빨강 계열)
-    style W fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style X fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style Y fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style Z fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-
-    %% 연결선 스타일 (경로 1 - 청록 0~4)
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-    linkStyle 2 stroke:#006064,stroke-width:2px
-    linkStyle 3 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (경로 2 - 파랑 5~9)
-    linkStyle 4 stroke:#1976d2,stroke-width:2px
-    linkStyle 5 stroke:#1976d2,stroke-width:2px
-    linkStyle 6 stroke:#1976d2,stroke-width:2px
-    linkStyle 7 stroke:#1976d2,stroke-width:2px
-
-    %% 연결선 스타일 (실행 - 보라 10~15)
-    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 9 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 10 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 11 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 12 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (LLM 호출 - 주황 16~19)
-    linkStyle 13 stroke:#e65100,stroke-width:2px
-    linkStyle 14 stroke:#e65100,stroke-width:2px
-    linkStyle 15 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (최종 응답 - 녹색 20~23)
-    linkStyle 16 stroke:#2e7d32,stroke-width:2px
-    linkStyle 17 stroke:#2e7d32,stroke-width:2px
-    linkStyle 18 stroke:#2e7d32,stroke-width:2px
-
-    %% 연결선 스타일 (Fallback - 빨강 24~26)
-    linkStyle 19 stroke:#c62828,stroke-width:2px
-    linkStyle 20 stroke:#c62828,stroke-width:2px
-    linkStyle 21 stroke:#c62828,stroke-width:2px
-
-    %% 단계 간 연결 (회색 27~31)
-    linkStyle 22 stroke:#616161,stroke-width:3px
-    linkStyle 23 stroke:#616161,stroke-width:3px
-    linkStyle 24 stroke:#616161,stroke-width:3px
-    linkStyle 25 stroke:#616161,stroke-width:3px
-    linkStyle 26 stroke:#616161,stroke-width:2px,stroke-dasharray:5
-```
+![일반 답변 도구 아키텍처](docs/images/architecture/08-6_일반_답변_도구.png)
 
 **일반 답변 파이프라인 설명:**
 - 사용자가 일반 질문을 입력하면 패턴 매칭을 시도하며, 매칭 실패 시 LLM 라우팅을 통해 general 도구를 선택하고, general 패턴 매칭 성공 시에도 일반 답변 도구를 직접 실행
@@ -4298,158 +3531,9 @@ ExperimentManager를 통해 세션별 폴더에 저장하여 실험 추적이 �
 <details>
 <summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
-##### 아키텍처
+##### 파일 저장 도구 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📋 저장 도구 실행 흐름"]
-        direction TB
-
-        subgraph UserInput["🔸 사용자 입력"]
-            direction LR
-            A[사용자 질문<br/>저장 요청] --> B{패턴 매칭<br/>또는<br/>LLM 라우팅}
-            B -->|save_file 선택| C[도구 실행<br/>시작]
-        end
-
-        subgraph ModeDecision["🔹 저장 모드 결정"]
-            direction LR
-            D[question 분석<br/>'전체' 포함?] --> E{전체 대화<br/>저장?}
-            E -->|Yes| F[messages 전체<br/>Markdown 변환]
-            E -->|No| G[단일 답변<br/>저장]
-        end
-
-        subgraph ContentSelection["🔺 저장 내용 선택"]
-            direction LR
-            H[우선순위 검사] --> I{final_answers<br/>있음?}
-            I -->|Yes| J[난이도별<br/>다중 저장]
-            I -->|No| K{tool_result<br/>있음?}
-            K -->|Yes| L[tool_result<br/>사용]
-            K -->|No| M{final_answer<br/>있음?}
-            M -->|Yes| N[final_answer<br/>사용]
-            M -->|No| O[messages에서<br/>마지막 assistant]
-        end
-
-        subgraph FileNaming["🔶 파일명 생성"]
-            direction LR
-            P[타임스탬프<br/>생성] --> Q[save_counter<br/>증가]
-            Q --> R[파일명 형식<br/>적용]
-            R --> S[filename 완성]
-        end
-
-        subgraph FileSave["💾 파일 저장"]
-            direction LR
-            T{ExperimentManager<br/>있음?} -->|Yes| U[save_output<br/>메서드 호출]
-            T -->|No| V[outputs/<br/>직접 저장]
-            U --> W[save_data/<br/>폴더 저장]
-            V --> W
-            W --> X[파일 쓰기<br/>UTF-8]
-        end
-
-        subgraph FinalAnswer["✅ 최종 응답"]
-            direction LR
-            Y[성공 메시지<br/>생성] --> Z[파일 경로<br/>포함]
-            Z --> AA[final_answer<br/>저장]
-        end
-
-        %% 단계 간 연결
-        UserInput --> ModeDecision
-        ModeDecision --> ContentSelection
-        ContentSelection --> FileNaming
-        FileNaming --> FileSave
-        FileSave --> FinalAnswer
-    end
-
-    %% 메인 워크플로우 배경
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일
-    style UserInput fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style ModeDecision fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style ContentSelection fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-    style FileNaming fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style FileSave fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
-    style FinalAnswer fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (사용자 입력 - 청록 계열)
-    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style B fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (모드 결정 - 보라 계열)
-    style D fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style E fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style F fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style G fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (내용 선택 - 녹색 계열)
-    style H fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style J fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
-    style K fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style L fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style M fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style N fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style O fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (파일명 생성 - 주황 계열)
-    style P fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style Q fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style R fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style S fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (파일 저장 - 파랑 계열)
-    style T fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style U fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
-    style V fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style W fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
-    style X fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (최종 응답 - 녹색 계열)
-    style Y fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style Z fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style AA fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
-
-    %% 연결선 스타일 (사용자 입력 - 청록 0~1)
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (모드 결정 - 보라 2~4)
-    linkStyle 2 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 3 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (내용 선택 - 녹색 5~11)
-    linkStyle 5 stroke:#2e7d32,stroke-width:2px
-    linkStyle 6 stroke:#2e7d32,stroke-width:2px
-    linkStyle 7 stroke:#2e7d32,stroke-width:2px
-    linkStyle 8 stroke:#2e7d32,stroke-width:2px
-    linkStyle 9 stroke:#2e7d32,stroke-width:2px
-    linkStyle 10 stroke:#2e7d32,stroke-width:2px
-    linkStyle 11 stroke:#2e7d32,stroke-width:2px
-
-    %% 연결선 스타일 (파일명 생성 - 주황 12~14)
-    linkStyle 12 stroke:#e65100,stroke-width:2px
-    linkStyle 13 stroke:#e65100,stroke-width:2px
-    linkStyle 14 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (파일 저장 - 파랑 15~19)
-    linkStyle 15 stroke:#1976d2,stroke-width:2px
-    linkStyle 16 stroke:#1976d2,stroke-width:2px
-    linkStyle 17 stroke:#1976d2,stroke-width:2px
-    linkStyle 18 stroke:#1976d2,stroke-width:2px
-    linkStyle 19 stroke:#1976d2,stroke-width:2px
-
-    %% 연결선 스타일 (최종 응답 - 녹색 20~21)
-    linkStyle 20 stroke:#2e7d32,stroke-width:2px
-    linkStyle 21 stroke:#2e7d32,stroke-width:2px
-
-    %% 단계 간 연결 (회색 22~26)
-    linkStyle 22 stroke:#616161,stroke-width:3px
-    linkStyle 23 stroke:#616161,stroke-width:3px
-    linkStyle 24 stroke:#616161,stroke-width:3px
-    linkStyle 25 stroke:#616161,stroke-width:3px
-    linkStyle 26 stroke:#616161,stroke-width:3px
-```
+![파일 저장 도구 아키텍처](docs/images/architecture/08-7_파일_저장_도구.png)
 
 **파일 저장 파이프라인 설명:**
 - 사용자가 저장 요청을 하면 패턴 매칭 또는 LLM 라우팅을 통해 save_file 도구를 선택하고 실행을 시작
@@ -4589,118 +3673,7 @@ Agent 동작:
 
 #### 평가 시스템 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📊 LLM-as-a-Judge 평가 시스템"]
-        direction TB
-
-        subgraph Stage1["🔸 1단계: 입력 수집"]
-            direction LR
-            A[사용자 질문] --> B[AI 답변]
-            B --> C[참고 문서]
-            C --> D[난이도 모드<br/>Easy/Hard]
-        end
-
-        subgraph Stage2["🔹 2단계: 평가 프롬프트 구성"]
-            direction LR
-            E[AnswerEvaluator<br/>초기화] --> F[평가 기준<br/>로드<br/>4가지 항목]
-            F --> G[프롬프트<br/>포맷팅]
-            G --> H[System Message<br/>+ User Message]
-        end
-
-        subgraph Stage3["🔺 3단계: LLM 평가 실행"]
-            direction LR
-            I[GPT-5<br/>API 호출] --> J{JSON<br/>파싱<br/>성공?}
-            J -->|Yes| K[점수 추출<br/>4가지 항목]
-            J -->|No| L[기본 점수<br/>0점 처리]
-        end
-
-        subgraph Stage4["🔶 4단계: 결과 검증"]
-            direction LR
-            M[점수 범위<br/>검증<br/>0-10] --> N[총점 계산<br/>0-40]
-            N --> O[코멘트<br/>추출]
-        end
-
-        subgraph Stage5["🔷 5단계: 저장 및 통계"]
-            direction LR
-            P[PostgreSQL<br/>저장<br/>evaluation_results] --> Q[평가 통계<br/>집계<br/>평균 점수]
-            Q --> R[실험 로그<br/>기록]
-        end
-
-        %% 단계 간 연결
-        Stage1 --> Stage2
-        Stage2 --> Stage3
-        Stage3 --> Stage4
-        Stage4 --> Stage5
-    end
-
-    %% MainFlow 스타일
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일 (5단계 색상)
-    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Stage2 fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
-    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Stage5 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (1단계 - 청록)
-    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style C fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
-    style D fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (2단계 - 파랑)
-    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style F fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
-    style G fill:#42a5f5,stroke:#1565c0,stroke-width:2px,color:#000
-    style H fill:#2196f3,stroke:#0d47a1,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (3단계 - 보라)
-    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style J fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
-    style K fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
-    style L fill:#9c27b0,stroke:#4a148c,stroke-width:2px,color:#fff
-
-    %% 노드 스타일 (4단계 - 주황)
-    style M fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style N fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
-    style O fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (5단계 - 녹색)
-    style P fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
-    style Q fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style R fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#fff
-
-    %% 연결선 스타일 (1단계 - 청록 0~2)
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-    linkStyle 2 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (2단계 - 파랑 3~5)
-    linkStyle 3 stroke:#1976d2,stroke-width:2px
-    linkStyle 4 stroke:#1976d2,stroke-width:2px
-    linkStyle 5 stroke:#1976d2,stroke-width:2px
-
-    %% 연결선 스타일 (3단계 - 보라 6~8)
-    linkStyle 6 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (4단계 - 주황 9~10)
-    linkStyle 9 stroke:#e65100,stroke-width:2px
-    linkStyle 10 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (5단계 - 녹색 11~12)
-    linkStyle 11 stroke:#2e7d32,stroke-width:2px
-    linkStyle 12 stroke:#2e7d32,stroke-width:2px
-
-    %% 단계 간 연결 (회색 13~16)
-    linkStyle 13 stroke:#616161,stroke-width:3px
-    linkStyle 14 stroke:#616161,stroke-width:3px
-    linkStyle 15 stroke:#616161,stroke-width:3px
-    linkStyle 16 stroke:#616161,stroke-width:3px
-```
+![평가 시스템 아키텍처](docs/images/architecture/09_평가_시스템.png)
 
 #### 4가지 평가 기준 (총 40점)
 
@@ -4841,121 +3814,7 @@ AI Agent의 행동을 제어하는 프롬프트를 **JSON 파일로 중앙 관�
 
 #### 프롬프트 시스템 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["📝 프롬프트 관리 시스템"]
-        direction TB
-
-        subgraph Stage1["🔸 1단계: JSON 파일 관리"]
-            direction LR
-            A[routing_prompts.json<br/>라우팅 프롬프트] --> B[tool_prompts.json<br/>7개 도구 프롬프트]
-            B --> C[evaluation_prompts.json<br/>평가 프롬프트]
-            C --> D[question_generation<br/>질문 생성]
-        end
-
-        subgraph Stage2["🔹 2단계: 프롬프트 로더"]
-            direction LR
-            E[loader.py<br/>로더 모듈] --> F[load_routing_prompts<br/>라우팅 로드]
-            F --> G[load_tool_prompts<br/>도구 로드]
-            G --> H[load_evaluation_prompts<br/>평가 로드]
-        end
-
-        subgraph Stage3["🔺 3단계: 난이도 선택"]
-            direction LR
-            I[사용자<br/>난이도 선택<br/>Easy/Hard] --> J{난이도<br/>분기}
-            J -->|Easy| K[Easy 모드<br/>프롬프트<br/>쉬운 용어/비유]
-            J -->|Hard| L[Hard 모드<br/>프롬프트<br/>기술 용어/수식]
-        end
-
-        subgraph Stage4["🔶 4단계: 프롬프트 구성"]
-            direction LR
-            M[System Prompt<br/>로드] --> N[Few-shot 예제<br/>추가<br/>13개 라우팅]
-            N --> O[User Prompt<br/>템플릿<br/>변수 바인딩]
-            O --> P[최종 프롬프트<br/>완성]
-        end
-
-        subgraph Stage5["🔷 5단계: LLM 호출"]
-            direction LR
-            Q[Solar Pro2<br/>라우팅] --> R[GPT-5<br/>답변 생성]
-            R --> S[GPT-5<br/>평가]
-        end
-
-        %% 단계 간 연결
-        Stage1 --> Stage2
-        Stage2 --> Stage3
-        Stage3 --> Stage4
-        Stage4 --> Stage5
-    end
-
-    %% MainFlow 스타일
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일 (5단계 색상)
-    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Stage2 fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
-    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Stage5 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (1단계 - 청록)
-    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style C fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
-    style D fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (2단계 - 파랑)
-    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style F fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
-    style G fill:#42a5f5,stroke:#1565c0,stroke-width:2px,color:#000
-    style H fill:#2196f3,stroke:#0d47a1,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (3단계 - 보라)
-    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style J fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
-    style K fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
-    style L fill:#9c27b0,stroke:#4a148c,stroke-width:2px,color:#fff
-
-    %% 노드 스타일 (4단계 - 주황)
-    style M fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
-    style N fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
-    style O fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
-    style P fill:#fb8c00,stroke:#e65100,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (5단계 - 녹색)
-    style Q fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
-    style R fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style S fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#fff
-
-    %% 연결선 스타일 (1단계 - 청록 0~2)
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-    linkStyle 2 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (2단계 - 파랑 3~5)
-    linkStyle 3 stroke:#1976d2,stroke-width:2px
-    linkStyle 4 stroke:#1976d2,stroke-width:2px
-    linkStyle 5 stroke:#1976d2,stroke-width:2px
-
-    %% 연결선 스타일 (3단계 - 보라 6~8)
-    linkStyle 6 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (4단계 - 주황 9~11)
-    linkStyle 9 stroke:#e65100,stroke-width:2px
-    linkStyle 10 stroke:#e65100,stroke-width:2px
-    linkStyle 11 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (5단계 - 녹색 12~13)
-    linkStyle 12 stroke:#2e7d32,stroke-width:2px
-    linkStyle 13 stroke:#2e7d32,stroke-width:2px
-
-    %% 단계 간 연결 (회색 14~17)
-    linkStyle 14 stroke:#616161,stroke-width:3px
-    linkStyle 15 stroke:#616161,stroke-width:3px
-    linkStyle 16 stroke:#616161,stroke-width:3px
-    linkStyle 17 stroke:#616161,stroke-width:3px
-```
+![프롬프트 시스템 아키텍처](docs/images/architecture/10_프롬프트_시스템.png)
 
 #### 핵심 기능
 
@@ -5129,200 +3988,7 @@ experiments/20251105/20251105_143022_session_001/
 
 #### 📊 Streamlit UI 시스템 통합 아키텍처
 
-```mermaid
-graph TB
-    subgraph MainFlow["🎨 Streamlit UI 시스템 전체 흐름"]
-        direction TB
-
-        subgraph Stage1["🔸 1단계: 앱 초기화 및 인증"]
-            direction LR
-            Start([▶️ 시작])
-            Browser["🌐 웹 브라우저<br/>접속"]
-            AppInit["📱 app.py<br/>앱 초기화"]
-            PageConfig["⚙️ 페이지 설정<br/>레이아웃/테마"]
-            Auth["🔐 사용자 인증<br/>로그인"]
-            Start --> Browser
-            Browser --> AppInit
-            AppInit --> PageConfig
-            PageConfig --> Auth
-        end
-
-        subgraph Stage2["🔹 2단계: 세션 관리 및 UI 렌더링"]
-            direction LR
-            InitSession["🚀 세션 초기화<br/>initialize_sessions"]
-            LoadLS["💾 LocalStorage<br/>데이터 로드"]
-            GroupDate["📅 날짜별 그룹화<br/>오늘/어제/지난7일"]
-            RenderSidebar["📂 사이드바 렌더링<br/>채팅 목록"]
-            InitSession --> LoadLS
-            LoadLS --> GroupDate
-            GroupDate --> RenderSidebar
-        end
-
-        subgraph Stage3["🔺 3단계: 사용자 입력 및 세션 제어"]
-            direction LR
-            SelectSession["📌 세션 선택<br/>switch_chat"]
-            Difficulty["🎚️ 난이도 선택<br/>Easy/Hard"]
-            Question["💭 질문 입력<br/>chat_input"]
-            NewChat["➕ 새 채팅<br/>create_new"]
-            DeleteChat["🗑️ 채팅 삭제<br/>delete_chat"]
-            SelectSession --> Difficulty
-            Difficulty --> Question
-        end
-
-        subgraph Stage4["🔶 4단계: AI Agent 실행"]
-            direction LR
-            RouterNode["🧭 라우터 노드<br/>도구 선택"]
-            ToolNode["🔧 도구 노드<br/>실행"]
-            GenNode["✨ 생성 노드<br/>답변 작성"]
-            CallbackHandler["📡 Callback Handler<br/>이벤트 처리"]
-            RouterNode --> ToolNode
-            ToolNode --> GenNode
-            GenNode --> CallbackHandler
-        end
-
-        subgraph Stage5["✨ 5단계: 실시간 응답 표시"]
-            direction LR
-            TokenStream["📺 토큰 스트리밍<br/>on_llm_new_token"]
-            ToolBadge["🏷️ 도구 배지<br/>색상 코딩"]
-            Sources["📚 출처 표시<br/>Expander"]
-            Evaluation["⭐ 평가 결과<br/>별점/이유"]
-            TokenStream --> ToolBadge
-            ToolBadge --> Sources
-            Sources --> Evaluation
-        end
-
-        subgraph Stage6["🔴 6단계: 사용자 액션 및 영속화"]
-            direction LR
-            MessageCopy["📋 메시지 복사<br/>clipboard"]
-            ChatExport["📤 채팅 내보내기<br/>Markdown"]
-            SaveLS["💾 LocalStorage<br/>자동 저장"]
-            NextQuestion{추가 질문?}
-            MessageCopy --> ChatExport
-            ChatExport --> SaveLS
-            SaveLS --> NextQuestion
-        end
-
-        subgraph Stage7["💡 7단계: Multi-turn 또는 종료"]
-            direction LR
-            MultiTurn["🔄 계속 대화<br/>Stage3 복귀"]
-            SwitchSession["🔀 세션 전환<br/>Stage2 복귀"]
-            End([✅ 종료])
-            NextQuestion -->|Yes| MultiTurn
-            NextQuestion -->|No| SwitchSession
-            SwitchSession --> End
-        end
-
-        %% 단계 간 연결
-        Stage1 --> Stage2
-        Stage2 --> Stage3
-        Stage3 --> Stage4
-        Stage4 --> Stage5
-        Stage5 --> Stage6
-        Stage6 --> Stage7
-        MultiTurn --> Stage3
-        SwitchSession --> Stage2
-    end
-
-    %% MainFlow 래퍼 스타일
-    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
-
-    %% Subgraph 스타일 (7단계 색상 팔레트)
-    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
-    style Stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
-    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    style Stage5 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
-    style Stage6 fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000
-    style Stage7 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
-
-    %% 노드 스타일 (1단계 - 청록 계열)
-    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
-    style Browser fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style AppInit fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style PageConfig fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
-    style Auth fill:#26c6da,stroke:#006064,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (2단계 - 파랑 계열)
-    style InitSession fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style LoadLS fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style GroupDate fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
-    style RenderSidebar fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (3단계 - 보라 계열)
-    style SelectSession fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style Difficulty fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style Question fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style NewChat fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-    style DeleteChat fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (4단계 - 주황 계열)
-    style RouterNode fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style ToolNode fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style GenNode fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style CallbackHandler fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (5단계 - 빨강 계열)
-    style TokenStream fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style ToolBadge fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style Sources fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style Evaluation fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (6단계 - 핑크 계열)
-    style MessageCopy fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
-    style ChatExport fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
-    style SaveLS fill:#f48fb1,stroke:#880e4f,stroke-width:2px,color:#000
-    style NextQuestion fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-
-    %% 노드 스타일 (7단계 - 녹색 계열)
-    style MultiTurn fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style SwitchSession fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
-
-    %% 연결선 스타일 (1단계 0~3)
-    linkStyle 0 stroke:#006064,stroke-width:2px
-    linkStyle 1 stroke:#006064,stroke-width:2px
-    linkStyle 2 stroke:#006064,stroke-width:2px
-    linkStyle 3 stroke:#006064,stroke-width:2px
-
-    %% 연결선 스타일 (2단계 4~6)
-    linkStyle 4 stroke:#01579b,stroke-width:2px
-    linkStyle 5 stroke:#01579b,stroke-width:2px
-    linkStyle 6 stroke:#01579b,stroke-width:2px
-
-    %% 연결선 스타일 (3단계 7~8)
-    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
-
-    %% 연결선 스타일 (4단계 9~11)
-    linkStyle 9 stroke:#e65100,stroke-width:2px
-    linkStyle 10 stroke:#e65100,stroke-width:2px
-    linkStyle 11 stroke:#e65100,stroke-width:2px
-
-    %% 연결선 스타일 (5단계 12~14)
-    linkStyle 12 stroke:#c62828,stroke-width:2px
-    linkStyle 13 stroke:#c62828,stroke-width:2px
-    linkStyle 14 stroke:#c62828,stroke-width:2px
-
-    %% 연결선 스타일 (6단계 15~17)
-    linkStyle 15 stroke:#880e4f,stroke-width:2px
-    linkStyle 16 stroke:#880e4f,stroke-width:2px
-    linkStyle 17 stroke:#880e4f,stroke-width:2px
-
-    %% 연결선 스타일 (7단계 18~20)
-    linkStyle 18 stroke:#2e7d32,stroke-width:2px
-    linkStyle 19 stroke:#2e7d32,stroke-width:2px
-    linkStyle 20 stroke:#2e7d32,stroke-width:2px
-
-    %% 단계 간 연결 (회색 21~27)
-    linkStyle 21 stroke:#616161,stroke-width:3px
-    linkStyle 22 stroke:#616161,stroke-width:3px
-    linkStyle 23 stroke:#616161,stroke-width:3px
-    linkStyle 24 stroke:#616161,stroke-width:3px
-    linkStyle 25 stroke:#616161,stroke-width:3px
-    linkStyle 26 stroke:#616161,stroke-width:3px
-    linkStyle 27 stroke:#616161,stroke-width:3px
-    linkStyle 28 stroke:#616161,stroke-width:3px
-```
+![Streamlit UI 아키텍처](docs/images/architecture/11_Streamlit_UI.png)
 
 위의 **통합 아키텍처**는 Streamlit UI 시스템의 **전체 생명주기**를 7단계로 보여줍니다:
 
@@ -5621,19 +4287,72 @@ python main.py
 ### RAG 시스템 최적화
 
 ```mermaid
-graph LR
-    A[사용자 질문] --> B[임베딩 생성<br/>100ms]
-    B --> C[pgvector 검색<br/>45ms]
-    C --> D[메타데이터 조회<br/>12ms]
-    D --> E[컨텍스트 구성<br/>50ms]
-    E --> F[LLM 답변 생성<br/>2000ms]
+graph TB
+    subgraph MainFlow["📋 RAG 시스템 최적화 흐름"]
+        direction TB
 
-    style A fill:#90caf9,stroke:#1976d2,color:#000
-    style B fill:#81c784,stroke:#388e3c,color:#000
-    style C fill:#81c784,stroke:#388e3c,color:#000
-    style D fill:#81c784,stroke:#388e3c,color:#000
-    style E fill:#81c784,stroke:#388e3c,color:#000
-    style F fill:#ffb74d,stroke:#f57c00,color:#000
+        subgraph Init["🔸 초기화"]
+            direction LR
+            A[사용자 질문]
+        end
+
+        subgraph Step1["🔹 1단계: 임베딩"]
+            direction LR
+            B[임베딩 생성<br/>100ms]
+        end
+
+        subgraph Step2["🔺 2단계: 벡터 검색"]
+            direction LR
+            C[pgvector 검색<br/>45ms]
+        end
+
+        subgraph Step3["🔶 3단계: 메타데이터"]
+            direction LR
+            D[메타데이터 조회<br/>12ms]
+        end
+
+        subgraph Step4["✨ 4단계: 컨텍스트"]
+            direction LR
+            E[컨텍스트 구성<br/>50ms]
+        end
+
+        subgraph Output["💡 5단계: 답변 생성"]
+            direction LR
+            F[LLM 답변 생성<br/>2000ms]
+        end
+
+        Init --> Step1
+        Step1 --> Step2
+        Step2 --> Step3
+        Step3 --> Step4
+        Step4 --> Output
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Step1 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Step2 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Step3 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Step4 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style C fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style D fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style E fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style F fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+
+    %% 단계 간 연결
+    linkStyle 0 stroke:#616161,stroke-width:3px
+    linkStyle 1 stroke:#616161,stroke-width:3px
+    linkStyle 2 stroke:#616161,stroke-width:3px
+    linkStyle 3 stroke:#616161,stroke-width:3px
+    linkStyle 4 stroke:#616161,stroke-width:3px
 ```
 
 **최적화 기법**:
