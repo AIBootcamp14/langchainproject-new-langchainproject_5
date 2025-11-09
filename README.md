@@ -2686,6 +2686,269 @@ SOLAR_API_KEY=xxxxxxxxxxxxxxxxxxxxx
 
 ---
 
+#### 7-4. 논문 요약 도구
+
+**위치**: `src/tools/summarize.py`
+
+PostgreSQL + pgvector에서 논문 청크를 조회하여 **난이도별 구조화된 요약**을 생성하는 도구입니다.
+
+##### 논문 요약 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 논문 요약 도구 실행 흐름"]
+        direction TB
+
+        subgraph UserInput["🔸 사용자 입력"]
+            direction LR
+            A([▶️ 사용자 질문<br/>논문 요약 요청]) --> B{패턴 매칭<br/>또는<br/>LLM 라우팅}
+            B -->|summarize 선택| C[도구 실행<br/>시작]
+        end
+
+        subgraph TitleExtraction["🔹 논문 제목 추출"]
+            direction LR
+            D[사용자 질문<br/>분석] --> E[LLM<br/>제목 추출]
+            E --> F[논문 제목<br/>획득]
+        end
+
+        subgraph PaperSearch["🔺 논문 검색"]
+            direction LR
+            G[PostgreSQL<br/>papers 테이블] --> H[ILIKE 검색<br/>제목 매칭]
+            H --> I{논문 발견?}
+            I -->|없음| J[오류 메시지<br/>반환]
+            I -->|발견| K[논문 메타데이터<br/>추출]
+        end
+
+        subgraph ChunkRetrieval["🔶 청크 조회"]
+            direction LR
+            L[pgvector<br/>paper_chunks] --> M[similarity_search<br/>k=50]
+            M --> N{청크 있음?}
+            N -->|없음| O[오류 메시지<br/>반환]
+            N -->|있음| P[청크 병합<br/>combined_text]
+        end
+
+        subgraph Summarization["💾 요약 생성"]
+            direction LR
+            Q[난이도별<br/>프롬프트 로드<br/>2개 수준] --> R[LLMClient<br/>초기화]
+            R --> S[두 수준<br/>요약 생성]
+            S --> T[final_answers<br/>저장]
+        end
+
+        subgraph FallbackChain["⚠️ Fallback 경로"]
+            direction LR
+            U[general] --> V([✅ 최종 답변])
+        end
+
+        %% 단계 간 연결
+        UserInput --> TitleExtraction
+        TitleExtraction --> PaperSearch
+        PaperSearch --> ChunkRetrieval
+        ChunkRetrieval --> Summarization
+        J --> FallbackChain
+        O --> FallbackChain
+        Summarization --> V
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style UserInput fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style TitleExtraction fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style PaperSearch fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style ChunkRetrieval fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Summarization fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    style FallbackChain fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (사용자 입력 - 청록 계열)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:3px,color:#000
+    style B fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (제목 추출 - 보라 계열)
+    style D fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style E fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style F fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (논문 검색 - 녹색 계열)
+    style G fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style H fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style K fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (청크 조회 - 주황 계열)
+    style L fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style M fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style N fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style O fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style P fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (요약 생성 - 파랑 계열)
+    style Q fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style R fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style S fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
+    style T fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (Fallback - 빨강 계열)
+    style U fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style V fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% 연결선 스타일 (UserInput: 0-1)
+    linkStyle 0,1 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (TitleExtraction: 2-3)
+    linkStyle 2,3 stroke:#7b1fa2,stroke-width:2px
+
+    %% 연결선 스타일 (PaperSearch: 4-7)
+    linkStyle 4,5,6,7 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (ChunkRetrieval: 8-11)
+    linkStyle 8,9,10,11 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (Summarization: 12-14)
+    linkStyle 12,13,14 stroke:#1976d2,stroke-width:2px
+
+    %% 연결선 스타일 (Fallback: 15)
+    linkStyle 15 stroke:#c62828,stroke-width:2px
+
+    %% 단계 간 연결 (회색: 16-21)
+    linkStyle 16,17,18,19,20,21 stroke:#616161,stroke-width:3px
+```
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 방식 |
+|------|------|----------|
+| **논문 제목 자동 추출** | 사용자 질문에서 논문 제목 LLM 추출 | LLMClient + title_extraction 프롬프트 |
+| **하이브리드 검색** | PostgreSQL (메타데이터) + pgvector (청크) | papers 테이블 + paper_chunks |
+| **4단계 난이도** | elementary/beginner/intermediate/advanced | tool_prompts.json 수준별 프롬프트 |
+| **2개 수준 요약** | Easy (elementary+beginner), Hard (intermediate+advanced) | level_mapping 자동 선택 |
+| **구조화된 요약** | 배경, 방법론, 결과, 핵심 기여 | 프롬프트 엔지니어링 |
+| **파일 저장** | summary.md Markdown 저장 | outputs/{timestamp}/summary/ |
+
+##### 난이도별 요약 수준
+
+| 수준 | 대상 연령 | 특징 | 프롬프트 스타일 |
+|------|-----------|------|-----------------|
+| **elementary** | 8-13세 | 이모지 사용, 일상 비유, 동화 형식 | "논문을 이야기처럼 재미있게..." |
+| **beginner** | 14-22세 | 쉬운 설명, 실생활 예시, 3-5개 포인트 | "핵심 아이디어를 3-5개 포인트로..." |
+| **intermediate** | 23-30세 | 기술적 세부사항, 알고리즘, 실험 결과 | "방법론 상세 분석, 실험 설계..." |
+| **advanced** | 30세 이상 | 수식/증명, 비판적 분석, 선행 연구 비교 | "이론적 배경, 통계적 유의성..." |
+
+##### 파이프라인 모드 vs 단일 모드
+
+**파이프라인 모드** (이전 도구 결과 활용):
+- 조건: `tool_pipeline` 존재 && `pipeline_index > 1`
+- 동작: 이전 도구(search_paper/web_search)의 `tool_result` 직접 요약
+- 장점: DB 검색 생략, 빠른 요약 생성
+- 프롬프트: 간단한 시스템 프롬프트 사용
+
+**단일 모드** (직접 논문 제목 전달):
+- 조건: 사용자가 "Attention Is All You Need 요약해줘" 직접 요청
+- 동작:
+  1. LLM으로 논문 제목 추출
+  2. PostgreSQL papers 테이블 검색
+  3. pgvector에서 청크 조회 (k=50)
+  4. 2개 수준 요약 생성
+- 장점: 더 상세한 요약, summary.md 파일 저장
+
+##### 요약 생성 프로세스
+
+**1단계: 논문 제목 추출**
+```python
+# LLM 프롬프트
+"다음 질문에서 요약하려는 논문의 제목을 추출하세요.
+논문 제목만 정확히 반환하세요.
+
+질문: {question}
+
+논문 제목:"
+```
+
+**2단계: PostgreSQL 검색**
+```sql
+SELECT paper_id, title, authors, abstract, publish_date
+FROM papers
+WHERE title ILIKE '%{paper_title}%'
+LIMIT 1
+```
+
+**3단계: pgvector 청크 조회**
+```python
+docs = vectorstore.similarity_search(
+    query=title,  # 논문 제목으로 시맨틱 검색
+    k=50          # 최대 50개 청크
+)
+combined_text = "\n\n".join([doc.page_content for doc in docs])
+```
+
+**4단계: 난이도별 요약 생성**
+```python
+level_mapping = {
+    "easy": ["elementary", "beginner"],
+    "hard": ["intermediate", "advanced"]
+}
+
+for level in levels:
+    summary_template = get_summarize_template(level)
+    summary = llm_client.invoke(summary_template)
+    final_answers[level] = summary
+```
+
+##### 사용 예시
+
+**사용자 질문**: "Attention Is All You Need 논문 요약해줘" (Easy 모드)
+
+**실행 흐름**:
+1. 논문 제목 추출: "Attention Is All You Need"
+2. PostgreSQL 검색: paper_id=42 발견
+3. pgvector 청크 조회: 48개 청크 획득
+4. 요약 생성 (elementary + beginner):
+
+**Beginner 수준 요약 (14-22세)**:
+> ## 논문 요약: 초급자용
+>
+> ### 이 논문이 해결하려는 문제
+> 기존 번역 모델은 순서대로 단어를 처리해서 느렸습니다.
+> 문장이 길면 앞부분을 잊어버리는 문제도 있었습니다.
+>
+> ### 제안하는 해결 방법
+> Transformer라는 새로운 모델을 만들었습니다.
+> - 모든 단어를 동시에 처리 (Self-Attention)
+> - 단어 간 관계를 계산해서 중요한 부분 찾기
+> - 순서 정보는 Positional Encoding으로 보존
+>
+> ### 왜 이 방법이 좋은지
+> - 학습 속도가 훨씬 빠름 (병렬 처리)
+> - 긴 문장도 잘 이해함
+> - 번역 품질이 기존 모델보다 높음
+
+##### Fallback Chain 동작
+
+**검색 실패 조건**:
+- 논문 제목 추출 실패
+- PostgreSQL에 논문 없음: "'XYZ' 논문을 찾지 못했습니다"
+- pgvector에 청크 없음: "논문 내용을 찾지 못했습니다"
+
+**Fallback 순서**:
+1. **summarize** (논문 요약 도구) → 실패
+2. **general** (LLM 지식 기반) → 최종 답변
+
+**성능 지표**:
+- **청크 조회 수**: k=50 (충분한 맥락)
+- **LLM 호출**: 3-4회 (제목 추출 1회 + 요약 2회)
+- **PostgreSQL 쿼리**: 1회 (papers 테이블)
+- **pgvector 검색**: 1회 (paper_chunks)
+
+**도구별 참조 문서**:
+- [논문 요약 시나리오](docs/scenarios/05_논문_요약.md)
+- [논문 요약 도구 아키텍처](docs/architecture/single_request/05_논문_요약.md)
+- [이중 요청 RAG 논문 검색 요약](docs/architecture/multiple_request/01_이중요청_RAG논문검색_논문요약.md)
+- [삼중 요청 RAG 논문 검색 논문 요약 저장](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md)
+
+---
+
 ### 8. Streamlit UI 시스템
 
 #### 주요 기능
