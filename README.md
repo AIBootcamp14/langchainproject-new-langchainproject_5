@@ -5761,6 +5761,8 @@ graph LR
 - [`docs/architecture/`](docs/architecture/) - 시스템 아키텍처 문서
 
   **단일 요청 아키텍처**:
+  - [`docs/architecture/single_request/`](docs/architecture/single_request/) - 단일 요청 시나리오 아키텍처 (8개 파일)
+    - RAG 논문/용어집 검색, 웹 검색, Text2SQL, 논문 요약, 저장, 일반 답변, 멀티턴 대화
 
   | 문서 | 설명 |
   |------|------|
@@ -5774,6 +5776,8 @@ graph LR
   | [`08_멀티턴_대화.md`](docs/architecture/single_request/08_멀티턴_대화.md) | 멀티턴 대화 아키텍처 |
 
   **다중 요청 아키텍처**:
+  - [`docs/architecture/multiple_request/`](docs/architecture/multiple_request/) - 다중 요청 시나리오 아키텍처 (16개 파일)
+    - 이중 요청 (8개), 삼중 요청 (6개), 사중 요청 (2개)
 
   | 문서 | 설명 |
   |------|------|
@@ -5919,26 +5923,49 @@ graph LR
 #### 회의록 및 기타
 
 **회의록**:
-- [`docs/minutes/`](docs/minutes/) - 팀 회의록
-  - [`docs/minutes/20251028/`](docs/minutes/20251028/) - 2025.10.28 회의록
-  - [`docs/minutes/20251029/`](docs/minutes/20251029/) - 2025.10.29 회의록
-  - [`docs/minutes/20251030/`](docs/minutes/20251030/) - 2025.10.30 회의록
-  - [`docs/minutes/20251031/`](docs/minutes/20251031/) - 2025.10.31 회의록
-  - [`docs/minutes/20251104/`](docs/minutes/20251104/) - 2025.11.04 회의록
+- [`docs/minutes/`](docs/minutes/) - 팀 회의록 (8개 파일)
+  - 2025.10.28 ~ 2025.11.04 회의록 및 멘토링 기록
+
+  | 날짜 | 문서 | 설명 |
+  |------|------|------|
+  | 2025.10.28 | [`20251028_팀_회의록.md`](docs/minutes/20251028/20251028_팀_회의록.md) | 2025.10.28 팀 회의록 |
+  | 2025.10.28 | [`20251028_멘토링.md`](docs/minutes/20251028/20251028_멘토링.md) | 2025.10.28 멘토링 기록 |
+  | 2025.10.29 | [`20251029_팀_회의록.md`](docs/minutes/20251029/20251029_팀_회의록.md) | 2025.10.29 팀 회의록 |
+  | 2025.10.29 | [`20251029_피어세션.md`](docs/minutes/20251029/20251029_피어세션.md) | 2025.10.29 피어세션 기록 |
+  | 2025.10.30 | [`20251030_팀_회의록.md`](docs/minutes/20251030/20251030_팀_회의록.md) | 2025.10.30 팀 회의록 |
+  | 2025.10.30 | [`20251030_멘토링.md`](docs/minutes/20251030/20251030_멘토링.md) | 2025.10.30 멘토링 기록 |
+  | 2025.10.31 | [`20251031_팀_회의록.md`](docs/minutes/20251031/20251031_팀_회의록.md) | 2025.10.31 팀 회의록 |
+  | 2025.11.04 | [`20251104_멘토링.md`](docs/minutes/20251104/20251104_멘토링.md) | 2025.11.04 멘토링 기록 |
 
 **발표 자료**:
 - [`docs/PPT/`](docs/PPT/) - 프로젝트 발표 자료
-  - [`docs/PPT/new/`](docs/PPT/new/) - 최신 발표 자료
+  - [`docs/PPT/new/`](docs/PPT/new/) - 최신 발표 자료 (5개 파일)
+
+  | 문서 | 설명 |
+  |------|------|
+  | [`02_프로젝트_목표_및_설계_추가.md`](docs/PPT/new/02_프로젝트_목표_및_설계_추가.md) | 프로젝트 목표 및 설계 발표 대본 |
+  | [`03_개발_및_구현_대본.md`](docs/PPT/new/03_개발_및_구현_대본.md) | 개발 및 구현 발표 대본 |
+  | [`03_개발_및_구현_대본_추가.md`](docs/PPT/new/03_개발_및_구현_대본_추가.md) | 개발 및 구현 발표 대본 (추가) |
+  | [`04_이슈_인사이트_대본.md`](docs/PPT/new/04_이슈_인사이트_대본.md) | 이슈 및 인사이트 발표 대본 |
+  | [`05_실행_결과_대본.md`](docs/PPT/new/05_실행_결과_대본.md) | 실행 결과 발표 대본 |
 
 **실험 결과**:
-- [`docs/experiments/`](docs/experiments/) - 실험 결과 및 분석 문서
-  - [`docs/experiments/20251031/`](docs/experiments/20251031/) - 2025.10.31 실험
-  - [`docs/experiments/20251101/`](docs/experiments/20251101/) - 2025.11.01 실험
-  - [`docs/experiments/20251104/`](docs/experiments/20251104/) - 2025.11.04 실험
-  - [`docs/experiments/20251105/`](docs/experiments/20251105/) - 2025.11.05 실험
+- [`docs/experiments/`](docs/experiments/) - 실험 결과 및 분석 문서 (4개 파일)
+  - 2025.10.31 ~ 2025.11.05 실험 분석 보고서
+
+  | 날짜 | 문서 | 설명 |
+  |------|------|------|
+  | 2025.10.31 | [`paper_review_app_ml_brief.md`](docs/experiments/20251031/paper_review_app_ml_brief.md) | 논문 리뷰 앱 ML Brief |
+  | 2025.11.04 | [`20251104_213739_session_010_실험_분석_보고서.md`](docs/experiments/20251104/20251104_213739_session_010_실험_분석_보고서.md) | Session_010 실험 분석 보고서 |
+  | 2025.11.05 | [`20251105_152347_pipeline_fallback_fix_report.md`](docs/experiments/20251105/20251105_152347_pipeline_fallback_fix_report.md) | 파이프라인 Fallback 수정 보고서 |
+  | 2025.11.05 | [`session_018_analysis_report.md`](docs/experiments/20251105/session_018_analysis_report.md) | Session_018 분석 보고서 |
 
 **오류 문서**:
-- [`docs/errors/`](docs/errors/) - 오류 분석 및 해결 문서
+- [`docs/errors/`](docs/errors/) - 오류 분석 및 해결 문서 (1개 파일)
+
+  | 문서 | 설명 |
+  |------|------|
+  | [`박재홍_코드_문제점_및_TODO.md`](docs/errors/박재홍_코드_문제점_및_TODO.md) | 박재홍 코드 문제점 분석 및 TODO |
 
 **이미지 자료**:
 - [`docs/images/`](docs/images/) - 프로젝트 이미지 자료
