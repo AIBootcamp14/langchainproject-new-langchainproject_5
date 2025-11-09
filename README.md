@@ -5667,6 +5667,66 @@ graph LR
 
 ---
 
+## 📖 추가 참고 문서
+
+### 사용 가이드
+
+**데이터베이스 관리**:
+- [`docs/usage/데이터베이스_설치_및_설정_가이드.md`](docs/usage/데이터베이스_설치_및_설정_가이드.md) - PostgreSQL + pgvector 설치 및 설정 가이드
+- [`docs/usage/데이터_삭제_가이드.md`](docs/usage/데이터_삭제_가이드.md) - 데이터베이스 데이터 삭제 가이드
+
+**실행 가이드**:
+- [`docs/usage/실행_명령어_가이드.md`](docs/usage/실행_명령어_가이드.md) - 챗봇 실행 및 주요 명령어 가이드
+
+### 시나리오 및 예상 질문
+
+**통합 시나리오**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 전체 시스템 통합 시나리오
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - Easy 모드 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - Hard 모드 질문 리스트
+
+**도구별 시나리오**:
+- [`docs/scenarios/01_일반_답변.md`](docs/scenarios/01_일반_답변.md) - 일반 답변 도구 시나리오
+- [`docs/scenarios/02_RAG_논문_검색.md`](docs/scenarios/02_RAG_논문_검색.md) - RAG 논문 검색 시나리오
+- [`docs/scenarios/03_웹_검색.md`](docs/scenarios/03_웹_검색.md) - 웹 검색 도구 시나리오
+- [`docs/scenarios/04_RAG_용어집.md`](docs/scenarios/04_RAG_용어집.md) - RAG 용어집 검색 시나리오
+- [`docs/scenarios/05_논문_요약.md`](docs/scenarios/05_논문_요약.md) - 논문 요약 도구 시나리오
+- [`docs/scenarios/06_파일_저장.md`](docs/scenarios/06_파일_저장.md) - 파일 저장 도구 시나리오
+- [`docs/scenarios/07_text2sql_통계.md`](docs/scenarios/07_text2sql_통계.md) - Text2SQL 통계 도구 시나리오
+
+### Q&A 문서
+
+**시스템별 Q&A**:
+- [`docs/QnA/agent_system_qna.md`](docs/QnA/agent_system_qna.md) - AI Agent 시스템 Q&A
+- [`docs/QnA/experiment_manager_qna.md`](docs/QnA/experiment_manager_qna.md) - 실험 관리 시스템 Q&A
+- [`docs/QnA/data_pipeline_qna.md`](docs/QnA/data_pipeline_qna.md) - 데이터 파이프라인 Q&A
+- [`docs/QnA/rag_system_qna.md`](docs/QnA/rag_system_qna.md) - RAG 시스템 Q&A
+- [`docs/QnA/pattern_routing_qna.md`](docs/QnA/pattern_routing_qna.md) - 패턴 기반 라우팅 Q&A
+- [`docs/QnA/streamlit_ui_qna.md`](docs/QnA/streamlit_ui_qna.md) - Streamlit UI Q&A
+
+**도구별 Q&A**:
+- [`docs/QnA/glossary_qna.md`](docs/QnA/glossary_qna.md) - 용어집 도구 Q&A
+- [`docs/QnA/text2sql_qna.md`](docs/QnA/text2sql_qna.md) - Text2SQL 도구 Q&A
+
+### 아키텍처 문서
+
+**단일 요청 아키텍처**:
+- [`docs/architecture/single_request/01_RAG_논문_검색.md`](docs/architecture/single_request/01_RAG_논문_검색.md) - RAG 논문 검색 아키텍처
+- [`docs/architecture/single_request/02_RAG_용어집_검색.md`](docs/architecture/single_request/02_RAG_용어집_검색.md) - RAG 용어집 검색 아키텍처
+- [`docs/architecture/single_request/03_Web_논문_검색.md`](docs/architecture/single_request/03_Web_논문_검색.md) - Web 논문 검색 아키텍처
+- [`docs/architecture/single_request/04_Text2SQL.md`](docs/architecture/single_request/04_Text2SQL.md) - Text2SQL 아키텍처
+- [`docs/architecture/single_request/05_논문_요약.md`](docs/architecture/single_request/05_논문_요약.md) - 논문 요약 아키텍처
+- [`docs/architecture/single_request/06_저장.md`](docs/architecture/single_request/06_저장.md) - 파일 저장 아키텍처
+- [`docs/architecture/single_request/07_일반_답변.md`](docs/architecture/single_request/07_일반_답변.md) - 일반 답변 아키텍처
+
+**다중 요청 아키텍처**:
+- [`docs/architecture/multiple_request/`](docs/architecture/multiple_request/) - 이중/삼중/사중 요청 아키텍처 (16개 파일)
+  - 이중 요청: RAG 논문 검색 → 논문 요약/저장, RAG 용어집 → 저장/일반답변, Web 검색 → 요약/저장, Text2SQL → 저장/일반답변
+  - 삼중 요청: RAG 논문 검색 → 논문 요약 → 저장, Web 검색 → 논문 요약 → 저장, Text2SQL → 일반 답변 → 저장 등
+  - 사중 요청: 용어집 → 논문 검색 → 요약 → 저장, Web 검색 → 논문 요약 → 일반 답변 → 저장
+
+---
+
 ## 📚 참고 자료
 
 - [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
