@@ -1345,14 +1345,6 @@ experiments/20251104/
 └── 20251104_090012_session_001/   # 다음 날, 다시 001부터 시작
 ```
 
-**참조 문서**:
-- [실험 관리 시스템 구현 이슈](docs/issues/01-1_실험_관리_시스템_구현.md)
-- [최현화 실험 관리 시스템 역할](docs/roles/01-1_최현화_실험_관리_시스템.md)
-- [실험 폴더 구조 규칙](docs/rules/실험_폴더_구조.md)
-- [실험 추적 관리 PRD](docs/PRD/06_실험_추적_관리.md)
-- [실험 관리 시스템 모듈화 문서](docs/modularization/03_실험_관리_시스템.md)
-- [Conversation 파일 관리](docs/modularization/03-1_Conversation_파일_관리.md)
-
 #### 자동 생성 디렉토리 구조
 
 ```
@@ -1409,7 +1401,14 @@ experiments/
 - **타임스탬프 기반 파일명**: 시간순 추적 가능
 - **계층적 로그 구조**: 도구별/기능별 로그 분리로 디버깅 효율성 극대화
 
-**상세**: [실험_관리_시스템.md](docs/modularization/03_실험_관리_시스템.md)
+
+**참조 문서**:
+- [실험 관리 시스템 구현 이슈](docs/issues/01-1_실험_관리_시스템_구현.md)
+- [최현화 실험 관리 시스템 역할](docs/roles/01-1_최현화_실험_관리_시스템.md)
+- [실험 폴더 구조 규칙](docs/rules/실험_폴더_구조.md)
+- [실험 추적 관리 PRD](docs/PRD/06_실험_추적_관리.md)
+- [실험 관리 시스템 모듈화 문서](docs/modularization/03_실험_관리_시스템.md)
+- [Conversation 파일 관리](docs/modularization/03-1_Conversation_파일_관리.md)
 
 ---
 
