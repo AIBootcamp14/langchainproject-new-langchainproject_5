@@ -2118,7 +2118,8 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 - [에이전트 실행 오류 수정 및 시스템 안정화](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md)
 - [다중요청 저장기능 개선](docs/issues/01-5_다중요청_저장기능_개선.md)
 
-#### 7-1. RAG 용어집 검색 도구
+<details>
+<summary><h4>7-1. RAG 용어집 검색 도구</h4></summary>
 
 **파일**: `src/tools/glossary.py`
 
@@ -2252,15 +2253,31 @@ CREATE TABLE glossary (
 > Attention은 Transformer 모델의 핵심 메커니즘으로, Query, Key, Value 벡터 간의 가중 평균을 계산하여 입력 시퀀스의 각 위치가 다른 모든 위치와 얼마나 관련되어 있는지를 학습합니다. Self-Attention은 같은 시퀀스 내에서, Cross-Attention은 서로 다른 시퀀스 간에 적용됩니다.
 
 **도구별 참조 문서**:
+
+**단일 요청 (Single Request)**:
+- [RAG 용어집 검색 아키텍처](docs/architecture/single_request/02_RAG_용어집_검색.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: RAG 용어집 검색 → 저장](docs/architecture/multiple_request/03_이중요청_RAG용어집검색_저장.md)
+- [이중요청: RAG 용어집 검색 → 일반 답변](docs/architecture/multiple_request/04_이중요청_RAG용어집검색_일반답변.md)
+- [삼중요청: RAG 용어집 검색 → RAG 논문 검색 → 논문 요약](docs/architecture/multiple_request/11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md)
+- [사중요청: 용어집 → 논문 검색 → 요약 → 저장](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md)
+
+**구현 이슈 및 개선사항**:
 - [RAG 용어집 시스템 구현](docs/issues/02_RAG_용어집_시스템_구현.md)
 - [RAG 코드 통합 검증 보고서](docs/issues/02-1_RAG_코드_통합_검증_보고서.md)
 - [용어 추출 개수 사용자 설정 기능](docs/issues/02-2_용어_추출_개수_사용자_설정_기능.md)
 - [용어집 도구 선택 실패 문제](docs/issues/02-5_용어집_도구_선택_실패_문제.md)
-- [신준엽 RAG 용어집](docs/roles/02_신준엽_RAG_용어집.md)
+
+**담당자 문서**:
+- [신준엽 - RAG 용어집](docs/roles/02_신준엽_RAG_용어집.md)
+
+</details>
 
 ---
 
-#### 7-2. RAG 논문 검색 도구
+<details>
+<summary><h4>7-2. RAG 논문 검색 도구</h4></summary>
 
 **위치**: `src/tools/search_paper.py`
 
@@ -2449,15 +2466,34 @@ CREATE INDEX idx_papers_date ON papers (publish_date);
 3. **general** (LLM 지식 기반) → 최종 답변
 
 **도구별 참조 문서**:
-- [RAG 논문 검색 시나리오](docs/scenarios/02_RAG_논문_검색.md)
-- [RAG 논문 검색 도구 아키텍처](docs/architecture/single_request/01_RAG_논문_검색.md)
+
+**단일 요청 (Single Request)**:
+- [RAG 논문 검색 아키텍처](docs/architecture/single_request/01_RAG_논문_검색.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: RAG 논문 검색 → 논문 요약](docs/architecture/multiple_request/01_이중요청_RAG논문검색_논문요약.md)
+- [이중요청: RAG 논문 검색 → 저장](docs/architecture/multiple_request/02_이중요청_RAG논문검색_저장.md)
+- [삼중요청: RAG 논문 검색 → 논문 요약 → 저장](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md)
+- [삼중요청: RAG 용어집 검색 → RAG 논문 검색 → 논문 요약](docs/architecture/multiple_request/11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md)
+- [삼중요청: RAG 논문 검색 → 일반 답변 → 저장](docs/architecture/multiple_request/14_삼중요청_RAG논문검색_일반답변_저장.md)
+- [사중요청: 용어집 → 논문 검색 → 요약 → 저장](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md)
+
+**구현 이슈 및 개선사항**:
 - [RAG 논문 검색 Fallback 실패 문제](docs/issues/02-3_RAG_논문검색_Fallback_실패_문제.md)
 - [논문 데이터 수집 및 DB 구축](docs/issues/03_논문데이터_수집_및_DB_구축.md)
-- [박재홍 논문 데이터 수집](docs/roles/03_박재홍_논문데이터수집.md)
+
+**시나리오 문서**:
+- [RAG 논문 검색 시나리오](docs/scenarios/02_RAG_논문_검색.md)
+
+**담당자 문서**:
+- [박재홍 - 논문 데이터 수집](docs/roles/03_박재홍_논문데이터수집.md)
+
+</details>
 
 ---
 
-#### 7-3. WEB 논문 검색 도구
+<details>
+<summary><h4>7-3. WEB 논문 검색 도구</h4></summary>
 
 **위치**: `src/tools/web_search.py`
 
@@ -2680,13 +2716,26 @@ SOLAR_API_KEY=xxxxxxxxxxxxxxxxxxxxx
 ```
 
 **도구별 참조 문서**:
-- [Web 논문 검색 도구 아키텍처](docs/architecture/single_request/03_Web_논문_검색.md)
+
+**단일 요청 (Single Request)**:
+- [Web 논문 검색 아키텍처](docs/architecture/single_request/03_Web_논문_검색.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: Web 논문 검색 → 논문 요약](docs/architecture/multiple_request/05_이중요청_Web논문검색_논문요약.md)
+- [이중요청: Web 논문 검색 → 저장](docs/architecture/multiple_request/06_이중요청_Web논문검색_저장.md)
+- [삼중요청: Web 논문 검색 → 논문 요약 → 저장](docs/architecture/multiple_request/10_삼중요청_Web논문검색_논문요약_저장.md)
+- [삼중요청: Web 논문 검색 → 일반 답변 → 저장](docs/architecture/multiple_request/13_삼중요청_Web논문검색_일반답변_저장.md)
+- [사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md)
+
+**구현 이슈 및 개선사항**:
 - [웹 검색 논문 추가 청킹 불일치 문제](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md)
-- [이중 요청 Web 논문 검색 저장](docs/architecture/multiple_request/06_이중요청_Web논문검색_저장.md)
+
+</details>
 
 ---
 
-#### 7-4. 논문 요약 도구
+<details>
+<summary><h4>7-4. 논문 요약 도구</h4></summary>
 
 **위치**: `src/tools/summarize.py`
 
@@ -2942,14 +2991,27 @@ for level in levels:
 - **pgvector 검색**: 1회 (paper_chunks)
 
 **도구별 참조 문서**:
+
+**단일 요청 (Single Request)**:
+- [논문 요약 아키텍처](docs/architecture/single_request/05_논문_요약.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: Web 논문 검색 → 논문 요약](docs/architecture/multiple_request/05_이중요청_Web논문검색_논문요약.md)
+- [삼중요청: RAG 논문 검색 → 논문 요약 → 저장](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md)
+- [삼중요청: Web 논문 검색 → 논문 요약 → 저장](docs/architecture/multiple_request/10_삼중요청_Web논문검색_논문요약_저장.md)
+- [삼중요청: RAG 용어집 검색 → RAG 논문 검색 → 논문 요약](docs/architecture/multiple_request/11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md)
+- [사중요청: 용어집 → 논문 검색 → 요약 → 저장](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md)
+- [사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md)
+
+**시나리오 문서**:
 - [논문 요약 시나리오](docs/scenarios/05_논문_요약.md)
-- [논문 요약 도구 아키텍처](docs/architecture/single_request/05_논문_요약.md)
-- [이중 요청 RAG 논문 검색 요약](docs/architecture/multiple_request/01_이중요청_RAG논문검색_논문요약.md)
-- [삼중 요청 RAG 논문 검색 논문 요약 저장](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md)
+
+</details>
 
 ---
 
-#### 7-5. Text2SQL 통계 도구
+<details>
+<summary><h4>7-5. Text2SQL 통계 도구</h4></summary>
 
 **도구명**: `text2sql`
 **목적**: 자연어 질문을 SQL 쿼리로 변환하여 논문 데이터베이스 통계 정보 제공
@@ -3378,13 +3440,27 @@ answer = llm_gpt5.invoke([
 - pgvector 검색: 0회 (벡터 검색 불필요)
 
 **도구별 참조 문서**:
-- [Text2SQL 시나리오](docs/scenarios/04_Text2SQL.md)
-- [Text2SQL 도구 아키텍처](docs/architecture/single_request/04_Text2SQL.md)
+
+**단일 요청 (Single Request)**:
+- [Text2SQL 아키텍처](docs/architecture/single_request/04_Text2SQL.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: Text2SQL → 저장](docs/architecture/multiple_request/07_이중요청_Text2SQL_저장.md)
+- [이중요청: Text2SQL → 일반 답변](docs/architecture/multiple_request/08_이중요청_Text2SQL_일반답변.md)
+- [삼중요청: Text2SQL → 일반 답변 → 저장](docs/architecture/multiple_request/12_삼중요청_Text2SQL_일반답변_저장.md)
+
+**구현 이슈 및 개선사항**:
 - [Text2SQL 구현 검증 보고서](docs/issues/05-1_text2sql_구현_검증_보고서.md)
+
+**시나리오 문서**:
+- [Text2SQL 시나리오](docs/scenarios/04_Text2SQL.md)
+
+</details>
 
 ---
 
-#### 7-6. 일반 답변 도구
+<details>
+<summary><h4>7-6. 일반 답변 도구</h4></summary>
 
 **도구명**: `general`
 **목적**: LLM의 자체 지식으로 직접 답변을 생성하는 범용 답변 도구이자 모든 다른 도구의 Fallback 최종 단계
@@ -3819,12 +3895,27 @@ state["tool_result"] = final_answers[levels[1]]
 - **외부 시스템**: OpenAI API만 사용 (DB, 웹 검색 없음)
 
 **도구별 참조 문서**:
+
+**단일 요청 (Single Request)**:
+- [일반 답변 아키텍처](docs/architecture/single_request/07_일반_답변.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: RAG 용어집 검색 → 일반 답변](docs/architecture/multiple_request/04_이중요청_RAG용어집검색_일반답변.md)
+- [이중요청: Text2SQL → 일반 답변](docs/architecture/multiple_request/08_이중요청_Text2SQL_일반답변.md)
+- [삼중요청: Text2SQL → 일반 답변 → 저장](docs/architecture/multiple_request/12_삼중요청_Text2SQL_일반답변_저장.md)
+- [삼중요청: Web 논문 검색 → 일반 답변 → 저장](docs/architecture/multiple_request/13_삼중요청_Web논문검색_일반답변_저장.md)
+- [삼중요청: RAG 논문 검색 → 일반 답변 → 저장](docs/architecture/multiple_request/14_삼중요청_RAG논문검색_일반답변_저장.md)
+- [사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md)
+
+**시나리오 문서**:
 - [일반 답변 시나리오](docs/scenarios/01_일반_답변.md)
-- [일반 답변 도구 아키텍처](docs/architecture/single_request/07_일반_답변.md)
+
+</details>
 
 ---
 
-#### 7-7. 파일 저장 도구
+<details>
+<summary><h4>7-7. 파일 저장 도구</h4></summary>
 
 **도구명**: `save_file`
 **목적**: 이전 도구의 실행 결과를 로컬 파일 시스템에 Markdown 파일로 영구 저장하는 최종 단계 도구
@@ -4083,8 +4174,27 @@ Agent 동작:
 **파일명**: `YYYYMMDD_HHMMSS_response_{번호}.md`
 
 **도구별 참조 문서**:
+
+**단일 요청 (Single Request)**:
+- [파일 저장 아키텍처](docs/architecture/single_request/06_저장.md)
+
+**다중 요청 (Multiple Request)**:
+- [이중요청: RAG 논문 검색 → 저장](docs/architecture/multiple_request/02_이중요청_RAG논문검색_저장.md)
+- [이중요청: RAG 용어집 검색 → 저장](docs/architecture/multiple_request/03_이중요청_RAG용어집검색_저장.md)
+- [이중요청: Web 논문 검색 → 저장](docs/architecture/multiple_request/06_이중요청_Web논문검색_저장.md)
+- [이중요청: Text2SQL → 저장](docs/architecture/multiple_request/07_이중요청_Text2SQL_저장.md)
+- [삼중요청: RAG 논문 검색 → 논문 요약 → 저장](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md)
+- [삼중요청: Web 논문 검색 → 논문 요약 → 저장](docs/architecture/multiple_request/10_삼중요청_Web논문검색_논문요약_저장.md)
+- [삼중요청: Text2SQL → 일반 답변 → 저장](docs/architecture/multiple_request/12_삼중요청_Text2SQL_일반답변_저장.md)
+- [삼중요청: Web 논문 검색 → 일반 답변 → 저장](docs/architecture/multiple_request/13_삼중요청_Web논문검색_일반답변_저장.md)
+- [삼중요청: RAG 논문 검색 → 일반 답변 → 저장](docs/architecture/multiple_request/14_삼중요청_RAG논문검색_일반답변_저장.md)
+- [사중요청: 용어집 → 논문 검색 → 요약 → 저장](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md)
+- [사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md)
+
+**시나리오 문서**:
 - [파일 저장 시나리오](docs/scenarios/06_파일_저장.md)
-- [저장 도구 아키텍처](docs/architecture/single_request/06_저장.md)
+
+</details>
 
 ---
 
@@ -4104,7 +4214,7 @@ Agent 동작:
 
 ---
 
-### 8. 평가 시스템 (LLM-as-a-Judge)
+### 9. 평가 시스템 (LLM-as-a-Judge)
 
 #### 평가 항목 (40점)
 - 정확도 (10점): 사실적 정확성
@@ -4122,7 +4232,7 @@ Agent 동작:
 
 ---
 
-### 9. 프롬프트 엔지니어링
+### 10. 프롬프트 엔지니어링
 
 #### 난이도별 프롬프트
 - **Easy**: 초등학생 수준, 비유/예시 활용
