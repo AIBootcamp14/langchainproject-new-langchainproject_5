@@ -1,0 +1,82 @@
+[
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "\"Attention Is All You Need\" 논문 요약해줘",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4470,
+    "timestamp": "2025-11-09T20:53:02.914972"
+  },
+  {
+    "tool": "glossary",
+    "collection": "glossary_embeddings",
+    "query_text": "이 논문의 한계점은 뭐야?",
+    "search_mode": "hybrid",
+    "top_k": 3,
+    "with_scores": true,
+    "result_length": 17,
+    "timestamp": "2025-11-09T20:55:06.335786"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "이 논문의 한계점은 뭐야?",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 3745,
+    "timestamp": "2025-11-09T20:55:19.240816"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "BERT improved follow-up research 2024",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4406,
+    "timestamp": "2025-11-09T20:58:04.501640"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "Attention mechanism year:2022-2024",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 4477,
+    "timestamp": "2025-11-09T20:59:12.398938"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "카테고리별 논문 수 통계 보여줘",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 2815,
+    "timestamp": "2025-11-09T21:00:36.317259"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "2024년 인용 수 기준 상위 10개 논문",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 3235,
+    "timestamp": "2025-11-09T21:03:12.465268"
+  },
+  {
+    "tool": "search_paper",
+    "collection": "paper_chunks",
+    "query_text": "2024년에 나온 AI 논문 몇 개야?",
+    "search_mode": "similarity",
+    "top_k": 5,
+    "use_multi_query": false,
+    "result_length": 2663,
+    "timestamp": "2025-11-09T21:04:40.431042"
+  }
+]

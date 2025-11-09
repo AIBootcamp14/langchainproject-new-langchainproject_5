@@ -1,0 +1,13 @@
+{
+  "accuracy_score": 3,
+  "relevance_score": 7,
+  "difficulty_score": 10,
+  "citation_score": 0,
+  "total_score": 20,
+  "comment": "요청(전체 대화 저장)에 직접 응답하며 저장 경로를 제시해 관련성은 높습니다. 다만 실제로 저장이 되었는지 확인 근거가 없고, 파일명이 'response_1.md'로 전체 대화가 아닌 단일 응답만 저장된 것처럼 보여 정확성이 낮습니다. 쉬운 표현으로 간단히 전달되어 난이도 적합성은 높습니다. 참고 문서가 없어 출처는 0점입니다.",
+  "question": "전체 대화 저장해줘",
+  "answer": "파일이 성공적으로 저장되었습니다.\n파일 경로: experiments/20251109/20251109_205213_session_001/outputs/save_data/20251109_210540_response_1.md",
+  "reference_docs": "참고 문서 없음 (일반 답변)",
+  "difficulty": "easy",
+  "timestamp": "2025-11-09T21:05:47.658110"
+}

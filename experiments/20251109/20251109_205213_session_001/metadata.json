@@ -1,0 +1,10 @@
+{
+  "session_id": "001",
+  "start_time": "2025-11-09T20:52:13.274889",
+  "difficulty": "easy",
+  "tool_used": "save_file",
+  "user_query": "전체 대화 저장해줘",
+  "success": true,
+  "response_time_ms": 6,
+  "end_time": null
+}
