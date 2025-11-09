@@ -1284,11 +1284,18 @@ langchain-project/
 
 #### 참조 문서
 
-- [`docs/issues/01-1_실험_관리_시스템_구현.md`](docs/issues/01-1_실험_관리_시스템_구현.md) - 실험 관리 시스템 구현 이슈
-- [`docs/rules/logger_사용법.md`](docs/rules/logger_사용법.md) - Logger 사용법 가이드
-- [`docs/roles/01-2_최현화_로깅_모니터링.md`](docs/roles/01-2_최현화_로깅_모니터링.md) - 최현화 로깅&모니터링 역할
-- [`docs/PRD/05_로깅_시스템.md`](docs/PRD/05_로깅_시스템.md) - 로깅 시스템 PRD
+**시스템 설계**:
 - [`docs/modularization/03_실험_관리_시스템.md`](docs/modularization/03_실험_관리_시스템.md) - 실험 관리 시스템 모듈화 문서
+- [`docs/PRD/05_로깅_시스템.md`](docs/PRD/05_로깅_시스템.md) - 로깅 시스템 PRD
+
+**구현 및 개선**:
+- [`docs/issues/01-1_실험_관리_시스템_구현.md`](docs/issues/01-1_실험_관리_시스템_구현.md) - 실험 관리 시스템 구현 이슈
+
+**담당자 문서**:
+- [`docs/roles/01-2_최현화_로깅_모니터링.md`](docs/roles/01-2_최현화_로깅_모니터링.md) - 최현화 로깅&모니터링 역할
+
+**사용 가이드**:
+- [`docs/rules/logger_사용법.md`](docs/rules/logger_사용법.md) - Logger 사용법 가이드
 
 
 #### [ExperimentManager 시스템]
@@ -1413,12 +1420,19 @@ experiments/
 
 #### 참조 문서
 
-- [`docs/issues/01-1_실험_관리_시스템_구현.md`](docs/issues/01-1_실험_관리_시스템_구현.md) - 실험 관리 시스템 구현 이슈
-- [`docs/roles/01-1_최현화_실험_관리_시스템.md`](docs/roles/01-1_최현화_실험_관리_시스템.md) - 최현화 실험 관리 시스템 역할
-- [`docs/rules/실험_폴더_구조.md`](docs/rules/실험_폴더_구조.md) - 실험 폴더 구조 규칙
-- [`docs/PRD/06_실험_추적_관리.md`](docs/PRD/06_실험_추적_관리.md) - 실험 추적 관리 PRD
+**시스템 설계**:
 - [`docs/modularization/03_실험_관리_시스템.md`](docs/modularization/03_실험_관리_시스템.md) - 실험 관리 시스템 모듈화 문서
 - [`docs/modularization/03-1_Conversation_파일_관리.md`](docs/modularization/03-1_Conversation_파일_관리.md) - Conversation 파일 관리
+- [`docs/PRD/06_실험_추적_관리.md`](docs/PRD/06_실험_추적_관리.md) - 실험 추적 관리 PRD
+
+**구현 및 개선**:
+- [`docs/issues/01-1_실험_관리_시스템_구현.md`](docs/issues/01-1_실험_관리_시스템_구현.md) - 실험 관리 시스템 구현 이슈
+
+**담당자 문서**:
+- [`docs/roles/01-1_최현화_실험_관리_시스템.md`](docs/roles/01-1_최현화_실험_관리_시스템.md) - 최현화 실험 관리 시스템 역할
+
+**사용 가이드**:
+- [`docs/rules/실험_폴더_구조.md`](docs/rules/실험_폴더_구조.md) - 실험 폴더 구조 규칙
 
 ---
 
@@ -1700,8 +1714,11 @@ papers DB (PostgreSQL 15+)
 
 #### 참조 문서
 
-- [`docs/PRD/11_데이터베이스_설계.md`](docs/PRD/11_데이터베이스_설계.md) - 데이터베이스 설계 PRD
+**시스템 설계**:
 - [`docs/modularization/05_데이터베이스_시스템.md`](docs/modularization/05_데이터베이스_시스템.md) - 데이터베이스 시스템 모듈화 문서
+- [`docs/PRD/11_데이터베이스_설계.md`](docs/PRD/11_데이터베이스_설계.md) - 데이터베이스 설계 PRD
+
+**사용 가이드**:
 - [`docs/usage/데이터베이스_설치_및_설정_가이드.md`](docs/usage/데이터베이스_설치_및_설정_가이드.md) - 데이터베이스 설치 가이드
 
 ---
@@ -1787,11 +1804,16 @@ python scripts/data/run_full_pipeline.py
 
 #### 참조 문서
 
-- [`docs/roles/03_박재홍_논문데이터수집.md`](docs/roles/03_박재홍_논문데이터수집.md) - 논문 데이터 수집 가이드
+**구현 및 개선**:
 - [`docs/issues/03_논문데이터_수집_및_DB_구축.md`](docs/issues/03_논문데이터_수집_및_DB_구축.md) - 논문 데이터 수집 및 DB 구축
 - [`docs/issues/03-1_data_pipeline_implementation.md`](docs/issues/03-1_data_pipeline_implementation.md) - 데이터 파이프라인 구현
 - [`docs/issues/03-2_data_pipeline_completion_report.md`](docs/issues/03-2_data_pipeline_completion_report.md) - 데이터 파이프라인 완료 보고서
 - [`docs/issues/03-3_데이터_파이프라인_청크_중복_문제.md`](docs/issues/03-3_데이터_파이프라인_청크_중복_문제.md) - 데이터 파이프라인 청크 중복 문제 해결
+
+**담당자 문서**:
+- [`docs/roles/03_박재홍_논문데이터수집.md`](docs/roles/03_박재홍_논문데이터수집.md) - 논문 데이터 수집 가이드
+
+**사용 가이드**:
 - [`docs/usage/데이터베이스_설치_및_설정_가이드.md`](docs/usage/데이터베이스_설치_및_설정_가이드.md) - 데이터베이스 설치 가이드
 
 ---
@@ -2133,8 +2155,11 @@ raw_results = search_paper_database.invoke({
 
 #### 참조 문서
 
+**시스템 설계**:
 - [`docs/modularization/08_대화_메모리_시스템.md`](docs/modularization/08_대화_메모리_시스템.md) - 대화 메모리 아키텍처
 - [`docs/modularization/08-1_멀티턴_대화_시스템.md`](docs/modularization/08-1_멀티턴_대화_시스템.md) - 멀티턴 구현 상세
+
+**구현 및 개선**:
 - [`docs/issues/01-7_멀티턴_질문_재작성_구현.md`](docs/issues/01-7_멀티턴_질문_재작성_구현.md) - refined_query 구현
 - [`docs/issues/01-8_멀티턴_맥락참조_라우팅_개선.md`](docs/issues/01-8_멀티턴_맥락참조_라우팅_개선.md) - 맥락 참조 감지
 
@@ -2166,15 +2191,20 @@ raw_results = search_paper_database.invoke({
 
 #### 참조 문서
 
+**시스템 설계**:
+- [`docs/modularization/06_AI_Agent_시스템.md`](docs/modularization/06_AI_Agent_시스템.md) - AI Agent 시스템 전체
+- [`docs/modularization/06-1_다중_요청_처리.md`](docs/modularization/06-1_다중_요청_처리.md) - 다중 요청 처리 상세
+- [`docs/modularization/06-2_패턴_기반_도구_라우팅.md`](docs/modularization/06-2_패턴_기반_도구_라우팅.md) - 패턴 기반 라우팅 상세
+- [`docs/PRD/12_AI_Agent_설계.md`](docs/PRD/12_AI_Agent_설계.md) - AI Agent 설계
+
+**구현 및 개선**:
 - [`docs/issues/01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) - AI Agent 메인 구현
 - [`docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md`](docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md) - 도구 자동전환 및 Fallback 메커니즘
 - [`docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md`](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md) - 에이전트 실행 오류 수정 및 시스템 안정화
 - [`docs/issues/01-5_다중요청_저장기능_개선.md`](docs/issues/01-5_다중요청_저장기능_개선.md) - 다중요청 저장기능 개선
 - [`docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md`](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md) - 웹검색 논문추가 청킹 불일치 문제
-- [`docs/modularization/06_AI_Agent_시스템.md`](docs/modularization/06_AI_Agent_시스템.md) - AI Agent 시스템 전체
-- [`docs/modularization/06-1_다중_요청_처리.md`](docs/modularization/06-1_다중_요청_처리.md) - 다중 요청 처리 상세
-- [`docs/modularization/06-2_패턴_기반_도구_라우팅.md`](docs/modularization/06-2_패턴_기반_도구_라우팅.md) - 패턴 기반 라우팅 상세
-- [`docs/PRD/12_AI_Agent_설계.md`](docs/PRD/12_AI_Agent_설계.md) - AI Agent 설계
+
+**담당자 문서**:
 - [`docs/roles/01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) - 최현화 AI Agent 메인
 
 ---
@@ -2247,9 +2277,14 @@ LLMClient는 모든 Agent 노드에서 사용됩니다:
 
 #### 참조 문서
 
-- [`docs/issues/01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) - AI Agent 메인 구현
+**시스템 설계**:
 - [`docs/modularization/07_LLM_클라이언트.md`](docs/modularization/07_LLM_클라이언트.md) - LLM 클라이언트 전체
 - [`docs/PRD/14_LLM_설정.md`](docs/PRD/14_LLM_설정.md) - LLM 설정 명세
+
+**구현 및 개선**:
+- [`docs/issues/01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) - AI Agent 메인 구현
+
+**담당자 문서**:
 - [`docs/roles/01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) - 최현화 AI Agent 메인
 
 ---
@@ -2313,10 +2348,15 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 
 #### 참조 문서
 
-- [`docs/issues/02_RAG_용어집_시스템_구현.md`](docs/issues/02_RAG_용어집_시스템_구현.md) - RAG 용어집 시스템 구현
-- [`docs/issues/02-1_RAG_코드_통합_검증_보고서.md`](docs/issues/02-1_RAG_코드_통합_검증_보고서.md) - RAG 코드 통합 검증 보고서
+**시스템 설계**:
 - [`docs/modularization/11_RAG_시스템.md`](docs/modularization/11_RAG_시스템.md) - RAG 시스템 전체
 - [`docs/PRD/13_RAG_시스템_설계.md`](docs/PRD/13_RAG_시스템_설계.md) - RAG 시스템 설계
+
+**구현 및 개선**:
+- [`docs/issues/02_RAG_용어집_시스템_구현.md`](docs/issues/02_RAG_용어집_시스템_구현.md) - RAG 용어집 시스템 구현
+- [`docs/issues/02-1_RAG_코드_통합_검증_보고서.md`](docs/issues/02-1_RAG_코드_통합_검증_보고서.md) - RAG 코드 통합 검증 보고서
+
+**담당자 문서**:
 - [`docs/roles/02_신준엽_RAG_용어집.md`](docs/roles/02_신준엽_RAG_용어집.md) - 신준엽 RAG 용어집
 
 ---
@@ -2365,16 +2405,21 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 
 #### 공통 참조 문서
 
+**시스템 설계**:
 - [`docs/modularization/06_AI_Agent_시스템.md`](docs/modularization/06_AI_Agent_시스템.md) - AI Agent 시스템
 - [`docs/modularization/09_도구_시스템.md`](docs/modularization/09_도구_시스템.md) - 도구 시스템 전체
 - [`docs/modularization/09-1_도구_자동전환_기능.md`](docs/modularization/09-1_도구_자동전환_기능.md) - 도구 자동전환 기능
 - [`docs/modularization/10_하이브리드_도구_패턴.md`](docs/modularization/10_하이브리드_도구_패턴.md) - 하이브리드 도구 패턴
 - [`docs/PRD/12_AI_Agent_설계.md`](docs/PRD/12_AI_Agent_설계.md) - AI Agent 설계
-- [`docs/roles/01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) - 최현화 AI Agent 메인
+
+**구현 및 개선**:
 - [`docs/issues/01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) - AI Agent 메인 구현
 - [`docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md`](docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md) - 도구 자동전환 및 Fallback 메커니즘
 - [`docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md`](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md) - 에이전트 실행 오류 수정 및 시스템 안정화
 - [`docs/issues/01-5_다중요청_저장기능_개선.md`](docs/issues/01-5_다중요청_저장기능_개선.md) - 다중요청 저장기능 개선
+
+**담당자 문서**:
+- [`docs/roles/01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) - 최현화 AI Agent 메인
 
 ---
 
@@ -5385,8 +5430,11 @@ JavaScript `localStorage` API와 Python 간 브릿지를 구성하여, 세션 �
 
 #### 참조 문서
 
-- [`docs/PRD/16_UI_설계.md`](docs/PRD/16_UI_설계.md) - Streamlit UI 설계 명세서 및 Workflow
+**시스템 설계**:
 - [`docs/modularization/14_Streamlit_UI_시스템.md`](docs/modularization/14_Streamlit_UI_시스템.md) - Streamlit UI 시스템 아키텍처 및 구현 상세
+- [`docs/PRD/16_UI_설계.md`](docs/PRD/16_UI_설계.md) - Streamlit UI 설계 명세서 및 Workflow
+
+**담당자 문서**:
 - [`docs/roles/01-3_최현화_Streamlit_UI_구현.md`](docs/roles/01-3_최현화_Streamlit_UI_구현.md) - Streamlit UI 구현 담당자 작업 내용 및 코드 예시
 
 ---
