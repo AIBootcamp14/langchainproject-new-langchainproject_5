@@ -3824,6 +3824,270 @@ state["tool_result"] = final_answers[levels[1]]
 
 ---
 
+#### 7-7. 파일 저장 도구
+
+**도구명**: `save_file`
+**목적**: 이전 도구의 실행 결과를 로컬 파일 시스템에 Markdown 파일로 영구 저장하는 최종 단계 도구
+
+##### 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 저장 도구 실행 흐름"]
+        direction TB
+
+        subgraph UserInput["🔸 사용자 입력"]
+            direction LR
+            A[사용자 질문<br/>저장 요청] --> B{패턴 매칭<br/>또는<br/>LLM 라우팅}
+            B -->|save_file 선택| C[도구 실행<br/>시작]
+        end
+
+        subgraph ModeDecision["🔹 저장 모드 결정"]
+            direction LR
+            D[question 분석<br/>'전체' 포함?] --> E{전체 대화<br/>저장?}
+            E -->|Yes| F[messages 전체<br/>Markdown 변환]
+            E -->|No| G[단일 답변<br/>저장]
+        end
+
+        subgraph ContentSelection["🔺 저장 내용 선택"]
+            direction LR
+            H[우선순위 검사] --> I{final_answers<br/>있음?}
+            I -->|Yes| J[난이도별<br/>다중 저장]
+            I -->|No| K{tool_result<br/>있음?}
+            K -->|Yes| L[tool_result<br/>사용]
+            K -->|No| M{final_answer<br/>있음?}
+            M -->|Yes| N[final_answer<br/>사용]
+            M -->|No| O[messages에서<br/>마지막 assistant]
+        end
+
+        subgraph FileNaming["🔶 파일명 생성"]
+            direction LR
+            P[타임스탬프<br/>생성] --> Q[save_counter<br/>증가]
+            Q --> R[파일명 형식<br/>적용]
+            R --> S[filename 완성]
+        end
+
+        subgraph FileSave["💾 파일 저장"]
+            direction LR
+            T{ExperimentManager<br/>있음?} -->|Yes| U[save_output<br/>메서드 호출]
+            T -->|No| V[outputs/<br/>직접 저장]
+            U --> W[save_data/<br/>폴더 저장]
+            V --> W
+            W --> X[파일 쓰기<br/>UTF-8]
+        end
+
+        subgraph FinalAnswer["✅ 최종 응답"]
+            direction LR
+            Y[성공 메시지<br/>생성] --> Z[파일 경로<br/>포함]
+            Z --> AA[final_answer<br/>저장]
+        end
+
+        %% 단계 간 연결
+        UserInput --> ModeDecision
+        ModeDecision --> ContentSelection
+        ContentSelection --> FileNaming
+        FileNaming --> FileSave
+        FileSave --> FinalAnswer
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style UserInput fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style ModeDecision fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style ContentSelection fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style FileNaming fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style FileSave fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    style FinalAnswer fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (사용자 입력 - 청록 계열)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (모드 결정 - 보라 계열)
+    style D fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style E fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style F fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style G fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (내용 선택 - 녹색 계열)
+    style H fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style K fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style L fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style M fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style N fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style O fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (파일명 생성 - 주황 계열)
+    style P fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style Q fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style R fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style S fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (파일 저장 - 파랑 계열)
+    style T fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style U fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
+    style V fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style W fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
+    style X fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (최종 응답 - 녹색 계열)
+    style Y fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style Z fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AA fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+
+    %% 연결선 스타일 (사용자 입력 - 청록 0~1)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (모드 결정 - 보라 2~4)
+    linkStyle 2 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 3 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 4 stroke:#7b1fa2,stroke-width:2px
+
+    %% 연결선 스타일 (내용 선택 - 녹색 5~11)
+    linkStyle 5 stroke:#2e7d32,stroke-width:2px
+    linkStyle 6 stroke:#2e7d32,stroke-width:2px
+    linkStyle 7 stroke:#2e7d32,stroke-width:2px
+    linkStyle 8 stroke:#2e7d32,stroke-width:2px
+    linkStyle 9 stroke:#2e7d32,stroke-width:2px
+    linkStyle 10 stroke:#2e7d32,stroke-width:2px
+    linkStyle 11 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (파일명 생성 - 주황 12~14)
+    linkStyle 12 stroke:#e65100,stroke-width:2px
+    linkStyle 13 stroke:#e65100,stroke-width:2px
+    linkStyle 14 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (파일 저장 - 파랑 15~19)
+    linkStyle 15 stroke:#1976d2,stroke-width:2px
+    linkStyle 16 stroke:#1976d2,stroke-width:2px
+    linkStyle 17 stroke:#1976d2,stroke-width:2px
+    linkStyle 18 stroke:#1976d2,stroke-width:2px
+    linkStyle 19 stroke:#1976d2,stroke-width:2px
+
+    %% 연결선 스타일 (최종 응답 - 녹색 20~21)
+    linkStyle 20 stroke:#2e7d32,stroke-width:2px
+    linkStyle 21 stroke:#2e7d32,stroke-width:2px
+
+    %% 단계 간 연결 (회색 22~26)
+    linkStyle 22 stroke:#616161,stroke-width:3px
+    linkStyle 23 stroke:#616161,stroke-width:3px
+    linkStyle 24 stroke:#616161,stroke-width:3px
+    linkStyle 25 stroke:#616161,stroke-width:3px
+    linkStyle 26 stroke:#616161,stroke-width:3px
+```
+
+**파일 저장 파이프라인 설명:**
+- 사용자가 저장 요청을 하면 패턴 매칭 또는 LLM 라우팅을 통해 save_file 도구를 선택하고 실행을 시작
+- 질문을 분석하여 '전체' 키워드가 포함되어 있으면 전체 대화 저장 모드로 messages를 Markdown으로 변환하고, 그렇지 않으면 단일 답변 저장 모드로 진행
+- 저장 내용을 우선순위에 따라 선택하며, final_answers가 있으면 난이도별 다중 저장, tool_result가 있으면 사용, final_answer가 있으면 사용, 모두 없으면 messages에서 마지막 assistant 메시지를 추출
+- 타임스탬프를 생성하고 save_counter를 증가시킨 후 파일명 형식을 적용하여 filename을 완성
+- ExperimentManager가 있으면 save_output 메서드를 호출하여 save_data 폴더에 저장하고, 없으면 outputs에 직접 저장한 후 UTF-8 인코딩으로 파일을 씀
+- 성공 메시지를 생성하고 파일 경로를 포함하여 final_answer에 저장
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 |
+|------|------|------|
+| **단일 답변 저장** | 이전 도구의 실행 결과를 파일로 저장 | tool_result, final_answer 우선순위 |
+| **전체 대화 저장** | 세션 전체 대화 내역을 Markdown으로 저장 | messages 순회 및 변환 |
+| **난이도별 다중 저장** | 요약 도구의 4개 수준 답변을 각각 별도 파일로 저장 | final_answers (elementary, beginner, intermediate, advanced) |
+| **자동 파일명 생성** | 타임스탬프 + 카운터로 고유 파일명 생성 | `YYYYMMDD_HHMMSS_response_{번호}.md` |
+| **세션별 관리** | ExperimentManager를 통해 세션별 폴더에 저장 | `experiments/{날짜}/{세션}/outputs/save_data/` |
+| **UTF-8 인코딩** | 모든 언어 문자 정상 저장 | encoding='utf-8' |
+
+##### 저장 내용 우선순위
+
+파이프라인에서 어떤 데이터를 저장할지 우선순위에 따라 결정:
+
+| 순위 | 데이터 출처 | 설명 | 사용 시나리오 |
+|------|-------------|------|---------------|
+| **0순위** | `final_answers` (dict) | 난이도별 다중 답변 | 요약 도구 실행 후 저장 (4개 파일) |
+| **1순위** | `tool_result` | 파이프라인 실행 결과 | 다중 요청 (search_paper → save_file) |
+| **2순위** | `final_answer` | 최종 답변 | 단일 도구 실행 |
+| **3순위** | `messages` | 마지막 assistant 메시지 | 대화 이력에서 추출 |
+
+##### 사용 예시
+
+**예시 1: 논문 검색 후 저장**
+
+사용자: "GPT 논문 찾아서 저장해줘"
+
+Agent 동작:
+1. 패턴 매칭: `keywords: [논문, 찾, 저장]` → `["search_paper", "save_file"]`
+2. `search_paper` 실행 → GPT 논문 5편 조회 → `tool_result`에 저장
+3. `save_file` 실행 → save_counter: `1`, 타임스탬프: `20251107_153045`
+4. 파일 저장: `experiments/.../outputs/save_data/20251107_153045_response_1.md`
+5. 최종 답변: "파일이 성공적으로 저장되었습니다.\n파일 경로: ..."
+
+**예시 2: 논문 요약 후 난이도별 다중 저장**
+
+사용자: "Transformer 논문 요약해서 저장해줘"
+
+Agent 동작:
+1. 패턴 매칭: `["search_paper", "web_search", "general", "summarize", "save_file"]`
+2. `summarize` 실행 → `final_answers["elementary"]`, `final_answers["beginner"]` 생성
+3. `save_file` 실행 → 난이도별 2개 파일 생성:
+   - `20251107_153200_response_2_elementary.md`
+   - `20251107_153200_response_2_beginner.md`
+4. 최종 답변: "난이도별 답변이 각각 저장되었습니다.\n저장된 파일:\n- 초등학생용(8-13세): ...\n- 초급자용(14-22세): ..."
+
+**예시 3: 전체 대화 저장**
+
+사용자: "전체 대화 저장해줘"
+
+Agent 동작:
+1. 패턴 매칭: `keywords: [전체, 저장]` → `["save_file"]`
+2. `save_file` 실행 → 전체 대화 모드 (is_full_save = True)
+3. messages 전체를 Markdown으로 변환:
+   ```markdown
+   # 대화 내용
+
+   ## [1] 🙋 사용자
+
+   Transformer 논문 요약해줘
+
+   ## [2] 🤖 AI
+
+   Transformer 논문 요약 결과...
+   ```
+4. 파일 저장: `20251107_153300_response_3.md`
+
+##### 핵심 특징
+
+**1. 최종 단계 도구 (Fallback 없음)**
+- 파이프라인의 마지막에 위치, 이전 도구의 결과를 영구 보존
+- 저장 실패는 시스템 오류 (Fallback으로 해결 불가)
+
+**2. 우선순위 기반 저장**
+- 가장 풍부한 정보부터 우선 저장
+- 데이터 손실 방지, 사용자 의도에 맞는 저장
+
+**3. 파일명 중복 방지**
+- **타임스탬프**: 다른 세션 간 구분 (초 단위)
+- **save_counter**: 같은 세션 내 구분 (누적 카운터)
+
+**4. ExperimentManager 통합**
+- 자동 폴더 관리, 세션별 폴더 구조 유지
+- 실험 추적 용이 및 재현성 향상
+
+##### 성능 지표
+
+**저장 속도**: 즉시 (< 10ms, 로컬 파일 시스템 I/O)
+**파일 형식**: Markdown (.md), UTF-8 인코딩
+**파일명**: `YYYYMMDD_HHMMSS_response_{번호}.md`
+
+**도구별 참조 문서**:
+- [파일 저장 시나리오](docs/scenarios/06_파일_저장.md)
+- [저장 도구 아키텍처](docs/architecture/single_request/06_저장.md)
+
+---
+
 ### 8. Streamlit UI 시스템
 
 #### 주요 기능
