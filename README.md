@@ -2118,6 +2118,146 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 - [에이전트 실행 오류 수정 및 시스템 안정화](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md)
 - [다중요청 저장기능 개선](docs/issues/01-5_다중요청_저장기능_개선.md)
 
+#### 7-1. RAG 용어집 검색 도구
+
+**파일**: `src/tools/glossary.py`
+
+PostgreSQL glossary 테이블에서 AI/ML 용어를 검색하고, **난이도별 설명**(Easy/Hard)을 제공하는 도구입니다. LLM으로 질문에서 용어를 자동 추출하여 검색합니다.
+
+##### 용어집 검색 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 RAG 용어집 검색 파이프라인"]
+        direction TB
+
+        subgraph Init["🔸 초기화: 사용자 질문"]
+            direction LR
+            Start([▶️ 시작]) --> A[사용자 질문<br/>예: Attention이 뭐야?]
+        end
+
+        subgraph Step1["🔹 1단계: 용어 추출"]
+            direction LR
+            B[LLM<br/>Solar Pro2] --> C[용어 식별<br/>Attention]
+        end
+
+        subgraph Step2["🔺 2단계: DB 검색"]
+            direction LR
+            D[PostgreSQL<br/>glossary 테이블] --> E{용어<br/>존재?}
+            E -->|Yes| F[💾 용어 정보<br/>definition + easy/hard]
+            E -->|No| G[❌ 검색 실패]
+        end
+
+        subgraph Step3["🔶 3단계: 난이도별 설명 선택"]
+            direction LR
+            H{난이도?}
+            H -->|Easy| I[easy_explanation<br/>초보자용 쉬운 설명]
+            H -->|Hard| J[hard_explanation<br/>전문가용 상세 설명]
+        end
+
+        subgraph Output["💡 4단계: 답변 생성"]
+            direction LR
+            K[LLM<br/>GPT-5] --> L[최종 답변<br/>난이도 맞춤]
+            L --> End([✅ 완료])
+        end
+
+        Init --> Step1
+        Step1 --> Step2
+        Step2 --> Step3
+        Step2 --> Output
+        Step3 --> Output
+    end
+
+    %% MainFlow 래퍼 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Init fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Step1 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Step2 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Step3 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (초기화 - 청록 계열)
+    style Start fill:#4db6ac,stroke:#00695c,stroke-width:3px,color:#000
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (1단계 - 보라 계열)
+    style B fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (2단계 - 주황 계열)
+    style D fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style E fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style F fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style G fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (3단계 - 빨강 계열)
+    style H fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style I fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style J fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (출력 - 녹색 계열)
+    style K fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style L fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style End fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+
+    %% 연결선 스타일
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 2 stroke:#e65100,stroke-width:2px
+    linkStyle 3 stroke:#e65100,stroke-width:2px
+    linkStyle 4 stroke:#e65100,stroke-width:2px
+    linkStyle 5 stroke:#c62828,stroke-width:2px
+    linkStyle 6 stroke:#c62828,stroke-width:2px
+    linkStyle 7 stroke:#2e7d32,stroke-width:2px
+    linkStyle 8 stroke:#2e7d32,stroke-width:2px
+
+    %% 단계 간 연결 (회색)
+    linkStyle 9 stroke:#616161,stroke-width:3px
+    linkStyle 10 stroke:#616161,stroke-width:3px
+    linkStyle 11 stroke:#616161,stroke-width:3px
+    linkStyle 12 stroke:#616161,stroke-width:3px
+```
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 방식 |
+|------|------|-----------|
+| **용어 자동 추출** | LLM이 질문에서 AI/ML 용어 식별 | Solar Pro2 (비용 절감) |
+| **PostgreSQL 검색** | glossary 테이블 조회 | `term` 필드 기준 검색 |
+| **난이도별 설명** | Easy/Hard 모드 지원 | `easy_explanation` / `hard_explanation` |
+| **Fallback 처리** | 용어 없을 시 일반 답변 도구로 전환 | Fallback Chain 메커니즘 |
+
+##### DB 스키마
+
+```sql
+CREATE TABLE glossary (
+    term VARCHAR PRIMARY KEY,
+    definition TEXT,
+    easy_explanation TEXT,
+    hard_explanation TEXT,
+    category VARCHAR
+);
+```
+
+##### 난이도별 답변 예시
+
+**질문**: "Attention이 뭐야?"
+
+**Easy 모드**:
+> Attention은 중요한 정보에 집중하는 기술이에요. 사람이 책을 읽을 때 중요한 부분에 집중하는 것처럼, AI도 데이터 중 중요한 부분에 더 집중합니다.
+
+**Hard 모드**:
+> Attention은 Transformer 모델의 핵심 메커니즘으로, Query, Key, Value 벡터 간의 가중 평균을 계산하여 입력 시퀀스의 각 위치가 다른 모든 위치와 얼마나 관련되어 있는지를 학습합니다. Self-Attention은 같은 시퀀스 내에서, Cross-Attention은 서로 다른 시퀀스 간에 적용됩니다.
+
+**도구별 참조 문서**:
+- [RAG 용어집 시스템 구현](docs/issues/02_RAG_용어집_시스템_구현.md)
+- [RAG 코드 통합 검증 보고서](docs/issues/02-1_RAG_코드_통합_검증_보고서.md)
+- [용어 추출 개수 사용자 설정 기능](docs/issues/02-2_용어_추출_개수_사용자_설정_기능.md)
+- [용어집 도구 선택 실패 문제](docs/issues/02-5_용어집_도구_선택_실패_문제.md)
+- [신준엽 RAG 용어집](docs/roles/02_신준엽_RAG_용어집.md)
+
 ---
 
 ### 8. Streamlit UI 시스템
