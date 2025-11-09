@@ -2519,6 +2519,12 @@ CREATE TABLE glossary (
 - [`docs/issues/02-2_용어_추출_개수_사용자_설정_기능.md`](docs/issues/02-2_용어_추출_개수_사용자_설정_기능.md) - 용어 추출 개수 사용자 설정 기능
 - [`docs/issues/02-5_용어집_도구_선택_실패_문제.md`](docs/issues/02-5_용어집_도구_선택_실패_문제.md) - 용어집 도구 선택 실패 문제
 
+**시나리오 문서**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
+- [`docs/scenarios/04_RAG_용어집.md`](docs/scenarios/04_RAG_용어집.md) - RAG 용어집 시나리오
+
 **담당자 문서**:
 - [`docs/roles/02_신준엽_RAG_용어집.md`](docs/roles/02_신준엽_RAG_용어집.md) - 신준엽 - RAG 용어집
 
@@ -2733,6 +2739,9 @@ CREATE INDEX idx_papers_date ON papers (publish_date);
 - [`docs/issues/03_논문데이터_수집_및_DB_구축.md`](docs/issues/03_논문데이터_수집_및_DB_구축.md) - 논문 데이터 수집 및 DB 구축
 
 **시나리오 문서**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
 - [`docs/scenarios/02_RAG_논문_검색.md`](docs/scenarios/02_RAG_논문_검색.md) - RAG 논문 검색 시나리오
 
 **담당자 문서**:
@@ -2979,6 +2988,12 @@ SOLAR_API_KEY=xxxxxxxxxxxxxxxxxxxxx
 
 **구현 이슈 및 개선사항**:
 - [`docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md`](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md) - 웹 검색 논문 추가 청킹 불일치 문제
+
+**시나리오 문서**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
+- [`docs/scenarios/03_웹_검색.md`](docs/scenarios/03_웹_검색.md) - 웹 검색 시나리오
 
 </details>
 
@@ -3254,6 +3269,9 @@ for level in levels:
 - [`docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md`](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md) - 사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장
 
 **시나리오 문서**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
 - [`docs/scenarios/05_논문_요약.md`](docs/scenarios/05_논문_요약.md) - 논문 요약 시나리오
 
 </details>
@@ -3703,7 +3721,10 @@ answer = llm_gpt5.invoke([
 - [`docs/issues/05-1_text2sql_구현_검증_보고서.md`](docs/issues/05-1_text2sql_구현_검증_보고서.md) - Text2SQL 구현 검증 보고서
 
 **시나리오 문서**:
-- [`docs/scenarios/04_Text2SQL.md`](docs/scenarios/04_Text2SQL.md) - Text2SQL 시나리오
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
+- [`docs/scenarios/07_text2sql_통계.md`](docs/scenarios/07_text2sql_통계.md) - Text2SQL 통계 시나리오
 
 </details>
 
@@ -4158,6 +4179,9 @@ state["tool_result"] = final_answers[levels[1]]
 - [`docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md`](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md) - 사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장
 
 **시나리오 문서**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
 - [`docs/scenarios/01_일반_답변.md`](docs/scenarios/01_일반_답변.md) - 일반 답변 시나리오
 
 </details>
@@ -4442,6 +4466,9 @@ Agent 동작:
 - [`docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md`](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md) - 사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장
 
 **시나리오 문서**:
+- [`docs/scenarios/00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) - 통합 시나리오 예상 질문
+- [`docs/scenarios/00-1_초보자_질문_리스트.md`](docs/scenarios/00-1_초보자_질문_리스트.md) - 초보자 질문 리스트
+- [`docs/scenarios/00-2_전문가_질문_리스트.md`](docs/scenarios/00-2_전문가_질문_리스트.md) - 전문가 질문 리스트
 - [`docs/scenarios/06_파일_저장.md`](docs/scenarios/06_파일_저장.md) - 파일 저장 시나리오
 
 </details>
