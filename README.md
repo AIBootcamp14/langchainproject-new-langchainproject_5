@@ -5764,39 +5764,39 @@ graph LR
   - [`docs/architecture/single_request/`](docs/architecture/single_request/) - 단일 요청 시나리오 아키텍처 (8개 파일)
     - RAG 논문/용어집 검색, 웹 검색, Text2SQL, 논문 요약, 저장, 일반 답변, 멀티턴 대화
 
-  | 문서 | 설명 |
-  |------|------|
-  | [`01_RAG_논문_검색.md`](docs/architecture/single_request/01_RAG_논문_검색.md) | RAG 논문 검색 아키텍처 |
-  | [`02_RAG_용어집_검색.md`](docs/architecture/single_request/02_RAG_용어집_검색.md) | RAG 용어집 검색 아키텍처 |
-  | [`03_Web_논문_검색.md`](docs/architecture/single_request/03_Web_논문_검색.md) | Web 논문 검색 아키텍처 |
-  | [`04_Text2SQL.md`](docs/architecture/single_request/04_Text2SQL.md) | Text2SQL 아키텍처 |
-  | [`05_논문_요약.md`](docs/architecture/single_request/05_논문_요약.md) | 논문 요약 아키텍처 |
-  | [`06_저장.md`](docs/architecture/single_request/06_저장.md) | 파일 저장 아키텍처 |
-  | [`07_일반_답변.md`](docs/architecture/single_request/07_일반_답변.md) | 일반 답변 아키텍처 |
-  | [`08_멀티턴_대화.md`](docs/architecture/single_request/08_멀티턴_대화.md) | 멀티턴 대화 아키텍처 |
+    | 문서 | 설명 |
+    |------|------|
+    | [`01_RAG_논문_검색.md`](docs/architecture/single_request/01_RAG_논문_검색.md) | RAG 논문 검색 아키텍처 |
+    | [`02_RAG_용어집_검색.md`](docs/architecture/single_request/02_RAG_용어집_검색.md) | RAG 용어집 검색 아키텍처 |
+    | [`03_Web_논문_검색.md`](docs/architecture/single_request/03_Web_논문_검색.md) | Web 논문 검색 아키텍처 |
+    | [`04_Text2SQL.md`](docs/architecture/single_request/04_Text2SQL.md) | Text2SQL 아키텍처 |
+    | [`05_논문_요약.md`](docs/architecture/single_request/05_논문_요약.md) | 논문 요약 아키텍처 |
+    | [`06_저장.md`](docs/architecture/single_request/06_저장.md) | 파일 저장 아키텍처 |
+    | [`07_일반_답변.md`](docs/architecture/single_request/07_일반_답변.md) | 일반 답변 아키텍처 |
+    | [`08_멀티턴_대화.md`](docs/architecture/single_request/08_멀티턴_대화.md) | 멀티턴 대화 아키텍처 |
 
   **다중 요청 아키텍처**:
   - [`docs/architecture/multiple_request/`](docs/architecture/multiple_request/) - 다중 요청 시나리오 아키텍처 (16개 파일)
     - 이중 요청 (8개), 삼중 요청 (6개), 사중 요청 (2개)
 
-  | 문서 | 설명 |
-  |------|------|
-  | [`01_이중요청_RAG논문검색_논문요약.md`](docs/architecture/multiple_request/01_이중요청_RAG논문검색_논문요약.md) | 이중요청: RAG 논문 검색 → 논문 요약 |
-  | [`02_이중요청_RAG논문검색_저장.md`](docs/architecture/multiple_request/02_이중요청_RAG논문검색_저장.md) | 이중요청: RAG 논문 검색 → 저장 |
-  | [`03_이중요청_RAG용어집검색_저장.md`](docs/architecture/multiple_request/03_이중요청_RAG용어집검색_저장.md) | 이중요청: RAG 용어집 검색 → 저장 |
-  | [`04_이중요청_RAG용어집검색_일반답변.md`](docs/architecture/multiple_request/04_이중요청_RAG용어집검색_일반답변.md) | 이중요청: RAG 용어집 검색 → 일반 답변 |
-  | [`05_이중요청_Web논문검색_논문요약.md`](docs/architecture/multiple_request/05_이중요청_Web논문검색_논문요약.md) | 이중요청: Web 논문 검색 → 논문 요약 |
-  | [`06_이중요청_Web논문검색_저장.md`](docs/architecture/multiple_request/06_이중요청_Web논문검색_저장.md) | 이중요청: Web 논문 검색 → 저장 |
-  | [`07_이중요청_Text2SQL_저장.md`](docs/architecture/multiple_request/07_이중요청_Text2SQL_저장.md) | 이중요청: Text2SQL → 저장 |
-  | [`08_이중요청_Text2SQL_일반답변.md`](docs/architecture/multiple_request/08_이중요청_Text2SQL_일반답변.md) | 이중요청: Text2SQL → 일반 답변 |
-  | [`09_삼중요청_RAG논문검색_논문요약_저장.md`](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md) | 삼중요청: RAG 논문 검색 → 논문 요약 → 저장 |
-  | [`10_삼중요청_Web논문검색_논문요약_저장.md`](docs/architecture/multiple_request/10_삼중요청_Web논문검색_논문요약_저장.md) | 삼중요청: Web 논문 검색 → 논문 요약 → 저장 |
-  | [`11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md`](docs/architecture/multiple_request/11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md) | 삼중요청: RAG 용어집 → RAG 논문 검색 → 논문 요약 |
-  | [`12_삼중요청_Text2SQL_일반답변_저장.md`](docs/architecture/multiple_request/12_삼중요청_Text2SQL_일반답변_저장.md) | 삼중요청: Text2SQL → 일반 답변 → 저장 |
-  | [`13_삼중요청_Web논문검색_일반답변_저장.md`](docs/architecture/multiple_request/13_삼중요청_Web논문검색_일반답변_저장.md) | 삼중요청: Web 논문 검색 → 일반 답변 → 저장 |
-  | [`14_삼중요청_RAG논문검색_일반답변_저장.md`](docs/architecture/multiple_request/14_삼중요청_RAG논문검색_일반답변_저장.md) | 삼중요청: RAG 논문 검색 → 일반 답변 → 저장 |
-  | [`15_사중요청_용어집_논문검색_요약_저장.md`](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md) | 사중요청: 용어집 → 논문 검색 → 요약 → 저장 |
-  | [`16_사중요청_Web논문검색_논문요약_일반답변_저장.md`](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md) | 사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장 |
+    | 문서 | 설명 |
+    |------|------|
+    | [`01_이중요청_RAG논문검색_논문요약.md`](docs/architecture/multiple_request/01_이중요청_RAG논문검색_논문요약.md) | 이중요청: RAG 논문 검색 → 논문 요약 |
+    | [`02_이중요청_RAG논문검색_저장.md`](docs/architecture/multiple_request/02_이중요청_RAG논문검색_저장.md) | 이중요청: RAG 논문 검색 → 저장 |
+    | [`03_이중요청_RAG용어집검색_저장.md`](docs/architecture/multiple_request/03_이중요청_RAG용어집검색_저장.md) | 이중요청: RAG 용어집 검색 → 저장 |
+    | [`04_이중요청_RAG용어집검색_일반답변.md`](docs/architecture/multiple_request/04_이중요청_RAG용어집검색_일반답변.md) | 이중요청: RAG 용어집 검색 → 일반 답변 |
+    | [`05_이중요청_Web논문검색_논문요약.md`](docs/architecture/multiple_request/05_이중요청_Web논문검색_논문요약.md) | 이중요청: Web 논문 검색 → 논문 요약 |
+    | [`06_이중요청_Web논문검색_저장.md`](docs/architecture/multiple_request/06_이중요청_Web논문검색_저장.md) | 이중요청: Web 논문 검색 → 저장 |
+    | [`07_이중요청_Text2SQL_저장.md`](docs/architecture/multiple_request/07_이중요청_Text2SQL_저장.md) | 이중요청: Text2SQL → 저장 |
+    | [`08_이중요청_Text2SQL_일반답변.md`](docs/architecture/multiple_request/08_이중요청_Text2SQL_일반답변.md) | 이중요청: Text2SQL → 일반 답변 |
+    | [`09_삼중요청_RAG논문검색_논문요약_저장.md`](docs/architecture/multiple_request/09_삼중요청_RAG논문검색_논문요약_저장.md) | 삼중요청: RAG 논문 검색 → 논문 요약 → 저장 |
+    | [`10_삼중요청_Web논문검색_논문요약_저장.md`](docs/architecture/multiple_request/10_삼중요청_Web논문검색_논문요약_저장.md) | 삼중요청: Web 논문 검색 → 논문 요약 → 저장 |
+    | [`11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md`](docs/architecture/multiple_request/11_삼중요청_RAG용어집검색_RAG논문검색_논문요약.md) | 삼중요청: RAG 용어집 → RAG 논문 검색 → 논문 요약 |
+    | [`12_삼중요청_Text2SQL_일반답변_저장.md`](docs/architecture/multiple_request/12_삼중요청_Text2SQL_일반답변_저장.md) | 삼중요청: Text2SQL → 일반 답변 → 저장 |
+    | [`13_삼중요청_Web논문검색_일반답변_저장.md`](docs/architecture/multiple_request/13_삼중요청_Web논문검색_일반답변_저장.md) | 삼중요청: Web 논문 검색 → 일반 답변 → 저장 |
+    | [`14_삼중요청_RAG논문검색_일반답변_저장.md`](docs/architecture/multiple_request/14_삼중요청_RAG논문검색_일반답변_저장.md) | 삼중요청: RAG 논문 검색 → 일반 답변 → 저장 |
+    | [`15_사중요청_용어집_논문검색_요약_저장.md`](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md) | 사중요청: 용어집 → 논문 검색 → 요약 → 저장 |
+    | [`16_사중요청_Web논문검색_논문요약_일반답변_저장.md`](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md) | 사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장 |
 
   **Mermaid 다이어그램**:
   - [`docs/architecture/mermaid/`](docs/architecture/mermaid/) - Mermaid 다이어그램 파일
