@@ -580,6 +580,13 @@ def fallback_router_node(state: AgentState, exp_manager=None):
                 })
                 state["tool_timeline"] = timeline
 
+                # ✅ Fallback 실행 후 파이프라인 종료 플래그 설정
+                state["pipeline_terminated"] = True
+                state["termination_reason"] = "fallback_executed"
+
+                if exp_manager:
+                    exp_manager.logger.write(f"Fallback 실행 후 파이프라인 종료 플래그 설정")
+
                 return state
 
         # Fallback 도구가 없으면 general로 대체

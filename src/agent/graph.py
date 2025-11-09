@@ -330,6 +330,14 @@ def create_agent_graph(exp_manager=None):
             if exp_manager:
                 exp_manager.logger.write(f"Pipeline 진행: {pipeline_index}/{len(tool_pipeline)}")
 
+            # ✅ Fallback 종료 플래그 확인
+            if state.get("pipeline_terminated", False):
+                if exp_manager:
+                    exp_manager.logger.write(f"파이프라인 조기 종료: {state.get('termination_reason')}")
+                # 파이프라인 종료를 위해 pipeline_index를 최대값으로 설정
+                state["pipeline_index"] = len(tool_pipeline)
+                return state
+
             # ✅ 조기 종료 로직: 특정 도구 성공 시 파이프라인 즉시 종료
             tool_result = state.get("tool_result", "")
             last_tool = tool_pipeline[pipeline_index - 1] if pipeline_index > 0 else None
