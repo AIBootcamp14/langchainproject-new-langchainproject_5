@@ -2368,12 +2368,14 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 - [`docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md`](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md) - 에이전트 실행 오류 수정 및 시스템 안정화
 - [`docs/issues/01-5_다중요청_저장기능_개선.md`](docs/issues/01-5_다중요청_저장기능_개선.md) - 다중요청 저장기능 개선
 
-<details>
-<summary><h4>7-1. RAG 용어집 검색 도구</h4></summary>
+#### 7-1. RAG 용어집 검색 도구
 
 **파일**: `src/tools/glossary.py`
 
-PostgreSQL glossary 테이블에서 AI/ML 용어를 검색하고, **난이도별 설명**(Easy/Hard)을 제공하는 도구입니다. LLM으로 질문에서 용어를 자동 추출하여 검색합니다.
+PostgreSQL glossary 테이블에서 AI/ML 용어를 검색하고 **난이도별 설명**(Easy/Hard)을 제공하는 도구입니다. LLM(Solar Pro2)이 질문에서 용어를 자동 추출하여 검색하며, 용어가 DB에 없을 경우 Fallback Chain을 통해 일반 답변 도구로 자동 전환됩니다. **예시**: "Attention이 뭐야?" → Easy 모드는 초보자용 쉬운 설명, Hard 모드는 전문가용 상세 설명(Query/Key/Value 벡터, Self-Attention 등) 제공.
+
+<details>
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
 ##### 용어집 검색 아키텍처
 
@@ -2532,12 +2534,14 @@ CREATE TABLE glossary (
 
 ---
 
+#### 7-2. RAG 논문 검색 도구
+
+**파일**: `src/tools/search_paper.py`
+
+PostgreSQL + pgvector 기반의 **하이브리드 검색**(벡터 검색 70% + 키워드 검색 30%)으로 로컬 논문 데이터베이스에서 관련 논문 Top-5를 검색하는 도구입니다. MultiQueryRetriever로 쿼리를 확장하여 검색 품질을 향상시키며, 검색 실패 시 Fallback Chain(web_search → general)을 통해 자동으로 다른 도구로 전환됩니다. **예시**: "Transformer 논문 설명해줘" → 벡터 유사도 기반으로 관련 논문 5편 검색 후 Easy/Hard 난이도에 맞춰 답변 생성.
+
 <details>
-<summary><h4>7-2. RAG 논문 검색 도구</h4></summary>
-
-**위치**: `src/tools/search_paper.py`
-
-PostgreSQL + pgvector 기반의 **하이브리드 검색**(벡터 검색 + 키워드 검색)으로 논문 데이터베이스에서 관련 논문을 검색하는 도구입니다.
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
 ##### 논문 검색 아키텍처
 
@@ -2751,12 +2755,14 @@ CREATE INDEX idx_papers_date ON papers (publish_date);
 
 ---
 
+#### 7-3. WEB 논문 검색 도구
+
+**파일**: `src/tools/web_search.py`
+
+Tavily Search API를 사용하여 **최신 논문 정보**를 실시간 웹에서 검색하고, arXiv 논문을 자동으로 DB에 저장하는 도구입니다. "최신", "최근", "2024년" 등 시간 키워드가 포함되면 RAG 검색을 건너뛰고 Web 검색이 최우선 실행되며, RAG 검색 실패 시 Fallback으로도 작동합니다. **예시**: "2025년 최신 LLM 논문은?" → Tavily API로 웹 검색 후 arXiv 논문 발견 시 자동으로 PostgreSQL에 저장하여 다음번 RAG 검색에서 활용 가능.
+
 <details>
-<summary><h4>7-3. WEB 논문 검색 도구</h4></summary>
-
-**위치**: `src/tools/web_search.py`
-
-Tavily Search API를 사용하여 **최신 논문 정보**를 실시간 웹에서 검색하고, **arXiv 논문 자동 저장** 기능을 제공하는 도구입니다.
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
 ##### Web 검색 아키텍처
 
@@ -2999,12 +3005,14 @@ SOLAR_API_KEY=xxxxxxxxxxxxxxxxxxxxx
 
 ---
 
+#### 7-4. 논문 요약 도구
+
+**파일**: `src/tools/summarize.py`
+
+PostgreSQL + pgvector에서 특정 논문의 모든 청크를 조회하여 **난이도별 구조화된 요약**(Easy: 3줄 요약, Hard: 배경/방법/결과/의의 상세 분석)을 생성하는 도구입니다. Map-Reduce 방식으로 청크별 요약 후 통합하며, 요약 품질은 LLM-as-a-Judge로 자동 평가합니다. **예시**: "BERT 논문 요약해줘" → Easy는 핵심만 3줄, Hard는 연구 배경부터 실험 결과, 한계점, 의의까지 구조화된 상세 분석 제공.
+
 <details>
-<summary><h4>7-4. 논문 요약 도구</h4></summary>
-
-**위치**: `src/tools/summarize.py`
-
-PostgreSQL + pgvector에서 논문 청크를 조회하여 **난이도별 구조화된 요약**을 생성하는 도구입니다.
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
 ##### 논문 요약 아키텍처
 
@@ -3278,11 +3286,14 @@ for level in levels:
 
 ---
 
-<details>
-<summary><h4>7-5. Text2SQL 통계 도구</h4></summary>
+#### 7-5. Text2SQL 통계 도구
 
-**도구명**: `text2sql`
-**목적**: 자연어 질문을 SQL 쿼리로 변환하여 논문 데이터베이스 통계 정보 제공
+**파일**: `src/tools/text2sql.py`
+
+자연어 질문을 SQL 쿼리로 자동 변환하여 논문 데이터베이스(papers 테이블)의 통계 정보를 제공하는 도구입니다. LLM이 질문을 분석하여 SELECT 쿼리를 생성하고, 안전하게 실행(Read-only, Prepared Statements)한 후 결과를 난이도별로 해석합니다. **예시**: "2024년 논문 몇 편?" → LLM이 `SELECT COUNT(*) FROM papers WHERE EXTRACT(YEAR FROM publish_date) = 2024` 생성 및 실행, Easy는 숫자만 간단히, Hard는 통계 분석과 인사이트까지 제공.
+
+<details>
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
 ##### 아키텍처
 
@@ -3730,10 +3741,14 @@ answer = llm_gpt5.invoke([
 
 ---
 
-<details>
-<summary><h4>7-6. 일반 답변 도구</h4></summary>
+#### 7-6. 일반 답변 도구
 
-**도구명**: `general`
+**파일**: `src/tools/general_answer.py`
+
+LLM을 직접 호출하여 일반적인 질문이나 인사, DB/검색이 필요 없는 질문에 답변하는 도구입니다. 다른 모든 도구의 **최종 Fallback**으로 작동하며, 도구 선택 실패 시 자동으로 선택됩니다. **예시**: "안녕하세요", "AI란 무엇인가요?" 등 → LLM이 직접 답변 생성, 논문 DB나 웹 검색 없이 빠르게 응답.
+
+<details>
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 **목적**: LLM의 자체 지식으로 직접 답변을 생성하는 범용 답변 도구이자 모든 다른 도구의 Fallback 최종 단계
 
 ##### 아키텍처
@@ -4188,11 +4203,14 @@ state["tool_result"] = final_answers[levels[1]]
 
 ---
 
-<details>
-<summary><h4>7-7. 파일 저장 도구</h4></summary>
+#### 7-7. 파일 저장 도구
 
-**도구명**: `save_file`
-**목적**: 이전 도구의 실행 결과를 로컬 파일 시스템에 Markdown 파일로 영구 저장하는 최종 단계 도구
+**파일**: `src/tools/save_file.py`
+
+이전 도구의 실행 결과를 로컬 파일 시스템에 Markdown 파일로 영구 저장하는 최종 단계 도구입니다. **단일 답변 저장**, **전체 대화 저장**, **난이도별 다중 저장**(요약 도구의 4개 수준 답변을 각각 별도 파일로 저장) 등 다양한 저장 모드를 지원하며, 타임스탬프 + 카운터로 고유 파일명을 자동 생성합니다. ExperimentManager를 통해 세션별 폴더에 저장하여 실험 추적이 용이합니다. **예시**: "GPT 논문 찾아서 저장해줘" → search_paper 실행 후 결과를 `20251107_153045_response_1.md`로 저장, "Transformer 논문 요약해서 저장해줘" → elementary, beginner 등 난이도별 2~4개 파일로 각각 저장.
+
+<details>
+<summary><strong>상세 아키텍처 및 구현 보기</strong></summary>
 
 ##### 아키텍처
 
