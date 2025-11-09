@@ -249,7 +249,18 @@ def router_node(state: AgentState, exp_manager=None):
 
         # 프롬프트에 컨텍스트 추가
         base_prompt = routing_prompt_template.format(question=question, difficulty=difficulty)
-        routing_prompt = f"{context}{base_prompt}" if context else base_prompt
+
+        # 맥락 참조 명시적 지시 추가
+        context_instruction = ""
+        if context:
+            context_instruction = """
+**중요**: 현재 질문이 이전 대화를 참조한다면 (예: "이 논문", "그 연구", "개선한 후속", "한계점"),
+이전 대화에서 언급된 **구체적인 논문 제목이나 주제**를 명확히 파악하여 적절한 도구를 선택하고,
+필요시 query 필드에 구체적인 주제를 포함하세요.
+
+"""
+
+        routing_prompt = f"{context}{context_instruction}{base_prompt}" if context else base_prompt
 
         # 난이도별 LLM 초기화
         llm_client = LLMClient.from_difficulty(
