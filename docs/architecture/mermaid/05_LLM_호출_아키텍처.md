@@ -90,7 +90,7 @@ graph TB
     %% 노드 스타일 (2단계 - 주황 계열)
     style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
     style J fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style K fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style K fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
     style L fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
 
     %% 노드 스타일 (3단계 - 주황/빨강 계열)
