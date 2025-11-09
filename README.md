@@ -3060,23 +3060,23 @@ graph TB
     style X fill:#8d6e63,stroke:#4e342e,color:#fff
     style Y fill:#795548,stroke:#4e342e,color:#fff
 
-    %% 연결선 스타일 (Input 단계: 0-3)
-    linkStyle 0,1,2,3 stroke:#006064,stroke-width:2px
+    %% 연결선 스타일 (Input 단계: 0-2)
+    linkStyle 0,1,2 stroke:#006064,stroke-width:2px
 
-    %% 연결선 스타일 (SQL Generation 단계: 4-9)
-    linkStyle 4,5,6,7,8,9 stroke:#6a1b9a,stroke-width:2px
+    %% 연결선 스타일 (SQL Generation 단계: 3-8)
+    linkStyle 3,4,5,6,7,8 stroke:#6a1b9a,stroke-width:2px
 
-    %% 연결선 스타일 (Execution 단계: 10-13)
-    linkStyle 10,11,12,13 stroke:#2e7d32,stroke-width:2px
+    %% 연결선 스타일 (Execution 단계: 9-12)
+    linkStyle 9,10,11,12 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (Answer Gen 단계: 14-17)
-    linkStyle 14,15,16,17 stroke:#ef6c00,stroke-width:2px
+    %% 연결선 스타일 (Answer Gen 단계: 13-16)
+    linkStyle 13,14,15,16 stroke:#ef6c00,stroke-width:2px
 
-    %% 연결선 스타일 (Logging 단계: 18-20)
-    linkStyle 18,19,20 stroke:#ad1457,stroke-width:2px
+    %% 연결선 스타일 (Logging 단계: 17-19)
+    linkStyle 17,18,19 stroke:#ad1457,stroke-width:2px
 
-    %% 연결선 스타일 (Fallback 단계: 21-24)
-    linkStyle 21,22,23,24 stroke:#4e342e,stroke-width:2px
+    %% 연결선 스타일 (Fallback 단계: 20-24)
+    linkStyle 20,21,22,23,24 stroke:#4e342e,stroke-width:2px
 
     %% 연결선 스타일 (단계 간 연결: 25-26)
     linkStyle 25,26 stroke:#616161,stroke-width:3px
