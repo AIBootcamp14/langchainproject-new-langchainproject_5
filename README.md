@@ -3069,17 +3069,17 @@ graph TB
     %% 연결선 스타일 (Execution 단계: 9-12)
     linkStyle 9,10,11,12 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 (Answer Gen 단계: 13-16)
-    linkStyle 13,14,15,16 stroke:#ef6c00,stroke-width:2px
+    %% 연결선 스타일 (Answer Gen 단계: 13-15)
+    linkStyle 13,14,15 stroke:#ef6c00,stroke-width:2px
 
-    %% 연결선 스타일 (Logging 단계: 17-19)
-    linkStyle 17,18,19 stroke:#ad1457,stroke-width:2px
+    %% 연결선 스타일 (Logging 단계: 16-18)
+    linkStyle 16,17,18 stroke:#ad1457,stroke-width:2px
 
-    %% 연결선 스타일 (Fallback 단계: 20-24)
-    linkStyle 20,21,22,23,24 stroke:#4e342e,stroke-width:2px
+    %% 연결선 스타일 (Fallback 단계: 19-23)
+    linkStyle 19,20,21,22,23 stroke:#4e342e,stroke-width:2px
 
-    %% 연결선 스타일 (단계 간 연결: 25-26)
-    linkStyle 25,26 stroke:#616161,stroke-width:3px
+    %% 연결선 스타일 (단계 간 연결: 24-25)
+    linkStyle 24,25 stroke:#616161,stroke-width:3px
 ```
 
 **Text2SQL 파이프라인 설명:**
