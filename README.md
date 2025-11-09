@@ -5696,11 +5696,106 @@ graph LR
 
 ## 📚 참고 자료
 
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [pgvector GitHub](https://github.com/pgvector/pgvector)
-- [Streamlit Documentation](https://docs.streamlit.io/)
-- [OpenAI API Documentation](https://platform.openai.com/docs/)
+### 프로젝트 문서
+
+#### 시스템 설계 문서
+
+**제품 요구사항 정의 (PRD)**:
+- [`docs/PRD/`](docs/PRD/) - 제품 요구사항 정의 문서 (22개 파일)
+  - 시스템 설계, AI Agent, RAG, LLM, 프롬프트 엔지니어링, UI 설계 등
+
+**모듈화 문서**:
+- [`docs/modularization/`](docs/modularization/) - 전체 시스템 모듈화 문서 (21개 파일)
+  - 실험 관리, 데이터베이스, AI Agent, LLM, 대화 메모리, 도구 시스템, RAG, 평가, 프롬프트, Streamlit UI 등
+
+**아키텍처 문서**:
+- [`docs/architecture/`](docs/architecture/) - 시스템 아키텍처 문서
+  - [`docs/architecture/single_request/`](docs/architecture/single_request/) - 단일 요청 아키텍처 (8개 파일)
+  - [`docs/architecture/multiple_request/`](docs/architecture/multiple_request/) - 다중 요청 아키텍처 (16개 파일)
+  - [`docs/architecture/mermaid/`](docs/architecture/mermaid/) - Mermaid 다이어그램 파일
+
+#### 구현 및 이슈 문서
+
+**이슈 및 개선사항**:
+- [`docs/issues/`](docs/issues/) - 구현 이슈 및 개선사항 문서 (28개 파일)
+  - AI Agent 구현, RAG 시스템, 데이터 파이프라인, 멀티턴 대화, 평가 시스템, 프롬프트 엔지니어링 등
+  - [`docs/issues/merge/`](docs/issues/merge/) - 병합 관련 문서
+
+**담당자별 역할 문서**:
+- [`docs/roles/`](docs/roles/) - 팀원별 담당 역할 및 작업 내용 (11개 파일)
+  - 최현화(팀장): AI Agent, 실험 관리, 로깅, Streamlit UI, 성능 평가
+  - 신준엽: RAG 용어집
+  - 박재홍: 논문 데이터 수집
+  - 임예슬: 프롬프트 엔지니어링
+
+#### 사용 가이드 및 규칙
+
+**사용 가이드**:
+- [`docs/usage/`](docs/usage/) - 설치 및 사용 가이드 (5개 파일)
+  - 데이터베이스 설치 및 설정, 실행 명령어, 데이터 삭제 가이드
+  - [`docs/usage/team/`](docs/usage/team/) - 팀원별 작업 가이드
+  - [`docs/usage/tests/`](docs/usage/tests/) - 테스트 가이드
+
+**개발 규칙**:
+- [`docs/rules/`](docs/rules/) - 개발 규칙 및 컨벤션 (6개 파일)
+  - Logger 사용법, 실험 폴더 구조, 커밋 메시지 작성법 등
+
+#### 시나리오 및 Q&A
+
+**사용 시나리오**:
+- [`docs/scenarios/`](docs/scenarios/) - 도구별 사용 시나리오 및 예상 질문 (10개 파일)
+  - 통합 시나리오, 초보자/전문가 질문 리스트, 도구별 상세 시나리오
+
+**Q&A 문서**:
+- [`docs/QnA/`](docs/QnA/) - 시스템별 및 도구별 Q&A 문서 (8개 파일)
+  - AI Agent, 실험 관리, 데이터 파이프라인, RAG, 패턴 라우팅, Streamlit UI, 용어집, Text2SQL
+
+#### 회의록 및 기타
+
+**회의록**:
+- [`docs/minutes/`](docs/minutes/) - 팀 회의록
+  - [`docs/minutes/20251028/`](docs/minutes/20251028/) - 2025.10.28 회의록
+  - [`docs/minutes/20251029/`](docs/minutes/20251029/) - 2025.10.29 회의록
+  - [`docs/minutes/20251030/`](docs/minutes/20251030/) - 2025.10.30 회의록
+  - [`docs/minutes/20251031/`](docs/minutes/20251031/) - 2025.10.31 회의록
+  - [`docs/minutes/20251104/`](docs/minutes/20251104/) - 2025.11.04 회의록
+
+**발표 자료**:
+- [`docs/PPT/`](docs/PPT/) - 프로젝트 발표 자료
+  - [`docs/PPT/new/`](docs/PPT/new/) - 최신 발표 자료
+
+**실험 결과**:
+- [`docs/experiments/`](docs/experiments/) - 실험 결과 및 분석 문서
+  - [`docs/experiments/20251031/`](docs/experiments/20251031/) - 2025.10.31 실험
+  - [`docs/experiments/20251101/`](docs/experiments/20251101/) - 2025.11.01 실험
+  - [`docs/experiments/20251104/`](docs/experiments/20251104/) - 2025.11.04 실험
+  - [`docs/experiments/20251105/`](docs/experiments/20251105/) - 2025.11.05 실험
+
+**오류 문서**:
+- [`docs/errors/`](docs/errors/) - 오류 분석 및 해결 문서
+
+**이미지 자료**:
+- [`docs/images/`](docs/images/) - 프로젝트 이미지 자료
+  - [`docs/images/architecture/`](docs/images/architecture/) - 아키텍처 이미지
+  - [`docs/images/github/`](docs/images/github/) - GitHub 관련 이미지
+  - [`docs/images/logging_experimentmanager_system/`](docs/images/logging_experimentmanager_system/) - 로깅/실험 관리 시스템 이미지
+  - [`docs/images/run_img/`](docs/images/run_img/) - 실행 결과 이미지
+  - [`docs/images/slack/`](docs/images/slack/) - Slack 관련 이미지
+
+---
+
+### 외부 참고 자료
+
+**프레임워크 및 라이브러리**:
+- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/) - AI Agent 프레임워크
+- [Streamlit Documentation](https://docs.streamlit.io/) - 웹 UI 프레임워크
+
+**데이터베이스**:
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/) - 관계형 데이터베이스
+- [pgvector GitHub](https://github.com/pgvector/pgvector) - PostgreSQL 벡터 확장
+
+**LLM API**:
+- [OpenAI API Documentation](https://platform.openai.com/docs/) - GPT 모델 API
 
 ---
 
