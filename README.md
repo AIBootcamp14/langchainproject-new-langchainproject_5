@@ -1912,9 +1912,16 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 | **캐싱** | 동일 질문 결과 캐시 | 중복 LLM 호출 방지 |
 
 **참조 문서**:
+- [AI Agent 메인 구현](docs/issues/01_AI_Agent_메인_구현.md)
+- [도구 자동전환 및 Fallback 메커니즘](docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md)
+- [에이전트 실행 오류 수정 및 시스템 안정화](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md)
+- [다중요청 저장기능 개선](docs/issues/01-5_다중요청_저장기능_개선.md)
+- [웹검색 논문추가 청킹 불일치 문제](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md)
 - [AI Agent 시스템 전체](docs/modularization/06_AI_Agent_시스템.md)
 - [다중 요청 처리 상세](docs/modularization/06-1_다중_요청_처리.md)
 - [패턴 기반 라우팅 상세](docs/modularization/06-2_패턴_기반_도구_라우팅.md)
+- [AI Agent 설계](docs/PRD/12_AI_Agent_설계.md)
+- [최현화 AI Agent 메인](docs/roles/01_최현화_AI_Agent_메인.md)
 
 ---
 
