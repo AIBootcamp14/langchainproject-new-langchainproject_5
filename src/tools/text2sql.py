@@ -268,7 +268,7 @@ def _run_query(sql: str) -> Tuple[List[str], List[Tuple[Any, ...]]]:
 
 def _to_markdown_table(cols: List[str], rows: List[Tuple[Any, ...]]) -> str:
     if not rows:
-        return "_결과가 없습니다._"
+        return "(검색 결과가 없습니다)"
     header = " | ".join(cols)
     sep = " | ".join(["---"] * len(cols))
     body_lines = []
