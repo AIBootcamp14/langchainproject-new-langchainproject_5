@@ -5969,11 +5969,14 @@ graph LR
 
 **이미지 자료**:
 - [`docs/images/`](docs/images/) - 프로젝트 이미지 자료
-  - [`docs/images/architecture/`](docs/images/architecture/) - 아키텍처 이미지
-  - [`docs/images/github/`](docs/images/github/) - GitHub 관련 이미지
-  - [`docs/images/logging_experimentmanager_system/`](docs/images/logging_experimentmanager_system/) - 로깅/실험 관리 시스템 이미지
-  - [`docs/images/run_img/`](docs/images/run_img/) - 실행 결과 이미지
-  - [`docs/images/slack/`](docs/images/slack/) - Slack 관련 이미지
+
+  | 폴더 | 설명 |
+  |------|------|
+  | [`architecture/`](docs/images/architecture/) | 아키텍처 이미지 |
+  | [`github/`](docs/images/github/) | GitHub 관련 이미지 |
+  | [`logging_experimentmanager_system/`](docs/images/logging_experimentmanager_system/) | 로깅/실험 관리 시스템 이미지 |
+  | [`run_img/`](docs/images/run_img/) | 실행 결과 이미지 |
+  | [`slack/`](docs/images/slack/) | Slack 관련 이미지 |
 
 ---
 
