@@ -90,14 +90,14 @@ graph TB
     %% 노드 스타일 (2단계 - 주황 계열)
     style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
     style J fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style K fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style K fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
     style L fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
 
-    %% 노드 스타일 (3단계 - 빨강 계열)
+    %% 노드 스타일 (3단계 - 주황/빨강 계열)
     style M fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style N fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style N fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
     style O fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style P fill:#ef5350,stroke:#b71c1c,stroke-width:2px,color:#000
+    style P fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
 
     %% 노드 스타일 (출력 - 녹색 계열)
     style Q fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
