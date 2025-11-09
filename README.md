@@ -1274,12 +1274,13 @@ langchain-project/
 - **즉시 플러시**: 모든 write() 호출 시 자동 flush로 프로그램 비정상 종료 시에도 로그 보존
 - **tqdm 최적화**: 콘솔(모든 진행률) vs 로그(10% 단위)로 파일 크기 절약
 
-**참조 문서**:
-- [실험 관리 시스템 구현 이슈](docs/issues/01-1_실험_관리_시스템_구현.md)
-- [Logger 사용법 가이드](docs/rules/logger_사용법.md)
-- [최현화 로깅&모니터링 역할](docs/roles/01-2_최현화_로깅_모니터링.md)
-- [로깅 시스템 PRD](docs/PRD/05_로깅_시스템.md)
-- [실험 관리 시스템 모듈화 문서](docs/modularization/03_실험_관리_시스템.md)
+#### 참조 문서
+
+- [`docs/issues/01-1_실험_관리_시스템_구현.md`](docs/issues/01-1_실험_관리_시스템_구현.md) - 실험 관리 시스템 구현 이슈
+- [`docs/rules/logger_사용법.md`](docs/rules/logger_사용법.md) - Logger 사용법 가이드
+- [`docs/roles/01-2_최현화_로깅_모니터링.md`](docs/roles/01-2_최현화_로깅_모니터링.md) - 최현화 로깅&모니터링 역할
+- [`docs/PRD/05_로깅_시스템.md`](docs/PRD/05_로깅_시스템.md) - 로깅 시스템 PRD
+- [`docs/modularization/03_실험_관리_시스템.md`](docs/modularization/03_실험_관리_시스템.md) - 실험 관리 시스템 모듈화 문서
 
 
 #### [ExperimentManager 시스템]
@@ -1402,13 +1403,14 @@ experiments/
 - **계층적 로그 구조**: 도구별/기능별 로그 분리로 디버깅 효율성 극대화
 
 
-**참조 문서**:
-- [실험 관리 시스템 구현 이슈](docs/issues/01-1_실험_관리_시스템_구현.md)
-- [최현화 실험 관리 시스템 역할](docs/roles/01-1_최현화_실험_관리_시스템.md)
-- [실험 폴더 구조 규칙](docs/rules/실험_폴더_구조.md)
-- [실험 추적 관리 PRD](docs/PRD/06_실험_추적_관리.md)
-- [실험 관리 시스템 모듈화 문서](docs/modularization/03_실험_관리_시스템.md)
-- [Conversation 파일 관리](docs/modularization/03-1_Conversation_파일_관리.md)
+#### 참조 문서
+
+- [`docs/issues/01-1_실험_관리_시스템_구현.md`](docs/issues/01-1_실험_관리_시스템_구현.md) - 실험 관리 시스템 구현 이슈
+- [`docs/roles/01-1_최현화_실험_관리_시스템.md`](docs/roles/01-1_최현화_실험_관리_시스템.md) - 최현화 실험 관리 시스템 역할
+- [`docs/rules/실험_폴더_구조.md`](docs/rules/실험_폴더_구조.md) - 실험 폴더 구조 규칙
+- [`docs/PRD/06_실험_추적_관리.md`](docs/PRD/06_실험_추적_관리.md) - 실험 추적 관리 PRD
+- [`docs/modularization/03_실험_관리_시스템.md`](docs/modularization/03_실험_관리_시스템.md) - 실험 관리 시스템 모듈화 문서
+- [`docs/modularization/03-1_Conversation_파일_관리.md`](docs/modularization/03-1_Conversation_파일_관리.md) - Conversation 파일 관리
 
 ---
 
@@ -1688,10 +1690,11 @@ papers DB (PostgreSQL 15+)
 - EXPLAIN ANALYZE로 실행 계획 확인
 - 적절한 LIMIT 사용으로 결과 제한
 
-**참조 문서**:
-- [데이터베이스 설계 PRD](docs/PRD/11_데이터베이스_설계.md)
-- [데이터베이스 시스템 모듈화 문서](docs/modularization/05_데이터베이스_시스템.md)
-- [데이터베이스 설치 가이드](docs/usage/데이터베이스_설치_및_설정_가이드.md)
+#### 참조 문서
+
+- [`docs/PRD/11_데이터베이스_설계.md`](docs/PRD/11_데이터베이스_설계.md) - 데이터베이스 설계 PRD
+- [`docs/modularization/05_데이터베이스_시스템.md`](docs/modularization/05_데이터베이스_시스템.md) - 데이터베이스 시스템 모듈화 문서
+- [`docs/usage/데이터베이스_설치_및_설정_가이드.md`](docs/usage/데이터베이스_설치_및_설정_가이드.md) - 데이터베이스 설치 가이드
 
 ---
 
@@ -1774,13 +1777,14 @@ python scripts/data/load_embeddings.py
 python scripts/data/run_full_pipeline.py
 ```
 
-**참조 문서**:
-- [논문 데이터 수집 가이드](docs/roles/03_박재홍_논문데이터수집.md)
-- [논문 데이터 수집 및 DB 구축](docs/issues/03_논문데이터_수집_및_DB_구축.md)
-- [데이터 파이프라인 구현](docs/issues/03-1_data_pipeline_implementation.md)
-- [데이터 파이프라인 완료 보고서](docs/issues/03-2_data_pipeline_completion_report.md)
-- [데이터 파이프라인 청크 중복 문제 해결](docs/issues/03-3_데이터_파이프라인_청크_중복_문제.md)
-- [데이터베이스 설치 가이드](docs/usage/데이터베이스_설치_및_설정_가이드.md)
+#### 참조 문서
+
+- [`docs/roles/03_박재홍_논문데이터수집.md`](docs/roles/03_박재홍_논문데이터수집.md) - 논문 데이터 수집 가이드
+- [`docs/issues/03_논문데이터_수집_및_DB_구축.md`](docs/issues/03_논문데이터_수집_및_DB_구축.md) - 논문 데이터 수집 및 DB 구축
+- [`docs/issues/03-1_data_pipeline_implementation.md`](docs/issues/03-1_data_pipeline_implementation.md) - 데이터 파이프라인 구현
+- [`docs/issues/03-2_data_pipeline_completion_report.md`](docs/issues/03-2_data_pipeline_completion_report.md) - 데이터 파이프라인 완료 보고서
+- [`docs/issues/03-3_데이터_파이프라인_청크_중복_문제.md`](docs/issues/03-3_데이터_파이프라인_청크_중복_문제.md) - 데이터 파이프라인 청크 중복 문제 해결
+- [`docs/usage/데이터베이스_설치_및_설정_가이드.md`](docs/usage/데이터베이스_설치_및_설정_가이드.md) - 데이터베이스 설치 가이드
 
 ---
 
@@ -1886,17 +1890,21 @@ LangGraph StateGraph 기반으로 **사용자 질문을 분석하여 적절한 �
 | **final_answer** | str | 최종 답변 |
 | **messages** | Sequence[BaseMessage] | 대화 히스토리 (멀티턴 지원) |
 
+#### 4.5. 멀티턴 대화 시스템 (Multi-turn Conversation)
+
+사용자가 **"관련 논문 찾아줘"**, **"그거 요약해줘"**처럼 **대명사나 맥락 참조 표현**을 사용할 때, 시스템이 이전 대화 내용을 자동으로 파악하여 정확한 답변을 제공합니다. **맥락 참조 질문 성공률을 30%에서 95%로 향상**시킨 핵심 기능입니다.
+
 <details>
-<summary><strong>4.5. 멀티턴 대화 시스템 (Multi-turn Conversation)</strong></summary>
+<summary><strong>멀티턴 대화 시스템 상세 보기</strong></summary>
 
 #### 아키텍처
 
 ```mermaid
 graph TB
-    subgraph wrapper["멀티턴 대화 시스템 아키텍처"]
+    subgraph wrapper["📋 멀티턴 대화 시스템 아키텍처"]
         direction TB
 
-        subgraph stage1["1️⃣ 대화 히스토리 수집"]
+        subgraph stage1["🔸 1단계: 대화 히스토리 수집"]
             direction LR
             A1["Streamlit<br/>Session State"]
             A2["get_current_messages()"]
@@ -1906,7 +1914,7 @@ graph TB
             A2 -->|"변환"| A3
         end
 
-        subgraph stage2["2️⃣ 맥락 참조 감지"]
+        subgraph stage2["🔹 2단계: 맥락 참조 감지"]
             direction LR
             B1["사용자 질문<br/>분석"]
             B2["맥락 키워드<br/>감지"]
@@ -1916,7 +1924,7 @@ graph TB
             B2 -->|"has_contextual_ref"| B3
         end
 
-        subgraph stage3["3️⃣ 질문 재작성"]
+        subgraph stage3["🔺 3단계: 질문 재작성"]
             direction LR
             C1["Router Node<br/>LLM 분석"]
             C2["query 필드<br/>추출"]
@@ -1926,7 +1934,7 @@ graph TB
             C2 -->|"JSON/Regex"| C3
         end
 
-        subgraph stage4["4️⃣ 도구 실행"]
+        subgraph stage4["🔻 4단계: 도구 실행"]
             direction LR
             D1["refined_query<br/>우선 사용"]
             D2["Multi-Query<br/>검색"]
@@ -1936,7 +1944,7 @@ graph TB
             D2 -->|"여러 변형"| D3
         end
 
-        subgraph stage5["5️⃣ 응답 저장"]
+        subgraph stage5["🔶 5단계: 응답 저장"]
             direction LR
             E1["대화 메모리<br/>업데이트"]
             E2["Session State<br/>추가"]
@@ -1952,25 +1960,38 @@ graph TB
         stage4 -.->|"응답"| stage5
     end
 
-    classDef stage1Style fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
-    classDef stage2Style fill:#e8eaf6,stroke:#283593,stroke-width:3px,color:#000
-    classDef stage3Style fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
-    classDef stage4Style fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    classDef stage5Style fill:#fce4ec,stroke:#880e4f,stroke-width:3px,color:#000
-    classDef wrapperStyle fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+    style wrapper fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+    style stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style stage2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style stage5 fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
 
-    class stage1 stage1Style
-    class stage2 stage2Style
-    class stage3 stage3Style
-    class stage4 stage4Style
-    class stage5 stage5Style
-    class wrapper wrapperStyle
+    style A1 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style A2 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style A3 fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    linkStyle 0,1 stroke:#01579b,stroke-width:2px
-    linkStyle 2,3 stroke:#283593,stroke-width:2px
-    linkStyle 4,5 stroke:#4a148c,stroke-width:2px
-    linkStyle 6,7 stroke:#e65100,stroke-width:2px
-    linkStyle 8,9 stroke:#880e4f,stroke-width:2px
+    style B1 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style B2 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style B3 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+
+    style C1 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C2 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C3 fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    style D1 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style D2 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style D3 fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+
+    style E1 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style E2 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style E3 fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+
+    linkStyle 0,1 stroke:#006064,stroke-width:2px
+    linkStyle 2,3 stroke:#1976d2,stroke-width:2px
+    linkStyle 4,5 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 6,7 stroke:#f57c00,stroke-width:2px
+    linkStyle 8,9 stroke:#c62828,stroke-width:2px
     linkStyle 10,11,12,13 stroke:#616161,stroke-width:3px
 ```
 
@@ -2135,17 +2156,18 @@ raw_results = search_paper_database.invoke({
 | **Connection Pooling** | DB 연결 재사용 | DB 연결 오버헤드 제거 |
 | **캐싱** | 동일 질문 결과 캐시 | 중복 LLM 호출 방지 |
 
-**참조 문서**:
-- [AI Agent 메인 구현](docs/issues/01_AI_Agent_메인_구현.md)
-- [도구 자동전환 및 Fallback 메커니즘](docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md)
-- [에이전트 실행 오류 수정 및 시스템 안정화](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md)
-- [다중요청 저장기능 개선](docs/issues/01-5_다중요청_저장기능_개선.md)
-- [웹검색 논문추가 청킹 불일치 문제](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md)
-- [AI Agent 시스템 전체](docs/modularization/06_AI_Agent_시스템.md)
-- [다중 요청 처리 상세](docs/modularization/06-1_다중_요청_처리.md)
-- [패턴 기반 라우팅 상세](docs/modularization/06-2_패턴_기반_도구_라우팅.md)
-- [AI Agent 설계](docs/PRD/12_AI_Agent_설계.md)
-- [최현화 AI Agent 메인](docs/roles/01_최현화_AI_Agent_메인.md)
+#### 참조 문서
+
+- [`docs/issues/01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) - AI Agent 메인 구현
+- [`docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md`](docs/issues/01-3_도구_자동전환_및_Fallback_메커니즘.md) - 도구 자동전환 및 Fallback 메커니즘
+- [`docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md`](docs/issues/01-4_에이전트_실행_오류_수정_및_시스템_안정화.md) - 에이전트 실행 오류 수정 및 시스템 안정화
+- [`docs/issues/01-5_다중요청_저장기능_개선.md`](docs/issues/01-5_다중요청_저장기능_개선.md) - 다중요청 저장기능 개선
+- [`docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md`](docs/issues/01-6_웹검색_논문추가_청킹_불일치_문제.md) - 웹검색 논문추가 청킹 불일치 문제
+- [`docs/modularization/06_AI_Agent_시스템.md`](docs/modularization/06_AI_Agent_시스템.md) - AI Agent 시스템 전체
+- [`docs/modularization/06-1_다중_요청_처리.md`](docs/modularization/06-1_다중_요청_처리.md) - 다중 요청 처리 상세
+- [`docs/modularization/06-2_패턴_기반_도구_라우팅.md`](docs/modularization/06-2_패턴_기반_도구_라우팅.md) - 패턴 기반 라우팅 상세
+- [`docs/PRD/12_AI_Agent_설계.md`](docs/PRD/12_AI_Agent_설계.md) - AI Agent 설계
+- [`docs/roles/01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) - 최현화 AI Agent 메인
 
 ---
 
@@ -2215,11 +2237,12 @@ LLMClient는 모든 Agent 노드에서 사용됩니다:
 | **난이도 기반** | Easy 모드는 Solar 우선 사용 | 비용 효율성 향상 |
 | **Fallback** | OpenAI 실패 시 Solar 사용 | 가용성 향상, 비용 절감 |
 
-**참조 문서**:
-- [AI Agent 메인 구현](docs/isseus/01_AI_Agent_메인_구현.md)
-- [LLM 클라이언트 전체](docs/modularization/07_LLM_클라이언트.md)
-- [LLM 설정 명세](docs/PRD/14_LLM_설정.md)
-- [최현화 AI Agent 메인](docs/roles/01_최현화_AI_Agent_메인.md)
+#### 참조 문서
+
+- [`docs/issues/01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) - AI Agent 메인 구현
+- [`docs/modularization/07_LLM_클라이언트.md`](docs/modularization/07_LLM_클라이언트.md) - LLM 클라이언트 전체
+- [`docs/PRD/14_LLM_설정.md`](docs/PRD/14_LLM_설정.md) - LLM 설정 명세
+- [`docs/roles/01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) - 최현화 AI Agent 메인
 
 ---
 
@@ -2280,12 +2303,13 @@ RAG(Retrieval-Augmented Generation) 시스템은 **대량의 논문 데이터베
 | **MMR (λ=0.5)** | 0.18초 | 87% | 4.5/5.0 |
 | **MultiQuery** | 0.85초 | 91% | 4.1/5.0 |
 
-**참조 문서**:
-- [RAG 용어집 시스템 구현](docs/issues/02_RAG_용어집_시스템_구현.md)
-- [RAG 코드 통합 검증 보고서](docs/issues/02-1_RAG_코드_통합_검증_보고서.md)
-- [RAG 시스템 전체](docs/modularization/11_RAG_시스템.md)
-- [RAG 시스템 설계](docs/PRD/13_RAG_시스템_설계.md)
-- [신준엽 RAG 용어집](docs/roles/02_신준엽_RAG_용어집.md)
+#### 참조 문서
+
+- [`docs/issues/02_RAG_용어집_시스템_구현.md`](docs/issues/02_RAG_용어집_시스템_구현.md) - RAG 용어집 시스템 구현
+- [`docs/issues/02-1_RAG_코드_통합_검증_보고서.md`](docs/issues/02-1_RAG_코드_통합_검증_보고서.md) - RAG 코드 통합 검증 보고서
+- [`docs/modularization/11_RAG_시스템.md`](docs/modularization/11_RAG_시스템.md) - RAG 시스템 전체
+- [`docs/PRD/13_RAG_시스템_설계.md`](docs/PRD/13_RAG_시스템_설계.md) - RAG 시스템 설계
+- [`docs/roles/02_신준엽_RAG_용어집.md`](docs/roles/02_신준엽_RAG_용어집.md) - 신준엽 RAG 용어집
 
 ---
 
