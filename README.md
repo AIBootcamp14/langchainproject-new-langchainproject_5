@@ -1482,51 +1482,54 @@ graph TB
         subgraph Tools["🔹 1단계: 도구 실행 기록"]
             direction LR
             G[도구 선택] --> H{도구 종류}
-            H -->|RAG 논문| I[논문 검색<br/>로그 기록]
-            H -->|웹 검색| J[웹 검색<br/>로그 기록]
-            H -->|통계 조회| K[SQL 조회<br/>로그 기록]
-            H -->|기타| L[일반 도구<br/>로그 기록]
+            H -->|RAG 용어집| I[용어집 검색<br/>로그 기록]
+            H -->|RAG 논문| J[논문 검색<br/>로그 기록]
+            H -->|웹 검색| K[웹 검색<br/>로그 기록]
+            H -->|논문 요약| L[논문 요약<br/>로그 기록]
+            H -->|통계 조회| M[Text2SQL<br/>로그 기록]
+            H -->|일반 답변| N[일반 답변<br/>로그 기록]
+            H -->|파일 저장| O[파일 저장<br/>로그 기록]
         end
 
         subgraph Database["🔺 2단계: 데이터베이스 작업 기록"]
             direction LR
-            M[DB 작업 실행] --> N{작업 유형}
-            N -->|SQL 쿼리| O[쿼리 내용<br/>자동 저장]
-            N -->|벡터 검색| P[검색 결과<br/>자동 저장]
-            O --> Q[성능 지표<br/>수집]
-            P --> Q
+            P[DB 작업 실행] --> Q{작업 유형}
+            Q -->|SQL 쿼리| R[쿼리 내용<br/>자동 저장]
+            Q -->|벡터 검색| S[검색 결과<br/>자동 저장]
+            R --> T[성능 지표<br/>수집]
+            S --> T
         end
 
         subgraph Prompts["🔶 3단계: 프롬프트 보관"]
             direction LR
-            R[프롬프트 생성] --> S[시스템<br/>프롬프트 저장]
-            S --> T[사용자<br/>질문 저장]
-            T --> U[최종<br/>프롬프트 저장]
+            U[프롬프트 생성] --> V[시스템<br/>프롬프트 저장]
+            V --> W[사용자<br/>질문 저장]
+            W --> X[최종<br/>프롬프트 저장]
         end
 
         subgraph Outputs["🔷 4단계: 답변 저장"]
             direction LR
-            V[답변 완성] --> W{난이도 모드}
-            W -->|초보자| X[초보자용<br/>대화 저장]
-            W -->|전문가| Y[전문가용<br/>대화 저장]
-            X --> Z[최종 답변<br/>텍스트 저장]
-            Y --> Z
+            Y[답변 완성] --> Z{난이도 모드}
+            Z -->|초보자| AA[초보자용<br/>대화 저장]
+            Z -->|전문가| AB[전문가용<br/>대화 저장]
+            AA --> AC[최종 답변<br/>텍스트 저장]
+            AB --> AC
         end
 
         subgraph Evaluation["🔻 5단계: 평가 결과 저장"]
             direction LR
-            AA[품질 평가<br/>수행] --> AB[평가 점수<br/>저장]
-            AB --> AC[RAG 성능<br/>지표 저장]
-            AC --> AD[응답 시간<br/>기록]
+            AD[품질 평가<br/>수행] --> AE[평가 점수<br/>저장]
+            AE --> AF[RAG 성능<br/>지표 저장]
+            AF --> AG[응답 시간<br/>기록]
         end
 
         subgraph Close["🔷 6단계: 종료 및 정리"]
             direction LR
-            AE[대화 종료] --> AF[DB 쿼리<br/>파일 저장]
-            AF --> AG[메타데이터<br/>최종 업데이트]
-            AG --> AH[빈 폴더<br/>자동 삭제]
-            AH --> AI[로그 시스템<br/>종료]
-            AI --> AJ[💾 실험 완료]
+            AH[대화 종료] --> AI[DB 쿼리<br/>파일 저장]
+            AI --> AJ[메타데이터<br/>최종 업데이트]
+            AJ --> AK[빈 폴더<br/>자동 삭제]
+            AK --> AL[로그 시스템<br/>종료]
+            AL --> AM[💾 실험 완료]
         end
 
         Init --> Tools
@@ -1557,47 +1560,50 @@ graph TB
     style E fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
     style F fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
 
-    %% 노드 스타일 - 1단계
+    %% 노드 스타일 - 1단계 (7개 도구)
     style G fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
     style H fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
     style I fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
     style J fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
     style K fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
     style L fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style M fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style N fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style O fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
 
     %% 노드 스타일 - 2단계
-    style M fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style N fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style O fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
     style P fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style Q fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style Q fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style R fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style S fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style T fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
 
     %% 노드 스타일 - 3단계
-    style R fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style S fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style T fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
-    style U fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
+    style U fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style V fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style W fill:#ffcc80,stroke:#f57c00,stroke-width:2px,color:#000
+    style X fill:#ffb74d,stroke:#f57c00,stroke-width:2px,color:#000
 
     %% 노드 스타일 - 4단계
-    style V fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
-    style W fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style X fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
-    style Y fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
-    style Z fill:#ef5350,stroke:#b71c1c,stroke-width:2px,color:#000
+    style Y fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Z fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style AA fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
+    style AB fill:#e57373,stroke:#c62828,stroke-width:2px,color:#000
+    style AC fill:#ef5350,stroke:#b71c1c,stroke-width:2px,color:#000
 
     %% 노드 스타일 - 5단계
-    style AA fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style AB fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style AC fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
-    style AD fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+    style AD fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AE fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AF fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style AG fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
 
     %% 노드 스타일 - 6단계
-    style AE fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
-    style AF fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
-    style AG fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
     style AH fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
     style AI fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
-    style AJ fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
+    style AJ fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style AK fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style AL fill:#f8bbd0,stroke:#880e4f,stroke-width:2px,color:#000
+    style AM fill:#66bb6a,stroke:#2e7d32,stroke-width:3px,color:#000
 
     %% 연결선 스타일 - 초기화 (0~4)
     linkStyle 0 stroke:#006064,stroke-width:2px
@@ -1606,51 +1612,54 @@ graph TB
     linkStyle 3 stroke:#006064,stroke-width:2px
     linkStyle 4 stroke:#006064,stroke-width:2px
 
-    %% 연결선 스타일 - 1단계 (5~8)
+    %% 연결선 스타일 - 1단계 7개 도구 (5~11)
     linkStyle 5 stroke:#01579b,stroke-width:2px
     linkStyle 6 stroke:#01579b,stroke-width:2px
     linkStyle 7 stroke:#01579b,stroke-width:2px
     linkStyle 8 stroke:#01579b,stroke-width:2px
     linkStyle 9 stroke:#01579b,stroke-width:2px
+    linkStyle 10 stroke:#01579b,stroke-width:2px
+    linkStyle 11 stroke:#01579b,stroke-width:2px
+    linkStyle 12 stroke:#01579b,stroke-width:2px
 
-    %% 연결선 스타일 - 2단계 (10~14)
-    linkStyle 10 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 11 stroke:#7b1fa2,stroke-width:2px
-    linkStyle 12 stroke:#7b1fa2,stroke-width:2px
+    %% 연결선 스타일 - 2단계 (13~17)
     linkStyle 13 stroke:#7b1fa2,stroke-width:2px
     linkStyle 14 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 15 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 16 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 17 stroke:#7b1fa2,stroke-width:2px
 
-    %% 연결선 스타일 - 3단계 (15~17)
-    linkStyle 15 stroke:#e65100,stroke-width:2px
-    linkStyle 16 stroke:#e65100,stroke-width:2px
-    linkStyle 17 stroke:#e65100,stroke-width:2px
+    %% 연결선 스타일 - 3단계 (18~20)
+    linkStyle 18 stroke:#e65100,stroke-width:2px
+    linkStyle 19 stroke:#e65100,stroke-width:2px
+    linkStyle 20 stroke:#e65100,stroke-width:2px
 
-    %% 연결선 스타일 - 4단계 (18~22)
-    linkStyle 18 stroke:#c62828,stroke-width:2px
-    linkStyle 19 stroke:#c62828,stroke-width:2px
-    linkStyle 20 stroke:#c62828,stroke-width:2px
+    %% 연결선 스타일 - 4단계 (21~25)
     linkStyle 21 stroke:#c62828,stroke-width:2px
     linkStyle 22 stroke:#c62828,stroke-width:2px
+    linkStyle 23 stroke:#c62828,stroke-width:2px
+    linkStyle 24 stroke:#c62828,stroke-width:2px
+    linkStyle 25 stroke:#c62828,stroke-width:2px
 
-    %% 연결선 스타일 - 5단계 (23~25)
-    linkStyle 23 stroke:#2e7d32,stroke-width:2px
-    linkStyle 24 stroke:#2e7d32,stroke-width:2px
-    linkStyle 25 stroke:#2e7d32,stroke-width:2px
+    %% 연결선 스타일 - 5단계 (26~28)
+    linkStyle 26 stroke:#2e7d32,stroke-width:2px
+    linkStyle 27 stroke:#2e7d32,stroke-width:2px
+    linkStyle 28 stroke:#2e7d32,stroke-width:2px
 
-    %% 연결선 스타일 - 6단계 (26~30)
-    linkStyle 26 stroke:#880e4f,stroke-width:2px
-    linkStyle 27 stroke:#880e4f,stroke-width:2px
-    linkStyle 28 stroke:#880e4f,stroke-width:2px
+    %% 연결선 스타일 - 6단계 (29~33)
     linkStyle 29 stroke:#880e4f,stroke-width:2px
     linkStyle 30 stroke:#880e4f,stroke-width:2px
+    linkStyle 31 stroke:#880e4f,stroke-width:2px
+    linkStyle 32 stroke:#880e4f,stroke-width:2px
+    linkStyle 33 stroke:#880e4f,stroke-width:2px
 
-    %% 단계 간 연결 (31~36)
-    linkStyle 31 stroke:#616161,stroke-width:3px
-    linkStyle 32 stroke:#616161,stroke-width:3px
-    linkStyle 33 stroke:#616161,stroke-width:3px
+    %% 단계 간 연결 (34~39)
     linkStyle 34 stroke:#616161,stroke-width:3px
     linkStyle 35 stroke:#616161,stroke-width:3px
     linkStyle 36 stroke:#616161,stroke-width:3px
+    linkStyle 37 stroke:#616161,stroke-width:3px
+    linkStyle 38 stroke:#616161,stroke-width:3px
+    linkStyle 39 stroke:#616161,stroke-width:3px
 ```
 
 #### 자동 생성 디렉토리 구조
