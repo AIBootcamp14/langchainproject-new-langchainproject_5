@@ -330,10 +330,23 @@ def create_agent_graph(exp_manager=None):
             if exp_manager:
                 exp_manager.logger.write(f"Pipeline 진행: {pipeline_index}/{len(tool_pipeline)}")
 
-            # ✅ 검색 도구 스킵 로직: RAG 또는 웹 검색이 성공했으면 다른 검색 도구 스킵
+            # ✅ 조기 종료 로직: 특정 도구 성공 시 파이프라인 즉시 종료
             tool_result = state.get("tool_result", "")
             last_tool = tool_pipeline[pipeline_index - 1] if pipeline_index > 0 else None
 
+            # text2sql 성공 시 즉시 종료 (통계 결과가 충분히 반환된 경우)
+            if last_tool == "text2sql":
+                # SQL 결과가 정상적으로 반환되었는지 확인 (50자 이상 + 에러 없음)
+                if tool_result and len(tool_result) > 50 and "에러" not in tool_result and "ERROR" not in tool_result:
+                    if exp_manager:
+                        exp_manager.logger.write("text2sql 성공: 파이프라인 조기 종료")
+                    # 파이프라인 종료를 위해 pipeline_index를 최대값으로 설정
+                    state["pipeline_index"] = len(tool_pipeline)
+                    state["pipeline_terminated"] = True
+                    state["termination_reason"] = "text2sql_success"
+                    return state
+
+            # ✅ 검색 도구 스킵 로직: RAG 또는 웹 검색이 성공했으면 다른 검색 도구 스킵
             # search_paper 성공 시: web_search, general 스킵하고 summarize로 이동
             if last_tool == "search_paper" and tool_result and "찾을 수 없습니다" not in tool_result:
                 # summarize 도구가 있으면 그 위치로 이동
