@@ -4934,173 +4934,106 @@ ui/
     └── settings.py                 # 설정 페이지
 ```
 
+#### 🔧 핵심 컴포넌트 구현 상세
+
+##### 1. app.py - 메인 애플리케이션
+
+**역할 및 책임**:
+- Streamlit 앱의 진입점으로, 전체 애플리케이션의 시작점
+- 페이지 설정(제목, 아이콘, 레이아웃)을 구성하고 사용자 인증을 관리
+- 사이드바와 채팅 인터페이스를 통합하여 전체 UI를 조율
+
+**주요 구현 로직**:
+- `st.set_page_config()`를 통해 페이지 제목, 아이콘, 레이아웃(wide), 사이드바 상태를 설정
+- `initialize_session_state()`로 세션 상태 초기화 (채팅 세션, 사용자 정보 등)
+- 사용자 인증 상태 확인 후 미인증 시 로그인 페이지 표시, 인증 완료 시 메인 화면(사이드바 + 채팅) 렌더링
+
+##### 2. sidebar.py - 채팅 세션 관리
+
+**역할 및 책임**:
+- 왼쪽 사이드바에 채팅 세션 목록을 날짜별로 그룹화하여 표시
+- 새 채팅 생성, 세션 전환, 세션 삭제 등 CRUD 기능 제공
+- ChatGPT 스타일의 날짜별 그룹화(오늘/어제/지난 7일/그 이전)로 직관적인 탐색 지원
+
+**주요 구현 로직**:
+- `initialize_chat_sessions()`: LocalStorage에서 기존 세션 복원, 없으면 기본 세션 생성
+- `group_chats_by_date()`: 현재 날짜 기준으로 세션 생성 날짜를 계산하여 4개 그룹으로 분류
+- `create_new_chat()`: UUID를 사용해 고유한 채팅 ID 생성, 현재 시간을 타임스탬프로 저장
+- `switch_chat(chat_id)`: `st.session_state`의 현재 세션 ID를 변경하고 UI 리렌더링
+- `delete_chat(chat_id)`: 확인 다이얼로그 후 세션 삭제, LocalStorage에서도 제거
+
+**날짜 그룹화 상세**:
+- `datetime.now()`로 현재 시간 획득, `timedelta`로 날짜 경계 계산
+- 오늘: 세션 날짜 == 현재 날짜
+- 어제: 세션 날짜 == 현재 날짜 - 1일
+- 지난 7일: 세션 날짜 > 현재 날짜 - 7일
+- 그 이전: 나머지 모든 세션
+
+##### 3. chat_interface.py - 채팅 화면
+
+**역할 및 책임**:
+- 메인 화면 오른쪽 영역에 채팅 메시지를 표시
+- 사용자 메시지와 AI 답변을 구분하여 말풍선 형태로 렌더링
+- 실시간 스트리밍 답변 출력, 도구 배지, 출처, 평가 결과 표시
+- 메시지 복사, 채팅 내보내기 등 사용자 편의 기능 제공
+
+**주요 구현 로직**:
+- `render_chat_interface()`: 전체 채팅 화면 렌더링, 메시지 히스토리 순회하며 표시
+- `display_message(message)`: 메시지 타입(user/assistant) 확인 후 `st.chat_message()` 사용하여 말풍선 표시
+- `stream_response(agent_response)`: `st.empty()` placeholder에 토큰 단위로 누적하며 실시간 출력, 커서 효과("▌") 추가
+- `show_tool_badge(tool_name)`: Streamlit Badge 컴포넌트로 도구명 표시, 도구별 색상 코딩 적용
+- `show_sources(sources)`: `st.expander()`로 출처 목록 표시, 논문/웹/DB 아이콘 구분
+- `show_evaluation(eval_result)`: 평가 점수를 별점(⭐)으로 시각화, 평가 이유 함께 표시
+
+**스트리밍 구현 상세**:
+- `StreamlitCallbackHandler`를 통해 LLM 토큰이 생성될 때마다 `on_llm_new_token()` 이벤트 수신
+- 빈 placeholder를 생성하고 토큰을 누적하며 markdown으로 갱신
+- 마지막 토큰까지 출력 후 커서 효과 제거하고 최종 답변 표시
+
+##### 4. chat_manager.py - 세션 데이터 관리
+
+**역할 및 책임**:
+- 채팅 세션 데이터의 영속화를 담당
+- LocalStorage와 `st.session_state` 간 데이터 동기화
+- 채팅 내보내기(Markdown), 세션 초기화 등 데이터 관리 기능 제공
+
+**주요 구현 로직**:
+- `ChatManager.load()`: JavaScript를 통해 브라우저 LocalStorage에서 세션 데이터 읽기, JSON 파싱 후 Python 딕셔너리로 변환
+- `ChatManager.save()`: 세션 데이터를 JSON으로 직렬화하여 LocalStorage에 저장
+- `ChatManager.export(format="markdown")`: 메시지 히스토리를 Markdown 포맷으로 변환, `st.download_button()`으로 다운로드 제공
+- `ChatManager.clear()`: 세션 데이터 초기화, LocalStorage와 `st.session_state` 모두 정리
+
+**LocalStorage 연동 상세**:
+- `st.components.v1.html()`을 사용하여 JavaScript 코드 실행
+- 저장: `localStorage.setItem(key, JSON.stringify(value))`로 데이터 저장
+- 로드: `localStorage.getItem(key)` 후 `window.parent.postMessage()`로 Python으로 전달
+- 브라우저 새로고침 시에도 세션 데이터가 유지되어 대화 연속성 보장
+
+##### 5. StreamlitCallbackHandler - 실시간 이벤트 처리
+
+**역할 및 책임**:
+- LangChain Agent 실행 중 발생하는 이벤트를 Streamlit UI에 실시간으로 반영
+- LLM 토큰 생성, 도구 실행 시작/종료, Agent 액션 등 모든 이벤트 핸들링
+- 사용자에게 AI 작동 과정을 투명하게 보여주어 신뢰도 향상
+
+**주요 이벤트 및 처리**:
+- `on_llm_new_token(token)`: LLM이 새 토큰 생성 시 호출, 토큰 리스트에 추가하여 실시간 스트리밍 출력
+- `on_tool_start(tool, input)`: 도구 실행 시작 시 호출, `st.spinner()`로 "🔧 {도구명} 실행 중..." 표시
+- `on_tool_end(output)`: 도구 실행 완료 시 호출, "✅ 도구 실행 완료" 메시지와 도구 배지 표시
+- `on_agent_action(action)`: Agent가 액션 실행 시 호출, 디버깅용 로그 표시
+- `on_agent_finish(finish)`: Agent 완료 시 호출, 최종 답변을 화면에 렌더링
+
+**구현 핵심**:
+- `BaseCallbackHandler` 클래스를 상속하여 LangChain 이벤트 시스템과 통합
+- `st.empty()` container를 사용하여 동적으로 UI 업데이트
+- 토큰 리스트를 누적하며 커서 효과("▌")와 함께 markdown 렌더링
+- 각 도구별 아이콘과 색상을 매핑하여 시각적으로 구분 가능하게 표시
+
 #### 참조 문서
 
 - [`docs/PRD/16_UI_설계.md`](docs/PRD/16_UI_설계.md) - Streamlit UI 설계 명세서 및 Workflow
 - [`docs/modularization/14_Streamlit_UI_시스템.md`](docs/modularization/14_Streamlit_UI_시스템.md) - Streamlit UI 시스템 아키텍처 및 구현 상세
 - [`docs/roles/01-3_최현화_Streamlit_UI_구현.md`](docs/roles/01-3_최현화_Streamlit_UI_구현.md) - Streamlit UI 구현 담당자 작업 내용 및 코드 예시
-
-<details>
-<summary><strong>구현 로직 상세 보기 (Python 코드)</strong></summary>
-
-#### 📋 핵심 컴포넌트 구현 로직
-
-##### 1. `app.py` - 메인 애플리케이션
-
-**역할**: Streamlit 앱의 진입점으로, 페이지 설정, 사용자 인증, 컴포넌트 통합을 담당
-
-**주요 로직**:
-```python
-# 페이지 설정
-st.set_page_config(
-    page_title="AI 논문 리뷰 챗봇",
-    page_icon="🤖",
-    layout="wide",  # 전체 너비 사용
-    initial_sidebar_state="expanded"  # 사이드바 기본 열림
-)
-
-# 세션 초기화
-initialize_session_state()
-
-# 사용자 인증
-if not st.session_state.get("authenticated"):
-    show_login_page()
-else:
-    # 사이드바 렌더링
-    render_sidebar()
-
-    # 채팅 인터페이스 렌더링
-    render_chat_interface()
-```
-
-##### 2. `sidebar.py` - 채팅 세션 관리
-
-**역할**: 채팅 목록 표시, 세션 CRUD, 날짜별 그룹화
-
-**주요 함수**:
-- `initialize_chat_sessions()`: LocalStorage에서 세션 복원 또는 기본 세션 생성
-- `group_chats_by_date()`: 세션을 날짜별로 그룹화 (오늘/어제/지난 7일/그 이전)
-- `create_new_chat()`: 새 채팅 세션 생성 (UUID 할당)
-- `switch_chat(chat_id)`: 다른 세션으로 전환
-- `delete_chat(chat_id)`: 세션 삭제 (확인 다이얼로그)
-
-**날짜 그룹화 로직**:
-```python
-def group_chats_by_date(chat_sessions):
-    now = datetime.now()
-    today = now.date()
-    yesterday = today - timedelta(days=1)
-    last_7_days = today - timedelta(days=7)
-
-    groups = {
-        "오늘": [],
-        "어제": [],
-        "지난 7일": [],
-        "그 이전": []
-    }
-
-    for chat in chat_sessions:
-        chat_date = datetime.fromisoformat(chat["created_at"]).date()
-
-        if chat_date == today:
-            groups["오늘"].append(chat)
-        elif chat_date == yesterday:
-            groups["어제"].append(chat)
-        elif chat_date > last_7_days:
-            groups["지난 7일"].append(chat)
-        else:
-            groups["그 이전"].append(chat)
-
-    return groups
-```
-
-##### 3. `chat_interface.py` - 채팅 화면
-
-**역할**: 메시지 표시, 사용자 입력 처리, AI 답변 스트리밍
-
-**주요 함수**:
-- `render_chat_interface()`: 채팅 화면 전체 렌더링
-- `display_message(message)`: 단일 메시지 표시 (사용자/AI 구분)
-- `stream_response(agent_response)`: 실시간 스트리밍 답변 출력
-- `show_tool_badge(tool_name)`: 도구 배지 표시
-- `show_sources(sources)`: 출처 Expander 표시
-- `show_evaluation(eval_result)`: 평가 결과 (별점) 표시
-
-**스트리밍 구현**:
-```python
-def stream_response(agent_response):
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-
-        # StreamlitCallbackHandler를 통해 토큰 단위 스트리밍
-        for token in agent_response:
-            full_response += token
-            message_placeholder.markdown(full_response + "▌")  # 커서 효과
-
-        message_placeholder.markdown(full_response)  # 최종 출력
-```
-
-##### 4. `chat_manager.py` - 세션 데이터 관리
-
-**역할**: 세션 영속화, LocalStorage 연동, 내보내기
-
-**주요 함수**:
-- `ChatManager.load()`: LocalStorage에서 세션 데이터 로드
-- `ChatManager.save()`: 세션 데이터를 LocalStorage에 저장
-- `ChatManager.export(format="markdown")`: 채팅을 Markdown 파일로 내보내기
-- `ChatManager.clear()`: 세션 데이터 초기화
-
-**LocalStorage 연동**:
-```python
-# JavaScript를 통해 LocalStorage 읽기/쓰기
-def save_to_localstorage(key, value):
-    st.components.v1.html(f"""
-        <script>
-            localStorage.setItem('{key}', JSON.stringify({value}));
-        </script>
-    """, height=0)
-
-def load_from_localstorage(key):
-    return st.components.v1.html(f"""
-        <script>
-            const value = localStorage.getItem('{key}');
-            window.parent.postMessage({{type: 'localstorage', value: value}}, '*');
-        </script>
-    """, height=0)
-```
-
-##### 5. `StreamlitCallbackHandler` - 실시간 이벤트 처리
-
-**역할**: Agent 실행 중 이벤트를 실시간으로 Streamlit UI에 반영
-
-**주요 이벤트**:
-- `on_llm_new_token(token)`: LLM이 새 토큰 생성 시 → 실시간 스트리밍
-- `on_tool_start(tool, input)`: 도구 실행 시작 시 → 스피너 표시
-- `on_tool_end(output)`: 도구 실행 완료 시 → 도구 배지 표시
-- `on_agent_action(action)`: Agent 액션 실행 시 → 로그 표시
-- `on_agent_finish(finish)`: Agent 완료 시 → 최종 답변 표시
-
-**구현 예시**:
-```python
-class StreamlitCallbackHandler(BaseCallbackHandler):
-    def __init__(self):
-        self.tokens = []
-        self.container = st.empty()
-
-    def on_llm_new_token(self, token: str, **kwargs):
-        self.tokens.append(token)
-        self.container.markdown("".join(self.tokens) + "▌")
-
-    def on_tool_start(self, serialized, input_str: str, **kwargs):
-        tool_name = serialized.get("name", "Unknown")
-        st.spinner(f"🔧 {tool_name} 실행 중...")
-
-    def on_tool_end(self, output: str, **kwargs):
-        st.success(f"✅ 도구 실행 완료")
-```
-
-</details>
 
 ---
 
