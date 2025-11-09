@@ -3384,6 +3384,446 @@ answer = llm_gpt5.invoke([
 
 ---
 
+#### 7-6. 일반 답변 도구
+
+**도구명**: `general`
+**목적**: LLM의 자체 지식으로 직접 답변을 생성하는 범용 답변 도구이자 모든 다른 도구의 Fallback 최종 단계
+
+##### 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📋 일반 답변 도구 실행 흐름"]
+        direction TB
+
+        subgraph Path1["🔸 경로 1: 직접 실행"]
+            direction LR
+            A[사용자<br/>일반 질문] --> B{패턴 매칭}
+            B -->|매칭 실패| C[LLM 라우팅]
+            B -->|general 패턴| D[일반 답변<br/>도구 실행]
+            C -->|general 선택| D
+        end
+
+        subgraph Path2["🔹 경로 2: Fallback 실행"]
+            direction LR
+            E[다른 도구<br/>실행] --> F{실행 성공?}
+            F -->|실패| G[Fallback 체인<br/>조회]
+            G --> H{general이<br/>체인에 있음?}
+            H -->|Yes| I[일반 답변<br/>도구로 전환]
+        end
+
+        subgraph Execution["🔺 도구 실행"]
+            direction LR
+            J[난이도<br/>확인] --> K{easy or<br/>hard?}
+            K -->|easy| L[elementary +<br/>beginner]
+            K -->|hard| M[intermediate +<br/>advanced]
+            L --> N[LLM 프롬프트<br/>구성]
+            M --> N
+        end
+
+        subgraph LLMCall["🔶 LLM 호출"]
+            direction LR
+            O[System 프롬프트<br/>로드] --> P[User 프롬프트<br/>구성]
+            P --> Q[LLM 호출<br/>2회]
+            Q --> R[답변 생성<br/>완료]
+        end
+
+        subgraph Output["✅ 최종 응답"]
+            direction LR
+            S[final_answers<br/>저장] --> T[final_answer<br/>저장]
+            T --> U[tool_result<br/>저장]
+            U --> V[state 반환]
+        end
+
+        subgraph Fallback["⚠️ Fallback 체인"]
+            direction LR
+            W[glossary → general] --> X[search_paper →<br/>web_search → general]
+            X --> Y[web_search → general]
+            Y --> Z[text2sql → ... → general]
+        end
+
+        %% 경로 연결
+        Path1 --> Execution
+        Path2 --> Execution
+        Execution --> LLMCall
+        LLMCall --> Output
+        Path2 -.참조.-> Fallback
+    end
+
+    %% 메인 워크플로우 배경
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일
+    style Path1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Path2 fill:#e1f5ff,stroke:#01579b,stroke-width:3px,color:#000
+    style Execution fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style LLMCall fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Output fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+    style Fallback fill:#ffebee,stroke:#c62828,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (경로 1 - 청록 계열)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style C fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style D fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (경로 2 - 파랑 계열)
+    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style F fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style G fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style H fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style I fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (실행 - 보라 계열)
+    style J fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style K fill:#ce93d8,stroke:#6a1b9a,stroke-width:2px,color:#000
+    style L fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style M fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style N fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (LLM 호출 - 주황 계열)
+    style O fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style P fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style Q fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style R fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (최종 응답 - 녹색 계열)
+    style S fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style T fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style U fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style V fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (Fallback - 빨강 계열)
+    style W fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style X fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Y fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+    style Z fill:#ef9a9a,stroke:#c62828,stroke-width:2px,color:#000
+
+    %% 연결선 스타일 (경로 1 - 청록 0~4)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
+    linkStyle 3 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (경로 2 - 파랑 5~9)
+    linkStyle 4 stroke:#1976d2,stroke-width:2px
+    linkStyle 5 stroke:#1976d2,stroke-width:2px
+    linkStyle 6 stroke:#1976d2,stroke-width:2px
+    linkStyle 7 stroke:#1976d2,stroke-width:2px
+
+    %% 연결선 스타일 (실행 - 보라 10~15)
+    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 9 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 10 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 11 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 12 stroke:#7b1fa2,stroke-width:2px
+
+    %% 연결선 스타일 (LLM 호출 - 주황 16~19)
+    linkStyle 13 stroke:#e65100,stroke-width:2px
+    linkStyle 14 stroke:#e65100,stroke-width:2px
+    linkStyle 15 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (최종 응답 - 녹색 20~23)
+    linkStyle 16 stroke:#2e7d32,stroke-width:2px
+    linkStyle 17 stroke:#2e7d32,stroke-width:2px
+    linkStyle 18 stroke:#2e7d32,stroke-width:2px
+
+    %% 연결선 스타일 (Fallback - 빨강 24~26)
+    linkStyle 19 stroke:#c62828,stroke-width:2px
+    linkStyle 20 stroke:#c62828,stroke-width:2px
+    linkStyle 21 stroke:#c62828,stroke-width:2px
+
+    %% 단계 간 연결 (회색 27~31)
+    linkStyle 22 stroke:#616161,stroke-width:3px
+    linkStyle 23 stroke:#616161,stroke-width:3px
+    linkStyle 24 stroke:#616161,stroke-width:3px
+    linkStyle 25 stroke:#616161,stroke-width:3px
+    linkStyle 26 stroke:#616161,stroke-width:2px,stroke-dasharray:5
+```
+
+**일반 답변 파이프라인 설명:**
+- 사용자가 일반 질문을 입력하면 패턴 매칭을 시도하며, 매칭 실패 시 LLM 라우팅을 통해 general 도구를 선택하고, general 패턴 매칭 성공 시에도 일반 답변 도구를 직접 실행
+- 다른 도구 실행 시 실패가 감지되면 Fallback 체인을 조회하여 general이 체인에 포함되어 있으면 자동으로 일반 답변 도구로 전환
+- 난이도를 확인하여 easy 모드는 elementary + beginner 수준으로, hard 모드는 intermediate + advanced 수준으로 LLM 프롬프트를 구성
+- System 프롬프트를 로드하고 User 프롬프트를 구성한 후 LLM을 2회 호출하여 각 수준별 답변을 생성
+- 생성된 답변을 final_answers에 저장하고, 하위 호환성을 위해 final_answer에도 저장하며, 파이프라인 지원을 위해 tool_result에 저장한 후 state를 반환
+- Fallback 체인은 glossary → general, search_paper → web_search → general, web_search → general, text2sql → ... → general 순으로 동작
+
+##### 주요 기능
+
+| 기능 | 설명 | 구현 |
+|------|------|------|
+| **범용 답변 생성** | LLM 자체 지식으로 모든 질문에 답변 | OpenAI GPT-5 / Solar Pro2 |
+| **최종 Fallback** | 모든 다른 도구 실패 시 자동 실행 | priority_chain에서 모든 도구의 종착점 |
+| **난이도별 2단계 답변** | easy (elementary + beginner) / hard (intermediate + advanced) | 총 4개 수준 프롬프트 제공 |
+| **직접 실행 경로** | 일반 질문 시 직접 실행 | 패턴 매칭 또는 LLM 라우팅 |
+| **Fallback 경로** | 다른 도구 실패 시 자동 전환 | glossary, search_paper, web_search, text2sql 모두 지원 |
+| **파이프라인 지원** | 다음 도구로 결과 전달 | tool_result 필드에 저장 |
+
+##### 실행 경로
+
+**경로 1: 직접 실행**
+
+사용자 질문이 특별한 도구를 필요로 하지 않는 일반적인 질문일 때:
+
+| 질문 예시 | 패턴 매칭 결과 | 라우팅 결과 |
+|-----------|---------------|-------------|
+| "안녕" | 매칭 실패 | general 선택 |
+| "왜 딥러닝을 사용하는거야?" | general 패턴 매칭 | general 선택 |
+| "점심 뭐 먹을까?" | 매칭 실패 | general 선택 |
+| "AI 트렌드 알려줘" | 매칭 실패 | general 선택 |
+
+**경로 2: Fallback 실행**
+
+다른 도구 실패 시 자동으로 전환:
+
+| 실패한 도구 | Fallback 체인 | 일반 답변 도구의 역할 |
+|-------------|---------------|----------------------|
+| **glossary** | glossary → **general** | 용어집에 없는 용어를 LLM 지식으로 설명 |
+| **search_paper** | search_paper → web_search → **general** | DB에 없는 논문을 LLM 지식으로 설명 |
+| **web_search** | web_search → **general** | 웹에서도 못 찾은 정보를 LLM 지식으로 답변 |
+| **text2sql** | text2sql → search_paper → web_search → **general** | 통계 조회 실패 시 LLM 지식으로 답변 |
+
+##### 난이도별 수준 매핑
+
+**Easy 모드**:
+| 수준 | 대상 | 나이 | 톤 | LLM 모델 |
+|------|------|------|------|----------|
+| **elementary** | 초등학생 | 8-13세 | 매우 쉬운 단어, 이모지 사용, 일상생활 비유 | Solar Pro2 |
+| **beginner** | 고등학생~대학 저학년 | 14-22세 | 친절하고 쉬운 설명, 기본 개념 중심 | Solar Pro2 |
+
+**Hard 모드**:
+| 수준 | 대상 | 경력 | 톤 | LLM 모델 |
+|------|------|------|------|----------|
+| **intermediate** | 대학 고학년~주니어 개발자 | 23-30세 | 전문 용어 사용, 코드 예시 제공 | GPT-5 |
+| **advanced** | 시니어 개발자~AI 연구자 | 30세 이상 | 학술적 표현, 수식 및 논문 인용 | GPT-5 |
+
+##### 사용 예시
+
+**예시 1: 직접 실행 - 개념 설명 (Easy 모드)**
+
+사용자: "Attention이 왜 필요해?"
+
+Agent 동작:
+1. Router가 패턴 매칭 실패 → LLM 라우팅 → `general` 선택
+2. 난이도: `easy` → 수준: `["elementary", "beginner"]`
+3. LLM 호출 (1차 - elementary):
+   ```
+   Attention Mechanism은 AI 모델이 중요한 정보에 집중할 수 있게 해줍니다. 🔍
+
+   왜 필요할까요?
+
+   1. 긴 문장 처리:
+      - 기존 RNN은 긴 문장의 앞부분을 잘 기억하지 못했어요
+      - Attention은 필요한 부분을 다시 참조할 수 있습니다
+
+   2. 병렬 처리:
+      - RNN은 순차적으로 처리해야 했지만
+      - Attention은 동시에 모든 단어를 볼 수 있어 훨씬 빠릅니다
+
+   실생활 비유:
+   책을 읽을 때 중요한 부분에 형광펜을 긋는 것과 비슷합니다! 📚
+   ```
+
+4. LLM 호출 (2차 - beginner):
+   ```
+   Attention은 AI가 입력 데이터의 어느 부분에 집중할지 결정하는 메커니즘입니다.
+
+   핵심 이점:
+   - Long-range Dependency 문제 해결
+   - 병렬 처리 가능 (학습 속도 향상)
+   - 모델의 해석 가능성 증가 (Attention Weight 시각화)
+
+   실전 적용:
+   - 기계 번역: 원문의 어떤 단어에 집중할지 결정
+   - 문서 요약: 중요한 문장 추출
+   - 이미지 캡션: 이미지의 어느 부분을 설명할지 선택
+   ```
+
+**예시 2: Fallback 실행 - 용어집에 없는 용어 (Hard 모드)**
+
+사용자: "Quantum Attention이 뭐야?"
+
+Agent 동작:
+1. `glossary` 도구 실행 → PostgreSQL 검색 → **결과 없음**
+2. Fallback 체인: `glossary` → `general`
+3. `general` 도구로 자동 전환
+4. 난이도: `hard` → 수준: `["intermediate", "advanced"]`
+5. LLM 호출 (1차 - intermediate):
+   ```
+   Quantum Attention은 양자 컴퓨팅과 Attention 메커니즘을 결합한 개념입니다.
+
+   핵심 아이디어:
+   1. 기존 Attention: 입력 시퀀스에서 중요한 부분에 집중
+   2. 양자 컴퓨팅: 중첩(superposition)과 얽힘(entanglement) 활용
+   3. Quantum Attention: 양자 상태로 Attention을 계산하여 병렬 처리
+
+   장점:
+   - 계산 속도 향상 (양자 병렬성)
+   - 더 복잡한 패턴 학습 가능
+   - 지수적 메모리 절약
+
+   현재는 이론적 연구 단계입니다.
+   ```
+
+6. LLM 호출 (2차 - advanced):
+   ```
+   Quantum Attention은 양자 역학의 중첩과 얽힘을 활용하여
+   기존 Attention의 계산 복잡도를 O(n²)에서 O(log n)으로 감소시키는
+   이론적 프레임워크입니다.
+
+   수식:
+   Q-Attention(|ψ⟩) = ∑ᵢ αᵢ|φᵢ⟩
+   where αᵢ = ⟨ψ|Û†K̂Û|φᵢ⟩
+
+   주요 논문:
+   - "Quantum Attention Networks" (arXiv:2023.xxxxx)
+   - "Entangled Attention for Quantum Machine Learning" (NeurIPS 2023)
+
+   실험 결과:
+   - 시뮬레이션 환경에서 10배 속도 향상
+   - 실제 양자 하드웨어 구현은 아직 제한적
+
+   도전 과제:
+   - 양자 오류 정정
+   - 스케일링 문제 (큐빗 수 제한)
+   ```
+
+**예시 3: Fallback 실행 - 논문 검색 2단계 실패**
+
+사용자: "xyz123 논문 찾아줘"
+
+Agent 동작:
+1. `search_paper` 실행 → RAG DB 검색 실패
+2. Fallback 1차: `web_search` 실행 → 웹 검색 실패
+3. Fallback 2차: `general` 실행
+4. LLM 답변:
+   ```
+   'xyz123' 논문을 찾지 못했습니다.
+
+   가능한 이유:
+   1. 논문 제목이 정확하지 않을 수 있습니다
+   2. 아직 출판되지 않았거나 arXiv에 없을 수 있습니다
+   3. 오타가 있을 수 있습니다
+
+   추천 방법:
+   - 저자 이름으로 검색해보세요
+   - 키워드로 관련 논문을 찾아보세요
+   - arXiv 또는 Google Scholar에서 직접 검색해보세요
+   ```
+
+##### Fallback 체인 상세
+
+**전체 Fallback 구조**:
+
+```
+[특화 도구] → [범용 검색] → [일반 답변] ← 최종 Fallback
+   ↓              ↓              ↓
+ 실패 가능     실패 가능      항상 성공
+```
+
+**도구별 Fallback 경로**:
+
+| 도구 | Fallback 체인 | 일반 답변 위치 |
+|------|---------------|----------------|
+| `glossary` | glossary → **general** | 1단계 (즉시 전환) |
+| `search_paper` | search_paper → web_search → **general** | 2단계 (웹 검색 후) |
+| `web_search` | web_search → **general** | 1단계 (즉시 전환) |
+| `text2sql` | text2sql → search_paper → web_search → **general** | 3단계 (최종 전환) |
+| `general` | 없음 (최종 Fallback) | 항상 성공 |
+
+##### 내부 프로세스
+
+**1. 난이도 매핑**
+```python
+# easy -> elementary + beginner
+# hard -> intermediate + advanced
+level_mapping = {
+    "easy": ["elementary", "beginner"],
+    "hard": ["intermediate", "advanced"]
+}
+
+levels = level_mapping.get(difficulty, ["beginner", "intermediate"])
+```
+
+**2. LLM 초기화**
+```python
+llm_client = LLMClient.from_difficulty(
+    difficulty=difficulty,  # "easy" 또는 "hard"
+    logger=exp_manager.logger if exp_manager else None
+)
+
+# easy -> Solar Pro2 (빠르고 경제적)
+# hard -> GPT-5 (더 정확하고 상세한 답변)
+```
+
+**3. 프롬프트 구성 및 LLM 호출 (2회)**
+```python
+final_answers = {}
+
+for level in levels:  # ["elementary", "beginner"] 또는 ["intermediate", "advanced"]
+    # 프롬프트 로드
+    system_content = get_tool_prompt("general_answer", level)
+    system_msg = SystemMessage(content=system_content)
+
+    # 메시지 구성
+    messages = [system_msg, HumanMessage(content=question)]
+
+    # LLM 호출
+    response = llm_client.llm.invoke(messages)
+    final_answers[level] = response.content
+```
+
+**4. 상태 업데이트**
+```python
+# 난이도별 2개 수준 답변 저장
+state["final_answers"] = final_answers
+
+# 하위 호환성: final_answer에 두 번째 수준 답변 저장
+state["final_answer"] = final_answers[levels[1]]
+
+# 파이프라인 지원: tool_result에도 저장 (다음 도구로 전달)
+state["tool_result"] = final_answers[levels[1]]
+```
+
+##### 핵심 특징
+
+**1. 범용 답변 도구이자 최종 Fallback**
+- LLM 자체 지식으로 모든 질문에 답변 가능
+- 외부 데이터 없이 순수 LLM 답변 생성
+- 모든 다른 도구의 Fallback 종착점
+- 시스템이 "답변할 수 없습니다"로 끝나지 않음
+
+**2. 두 가지 실행 경로**
+- **경로 1: 직접 실행** - 일반적인 질문, 대화
+- **경로 2: Fallback 실행** - 다른 도구 실패 시 자동 전환
+
+**3. 난이도별 2단계 답변 생성**
+- `easy` → elementary (8-13세) + beginner (14-22세)
+- `hard` → intermediate (23-30세) + advanced (30세 이상)
+- 사용자는 easy/hard만 선택, 시스템은 각 난이도에서 2개 수준 제공
+
+**4. Fallback 없음 (최종 단계)**
+- LLM은 항상 답변 생성 가능 (실패 불가)
+- 데이터가 없어도 지식 기반 답변
+- 사용자에게 항상 유용한 정보 제공
+
+##### 성능 지표
+
+**응답 시간**:
+- LLM 호출: 2-5초 (Solar Pro2) / 3-8초 (GPT-5)
+- **총 응답 시간**: 4-16초 (2회 호출)
+
+**비용**:
+- LLM 호출: 2회 (2개 수준 답변 생성)
+- **외부 시스템**: OpenAI API만 사용 (DB, 웹 검색 없음)
+
+**도구별 참조 문서**:
+- [일반 답변 시나리오](docs/scenarios/01_일반_답변.md)
+- [일반 답변 도구 아키텍처](docs/architecture/single_request/07_일반_답변.md)
+
+---
+
 ### 8. Streamlit UI 시스템
 
 #### 주요 기능
