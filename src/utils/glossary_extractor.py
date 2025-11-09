@@ -107,7 +107,23 @@ def extract_terms_from_answer(
         elif "```" in response_text:
             response_text = response_text.split("```")[1].split("```")[0].strip()
 
-        data = json.loads(response_text)
+        # JSON 파싱 전 escape 문자 처리
+        # LLM이 생성한 JSON에서 잘못된 escape 문자를 정리
+        try:
+            data = json.loads(response_text)
+        except json.JSONDecodeError as e:
+            if logger:
+                logger.write(f"JSON 파싱 1차 시도 실패: {e}", print_error=True)
+
+            # 2차 시도: strict=False로 파싱 (이스케이프 처리 완화)
+            try:
+                data = json.loads(response_text, strict=False)
+            except json.JSONDecodeError as e2:
+                if logger:
+                    logger.write(f"JSON 파싱 2차 시도 실패: {e2}", print_error=True)
+                    logger.write(f"응답 텍스트 샘플: {response_text[:500]}")
+                return []
+
         terms = data.get("terms", [])
 
         if logger:
