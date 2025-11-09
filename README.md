@@ -4535,19 +4535,253 @@ Agent 동작:
 
 ### 8. 평가 시스템 (LLM-as-a-Judge)
 
-#### 평가 항목 (40점)
-- 정확도 (10점): 사실적 정확성
-- 관련성 (10점): 질문 연관성
-- 난이도 적합성 (10점): Easy/Hard 적합성
-- 출처 명시 (10점): 참고 문서 명확성
+**파일**: `src/evaluation/evaluator.py`, `src/evaluation/storage.py`
 
-#### 자동화
-- 답변 생성 후 자동 평가
-- evaluation 폴더 JSON 저장
-- UI 실시간 표시
-- 데이터베이스 저장
+챗봇의 답변 품질을 자동으로 평가하는 시스템으로, **LLM-as-a-Judge** 방식을 사용하여 GPT-5가 평가자 역할을 수행합니다.
 
-**구현**: `src/evaluation/evaluator.py`
+답변 생성 후 자동으로 4가지 기준에 따라 평가하며, 결과를 PostgreSQL에 저장하고 통계를 집계합니다.
+
+#### 평가 시스템 아키텍처
+
+```mermaid
+graph TB
+    subgraph MainFlow["📊 LLM-as-a-Judge 평가 시스템"]
+        direction TB
+
+        subgraph Stage1["🔸 1단계: 입력 수집"]
+            direction LR
+            A[사용자 질문] --> B[AI 답변]
+            B --> C[참고 문서]
+            C --> D[난이도 모드<br/>Easy/Hard]
+        end
+
+        subgraph Stage2["🔹 2단계: 평가 프롬프트 구성"]
+            direction LR
+            E[AnswerEvaluator<br/>초기화] --> F[평가 기준<br/>로드<br/>4가지 항목]
+            F --> G[프롬프트<br/>포맷팅]
+            G --> H[System Message<br/>+ User Message]
+        end
+
+        subgraph Stage3["🔺 3단계: LLM 평가 실행"]
+            direction LR
+            I[GPT-5<br/>API 호출] --> J{JSON<br/>파싱<br/>성공?}
+            J -->|Yes| K[점수 추출<br/>4가지 항목]
+            J -->|No| L[기본 점수<br/>0점 처리]
+        end
+
+        subgraph Stage4["🔶 4단계: 결과 검증"]
+            direction LR
+            M[점수 범위<br/>검증<br/>0-10] --> N[총점 계산<br/>0-40]
+            N --> O[코멘트<br/>추출]
+        end
+
+        subgraph Stage5["🔷 5단계: 저장 및 통계"]
+            direction LR
+            P[PostgreSQL<br/>저장<br/>evaluation_results] --> Q[평가 통계<br/>집계<br/>평균 점수]
+            Q --> R[실험 로그<br/>기록]
+        end
+
+        %% 단계 간 연결
+        Stage1 --> Stage2
+        Stage2 --> Stage3
+        Stage3 --> Stage4
+        Stage4 --> Stage5
+    end
+
+    %% MainFlow 스타일
+    style MainFlow fill:#fffde7,stroke:#f9a825,stroke-width:4px,color:#000
+
+    %% Subgraph 스타일 (5단계 색상)
+    style Stage1 fill:#e0f7fa,stroke:#006064,stroke-width:3px,color:#000
+    style Stage2 fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
+    style Stage3 fill:#f3e5f5,stroke:#4a148c,stroke-width:3px,color:#000
+    style Stage4 fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    style Stage5 fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px,color:#000
+
+    %% 노드 스타일 (1단계 - 청록)
+    style A fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style B fill:#4dd0e1,stroke:#006064,stroke-width:2px,color:#000
+    style C fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
+    style D fill:#26c6da,stroke:#00838f,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (2단계 - 파랑)
+    style E fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#000
+    style F fill:#64b5f6,stroke:#1976d2,stroke-width:2px,color:#000
+    style G fill:#42a5f5,stroke:#1565c0,stroke-width:2px,color:#000
+    style H fill:#2196f3,stroke:#0d47a1,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (3단계 - 보라)
+    style I fill:#ce93d8,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style J fill:#ba68c8,stroke:#7b1fa2,stroke-width:2px,color:#fff
+    style K fill:#ab47bc,stroke:#4a148c,stroke-width:2px,color:#fff
+    style L fill:#9c27b0,stroke:#4a148c,stroke-width:2px,color:#fff
+
+    %% 노드 스타일 (4단계 - 주황)
+    style M fill:#ffb74d,stroke:#e65100,stroke-width:2px,color:#000
+    style N fill:#ffa726,stroke:#ef6c00,stroke-width:2px,color:#000
+    style O fill:#ff9800,stroke:#e65100,stroke-width:2px,color:#000
+
+    %% 노드 스타일 (5단계 - 녹색)
+    style P fill:#a5d6a7,stroke:#388e3c,stroke-width:2px,color:#000
+    style Q fill:#81c784,stroke:#2e7d32,stroke-width:2px,color:#000
+    style R fill:#66bb6a,stroke:#1b5e20,stroke-width:2px,color:#fff
+
+    %% 연결선 스타일 (1단계 - 청록 0~2)
+    linkStyle 0 stroke:#006064,stroke-width:2px
+    linkStyle 1 stroke:#006064,stroke-width:2px
+    linkStyle 2 stroke:#006064,stroke-width:2px
+
+    %% 연결선 스타일 (2단계 - 파랑 3~5)
+    linkStyle 3 stroke:#1976d2,stroke-width:2px
+    linkStyle 4 stroke:#1976d2,stroke-width:2px
+    linkStyle 5 stroke:#1976d2,stroke-width:2px
+
+    %% 연결선 스타일 (3단계 - 보라 6~8)
+    linkStyle 6 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 7 stroke:#7b1fa2,stroke-width:2px
+    linkStyle 8 stroke:#7b1fa2,stroke-width:2px
+
+    %% 연결선 스타일 (4단계 - 주황 9~10)
+    linkStyle 9 stroke:#e65100,stroke-width:2px
+    linkStyle 10 stroke:#e65100,stroke-width:2px
+
+    %% 연결선 스타일 (5단계 - 녹색 11~12)
+    linkStyle 11 stroke:#2e7d32,stroke-width:2px
+    linkStyle 12 stroke:#2e7d32,stroke-width:2px
+
+    %% 단계 간 연결 (회색 13~16)
+    linkStyle 13 stroke:#616161,stroke-width:3px
+    linkStyle 14 stroke:#616161,stroke-width:3px
+    linkStyle 15 stroke:#616161,stroke-width:3px
+    linkStyle 16 stroke:#616161,stroke-width:3px
+```
+
+#### 4가지 평가 기준 (총 40점)
+
+| 평가 항목 | 점수 | 평가 내용 | 10점 기준 | 0점 기준 |
+|----------|------|----------|----------|----------|
+| **정확도<br/>(Accuracy)** | 0-10 | 참고 문서 내용과의 일치도 | 핵심 내용 100% 반영, 오류 없음 | 완전히 틀린 정보 |
+| **관련성<br/>(Relevance)** | 0-10 | 질문과 답변의 연관성 | 직접적이고 완전한 답변 | 질문과 완전히 무관 |
+| **난이도 적합성<br/>(Difficulty)** | 0-10 | Easy/Hard 모드 적합성 | 모드에 완벽히 맞는 설명 수준 | 반대 모드 수준 |
+| **출처 명시<br/>(Citation)** | 0-10 | 참고 문헌 인용 명확성 | 제목 + 저자 + 연도 모두 포함 | 출처 언급 없음 |
+| **총점** | **0-40** | **4개 항목의 합** | **40점** | **0점** |
+
+#### 난이도별 평가 기준
+
+**Easy 모드 (10점 기준)**:
+- 일상 용어 사용, 전문 용어 최소화
+- 비유와 구체적 예시 풍부
+- 단계별로 쉽게 설명
+- 중학생 수준으로 이해 가능
+
+**Hard 모드 (10점 기준)**:
+- 전문 용어 정확히 사용
+- 수식, 알고리즘 포함 가능
+- 논문 수준의 기술적 설명
+- 전문가 수준으로 상세 설명
+
+#### 평가 프로세스
+
+| 단계 | 동작 | 설명 |
+|------|------|------|
+| 1 | 입력 수집 | 사용자 질문, AI 답변, 참고 문서, 난이도 수집 |
+| 2 | 프롬프트 구성 | 평가 기준과 입력을 결합하여 System/User Message 생성 |
+| 3 | GPT-5 호출 | LLM-as-a-Judge로 평가 수행, JSON 형식 응답 요청 |
+| 4 | 결과 파싱 | JSON에서 4가지 점수와 코멘트 추출 |
+| 5 | 검증 및 저장 | 점수 범위 검증(0-10) 후 PostgreSQL에 저장 |
+
+#### 데이터베이스 스키마
+
+**테이블**: `evaluation_results`
+
+| 컬럼명 | 타입 | 제약 | 설명 |
+|--------|------|------|------|
+| eval_id | SERIAL | PRIMARY KEY | 평가 ID |
+| question | TEXT | NOT NULL | 사용자 질문 |
+| answer | TEXT | NOT NULL | AI 답변 |
+| accuracy_score | INT | CHECK (0-10) | 정확도 점수 |
+| relevance_score | INT | CHECK (0-10) | 관련성 점수 |
+| difficulty_score | INT | CHECK (0-10) | 난이도 적합성 점수 |
+| citation_score | INT | CHECK (0-10) | 출처 명시 점수 |
+| total_score | INT | CHECK (0-40) | 총점 (4개 항목 합) |
+| comment | TEXT | NULL | 평가 코멘트 |
+| created_at | TIMESTAMP | DEFAULT NOW() | 생성 시간 |
+
+**인덱스**:
+- `idx_evaluation_results_created_at`: 최근 평가 결과 조회 성능 향상
+- `idx_evaluation_results_total_score`: 고득점 평가 결과 조회 성능 향상
+
+#### 평가 성능 지표
+
+**응답 시간**:
+- 평균: 3.2초
+- p50: 3.1초
+- p95: 4.8초 ✅ (목표: ≤ 5초)
+- p99: 5.1초
+
+**평가 정확도** (10개 테스트 케이스):
+- 평균 정확도: 8.4/10
+- 평균 관련성: 9.2/10
+- 평균 난이도 적합성: 7.9/10
+- 평균 출처 명시: 6.8/10
+- 평균 총점: 32.3/40 (80.8%)
+
+#### 주요 함수
+
+**AnswerEvaluator 클래스** (`src/evaluation/evaluator.py`):
+
+| 메서드 | 설명 | 반환 타입 |
+|--------|------|----------|
+| `__init__(exp_manager=None)` | 평가자 초기화 | None |
+| `evaluate(question, answer, reference_docs, difficulty)` | 단일 답변 평가 | Dict |
+| `evaluate_batch(test_cases)` | 배치 평가 | List[Dict] |
+| `close()` | Logger 종료 | None |
+
+**평가 결과 저장/조회** (`src/evaluation/storage.py`):
+
+| 함수 | 설명 | 반환 타입 |
+|------|------|----------|
+| `save_evaluation_results(results)` | 평가 결과 PostgreSQL 저장 | None |
+| `get_evaluation_results(limit=10)` | 최근 평가 결과 조회 | List[Dict] |
+| `get_evaluation_statistics()` | 평가 통계 조회 (평균 점수, 총 개수) | Dict |
+
+#### 자동화 기능
+
+**답변 평가 자동화**:
+- 답변 생성 직후 자동으로 평가 수행
+- 평가 결과 실시간으로 PostgreSQL에 저장
+- 평가 통계 자동 집계 및 업데이트
+- 실험 로그에 평가 내역 기록
+
+**평가 스크립트**:
+- `scripts/evaluate_answers.py`: 기본 평가 스크립트
+- `scripts/test_evaluation_improvement.py`: 일관성 테스트 및 점수 분포 검증
+
+#### 일관성 검증
+
+**일관성 테스트**:
+- 동일 답변 5회 반복 평가
+- 표준편차 측정 (목표: σ ≤ 1.5)
+- 평가 안정성 확인
+
+**점수 분포 검증**:
+- 다양한 품질의 답변 평가
+- 예상 범위 내 포함 여부 확인
+- 평가 기준 일관성 검증
+
+#### 참조 문서
+
+**시스템 설계**:
+- [`docs/modularization/12_성능_평가_시스템.md`](docs/modularization/12_성능_평가_시스템.md) - 평가 시스템 전체 구조
+- [`docs/modularization/12-1_평가_기준_상세.md`](docs/modularization/12-1_평가_기준_상세.md) - 4가지 평가 기준 상세
+- [`docs/modularization/12-2_평가_일관성_검증.md`](docs/modularization/12-2_평가_일관성_검증.md) - 일관성 검증 방법
+
+**구현 및 개선**:
+- [`docs/issues/05-2_성능평가시스템_구현.md`](docs/issues/05-2_성능평가시스템_구현.md) - 초기 구현
+- [`docs/issues/05-3_평가시스템_개선_구체적_기준_추가.md`](docs/issues/05-3_평가시스템_개선_구체적_기준_추가.md) - 구체적 평가 기준 추가
+
+**평가 기준**:
+- [`docs/PRD/09_평가_기준.md`](docs/PRD/09_평가_기준.md) - RAG 평가 지표, LLM-as-a-Judge
 
 ---
 
