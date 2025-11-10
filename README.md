@@ -4364,6 +4364,8 @@ python main.py
 - [`docs/PRD/`](docs/PRD/) - 제품 요구사항 정의 문서 (22개 파일)
   - 시스템 설계, AI Agent, RAG, LLM, 프롬프트 엔지니어링, UI 설계 등
 
+  <details>
+  <summary><strong>PRD 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`01_프로젝트_개요.md`](docs/PRD/01_프로젝트_개요.md) | 프로젝트 목표, 배경, 핵심 기능 |
@@ -4388,11 +4390,15 @@ python main.py
   | [`자료조사_04_RAG_시스템.md`](docs/PRD/자료조사_04_RAG_시스템.md) | RAG 시스템 조사 |
   | [`자료조사_05_AI_Agent_도구.md`](docs/PRD/자료조사_05_AI_Agent_도구.md) | AI Agent 도구 조사 |
   | [`자료조사_06_역할분배_일정.md`](docs/PRD/자료조사_06_역할분배_일정.md) | 팀 역할 분배 및 일정 조사 |
+  </details>
+
 
 **모듈화 문서**:
 - [`docs/modularization/`](docs/modularization/) - 전체 시스템 모듈화 문서 (21개 파일)
   - 실험 관리, 데이터베이스, AI Agent, LLM, 대화 메모리, 도구 시스템, RAG, 평가, 프롬프트, Streamlit UI 등
 
+  <details>
+  <summary><strong>모듈화 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`01_프로젝트_구조.md`](docs/modularization/01_프로젝트_구조.md) | 프로젝트 폴더 및 파일 구조 |
@@ -4416,6 +4422,8 @@ python main.py
   | [`12-2_평가_일관성_검증.md`](docs/modularization/12-2_평가_일관성_검증.md) | 평가 일관성 검증 방법 |
   | [`13_프롬프트_엔지니어링.md`](docs/modularization/13_프롬프트_엔지니어링.md) | 프롬프트 시스템 전체 |
   | [`14_Streamlit_UI_시스템.md`](docs/modularization/14_Streamlit_UI_시스템.md) | Streamlit UI 아키텍처 |
+  </details>
+
 
 **아키텍처 문서**:
 - [`docs/architecture/`](docs/architecture/) - 시스템 아키텍처 문서
@@ -4424,6 +4432,8 @@ python main.py
   - [`docs/architecture/single_request/`](docs/architecture/single_request/) - 단일 요청 시나리오 아키텍처 (8개 파일)
     - RAG 논문/용어집 검색, 웹 검색, Text2SQL, 논문 요약, 저장, 일반 답변, 멀티턴 대화
 
+    <details>
+    <summary><strong>단일 요청 관련 문서 참조 링크</strong></summary>
     | 문서 | 설명 |
     |------|------|
     | [`01_RAG_논문_검색.md`](docs/architecture/single_request/01_RAG_논문_검색.md) | RAG 논문 검색 아키텍처 |
@@ -4434,11 +4444,14 @@ python main.py
     | [`06_저장.md`](docs/architecture/single_request/06_저장.md) | 파일 저장 아키텍처 |
     | [`07_일반_답변.md`](docs/architecture/single_request/07_일반_답변.md) | 일반 답변 아키텍처 |
     | [`08_멀티턴_대화.md`](docs/architecture/single_request/08_멀티턴_대화.md) | 멀티턴 대화 아키텍처 |
+    </details>
 
   **다중 요청 아키텍처**:
   - [`docs/architecture/multiple_request/`](docs/architecture/multiple_request/) - 다중 요청 시나리오 아키텍처 (16개 파일)
     - 이중 요청 (8개), 삼중 요청 (6개), 사중 요청 (2개)
 
+    <details>
+    <summary><strong>다중 요청 관련 문서 참조 링크</strong></summary>
     | 문서 | 설명 |
     |------|------|
     | [`01_이중요청_RAG논문검색_논문요약.md`](docs/architecture/multiple_request/01_이중요청_RAG논문검색_논문요약.md) | 이중요청: RAG 논문 검색 → 논문 요약 |
@@ -4457,6 +4470,8 @@ python main.py
     | [`14_삼중요청_RAG논문검색_일반답변_저장.md`](docs/architecture/multiple_request/14_삼중요청_RAG논문검색_일반답변_저장.md) | 삼중요청: RAG 논문 검색 → 일반 답변 → 저장 |
     | [`15_사중요청_용어집_논문검색_요약_저장.md`](docs/architecture/multiple_request/15_사중요청_용어집_논문검색_요약_저장.md) | 사중요청: 용어집 → 논문 검색 → 요약 → 저장 |
     | [`16_사중요청_Web논문검색_논문요약_일반답변_저장.md`](docs/architecture/multiple_request/16_사중요청_Web논문검색_논문요약_일반답변_저장.md) | 사중요청: Web 논문 검색 → 논문 요약 → 일반 답변 → 저장 |
+    </details>
+
 
   **Mermaid 다이어그램**:
   - [`docs/architecture/mermaid/`](docs/architecture/mermaid/) - Mermaid 다이어그램 파일
@@ -4468,6 +4483,8 @@ python main.py
   - AI Agent 구현, RAG 시스템, 데이터 파이프라인, 멀티턴 대화, 평가 시스템, 프롬프트 엔지니어링 등
   - [`docs/issues/merge/`](docs/issues/merge/) - 병합 관련 문서
 
+  <details>
+  <summary><strong>이슈 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`01_AI_Agent_메인_구현.md`](docs/issues/01_AI_Agent_메인_구현.md) | AI Agent 메인 시스템 구현 |
@@ -4498,6 +4515,7 @@ python main.py
   | [`05-3_평가시스템_개선_구체적_기준_추가.md`](docs/issues/05-3_평가시스템_개선_구체적_기준_추가.md) | 평가 시스템 개선 및 구체적 기준 추가 |
   | [`05-4_Text2SQL_난이도별_프롬프트_강화.md`](docs/issues/05-4_Text2SQL_난이도별_프롬프트_강화.md) | Text2SQL 난이도별 프롬프트 강화 |
   | [`06_Session_010_실험_분석_기반_시스템_개선.md`](docs/issues/06_Session_010_실험_분석_기반_시스템_개선.md) | Session_010 실험 분석 기반 시스템 개선 |
+  </details>
 
 **담당자별 역할 문서**:
 - [`docs/roles/`](docs/roles/) - 팀원별 담당 역할 및 작업 내용 (11개 파일)
@@ -4506,6 +4524,8 @@ python main.py
   - 박재홍: 논문 데이터 수집
   - 임예슬: 프롬프트 엔지니어링
 
+  <details>
+  <summary><strong>담당 역할 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`01_최현화_AI_Agent_메인.md`](docs/roles/01_최현화_AI_Agent_메인.md) | 최현화 - AI Agent 메인 시스템 개발 |
@@ -4519,6 +4539,7 @@ python main.py
   | [`05_추가선택기능.md`](docs/roles/05_추가선택기능.md) | 추가 선택 기능 개발 |
   | [`05-1_신준엽_Text-to-SQL.md`](docs/roles/05-1_신준엽_Text-to-SQL.md) | 신준엽 - Text2SQL 시스템 개발 |
   | [`05-2_최현화_성능평가시스템.md`](docs/roles/05-2_최현화_성능평가시스템.md) | 최현화 - 성능 평가 시스템 개발 |
+  </details>
 
 #### 사용 가이드 및 규칙
 
@@ -4528,16 +4549,21 @@ python main.py
   - [`docs/usage/team/`](docs/usage/team/) - 팀원별 작업 가이드
   - [`docs/usage/tests/`](docs/usage/tests/) - 테스트 가이드
 
+  <details>
+  <summary><strong>실행 명령어 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`데이터베이스_설치_및_설정_가이드.md`](docs/usage/데이터베이스_설치_및_설정_가이드.md) | PostgreSQL + pgvector 설치 및 설정 |
   | [`실행_명령어_가이드.md`](docs/usage/실행_명령어_가이드.md) | 챗봇 실행 및 스크립트 사용법 |
   | [`데이터_삭제_가이드.md`](docs/usage/데이터_삭제_가이드.md) | 데이터베이스 데이터 삭제 방법 |
+  </details>
 
 **개발 규칙**:
 - [`docs/rules/`](docs/rules/) - 개발 규칙 및 컨벤션 (6개 파일)
   - Logger 사용법, 실험 폴더 구조, 커밋 메시지 작성법 등
 
+  <details>
+  <summary><strong>개발 규칙 및 컨벤션 정립 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`logger_사용법.md`](docs/rules/logger_사용법.md) | Logger 시스템 사용 규칙 |
@@ -4546,6 +4572,7 @@ python main.py
   | [`python_string_style.md`](docs/rules/python_string_style.md) | Python 문자열 스타일 규칙 |
   | [`annotate_style.md`](docs/rules/annotate_style.md) | 코드 주석 작성 규칙 |
   | [`GitHub_이슈_라벨_정의.md`](docs/rules/GitHub_이슈_라벨_정의.md) | GitHub 이슈 라벨 정의 및 사용법 |
+  </details>
 
 #### 시나리오 및 Q&A
 
@@ -4553,6 +4580,8 @@ python main.py
 - [`docs/scenarios/`](docs/scenarios/) - 도구별 사용 시나리오 및 예상 질문 (10개 파일)
   - 통합 시나리오, 초보자/전문가 질문 리스트, 도구별 상세 시나리오
 
+  <details>
+  <summary><strong>실행 테스트 시나리오 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`00_통합_시나리오_예상_질문.md`](docs/scenarios/00_통합_시나리오_예상_질문.md) | 통합 시나리오 및 예상 질문 리스트 |
@@ -4565,11 +4594,14 @@ python main.py
   | [`05_논문_요약.md`](docs/scenarios/05_논문_요약.md) | 논문 요약 도구 사용 시나리오 |
   | [`06_파일_저장.md`](docs/scenarios/06_파일_저장.md) | 파일 저장 도구 사용 시나리오 |
   | [`07_text2sql_통계.md`](docs/scenarios/07_text2sql_통계.md) | Text2SQL 통계 조회 도구 사용 시나리오 |
+  </details>
 
 **Q&A 문서**:
 - [`docs/QnA/`](docs/QnA/) - 시스템별 및 도구별 Q&A 문서 (8개 파일)
   - AI Agent, 실험 관리, 데이터 파이프라인, RAG, 패턴 라우팅, Streamlit UI, 용어집, Text2SQL
 
+  <details>
+  <summary><strong>QnA 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`agent_system_qna.md`](docs/QnA/agent_system_qna.md) | AI Agent 시스템 Q&A |
@@ -4580,6 +4612,7 @@ python main.py
   | [`rag_system_qna.md`](docs/QnA/rag_system_qna.md) | RAG 시스템 Q&A |
   | [`streamlit_ui_qna.md`](docs/QnA/streamlit_ui_qna.md) | Streamlit UI Q&A |
   | [`text2sql_qna.md`](docs/QnA/text2sql_qna.md) | Text2SQL 도구 Q&A |
+  </details>
 
 #### 회의록 및 기타
 
@@ -4587,6 +4620,8 @@ python main.py
 - [`docs/minutes/`](docs/minutes/) - 팀 회의록 (8개 파일)
   - 2025.10.28 ~ 2025.11.04 회의록 및 멘토링 기록
 
+  <details>
+  <summary><strong>회의록 문서 참조 링크</strong></summary>
   | 날짜 | 문서 | 설명 |
   |------|------|------|
   | 2025.10.28 | [`20251028_팀_회의록.md`](docs/minutes/20251028/20251028_팀_회의록.md) | 2025.10.28 팀 회의록 |
@@ -4597,40 +4632,37 @@ python main.py
   | 2025.10.30 | [`20251030_멘토링.md`](docs/minutes/20251030/20251030_멘토링.md) | 2025.10.30 멘토링 기록 |
   | 2025.10.31 | [`20251031_팀_회의록.md`](docs/minutes/20251031/20251031_팀_회의록.md) | 2025.10.31 팀 회의록 |
   | 2025.11.04 | [`20251104_멘토링.md`](docs/minutes/20251104/20251104_멘토링.md) | 2025.11.04 멘토링 기록 |
-
-**발표 자료**:
-- [`docs/PPT/`](docs/PPT/) - 프로젝트 발표 자료
-  - [`docs/PPT/new/`](docs/PPT/new/) - 최신 발표 자료 (5개 파일)
-
-  | 문서 | 설명 |
-  |------|------|
-  | [`02_프로젝트_목표_및_설계_추가.md`](docs/PPT/new/02_프로젝트_목표_및_설계_추가.md) | 프로젝트 목표 및 설계 발표 대본 |
-  | [`03_개발_및_구현_대본.md`](docs/PPT/new/03_개발_및_구현_대본.md) | 개발 및 구현 발표 대본 |
-  | [`03_개발_및_구현_대본_추가.md`](docs/PPT/new/03_개발_및_구현_대본_추가.md) | 개발 및 구현 발표 대본 (추가) |
-  | [`04_이슈_인사이트_대본.md`](docs/PPT/new/04_이슈_인사이트_대본.md) | 이슈 및 인사이트 발표 대본 |
-  | [`05_실행_결과_대본.md`](docs/PPT/new/05_실행_결과_대본.md) | 실행 결과 발표 대본 |
+  </details>
 
 **실험 결과**:
 - [`docs/experiments/`](docs/experiments/) - 실험 결과 및 분석 문서 (4개 파일)
   - 2025.10.31 ~ 2025.11.05 실험 분석 보고서
 
+  <details>
+  <summary><strong>실험 분석 문서 참조 링크</strong></summary>
   | 날짜 | 문서 | 설명 |
   |------|------|------|
   | 2025.10.31 | [`paper_review_app_ml_brief.md`](docs/experiments/20251031/paper_review_app_ml_brief.md) | 논문 리뷰 앱 ML Brief |
   | 2025.11.04 | [`20251104_213739_session_010_실험_분석_보고서.md`](docs/experiments/20251104/20251104_213739_session_010_실험_분석_보고서.md) | Session_010 실험 분석 보고서 |
   | 2025.11.05 | [`20251105_152347_pipeline_fallback_fix_report.md`](docs/experiments/20251105/20251105_152347_pipeline_fallback_fix_report.md) | 파이프라인 Fallback 수정 보고서 |
   | 2025.11.05 | [`session_018_analysis_report.md`](docs/experiments/20251105/session_018_analysis_report.md) | Session_018 분석 보고서 |
+  </details>
 
 **오류 문서**:
 - [`docs/errors/`](docs/errors/) - 오류 분석 및 해결 문서 (1개 파일)
 
+  <details>
+  <summary><strong>오류 관리 문서 참조 링크</strong></summary>
   | 문서 | 설명 |
   |------|------|
   | [`박재홍_코드_문제점_및_TODO.md`](docs/errors/박재홍_코드_문제점_및_TODO.md) | 박재홍 코드 문제점 분석 및 TODO |
+  </details>
 
 **이미지 자료**:
 - [`docs/images/`](docs/images/) - 프로젝트 이미지 자료
 
+  <details>
+  <summary><strong>이미지 자료 참조 링크</strong></summary>
   | 폴더 | 설명 |
   |------|------|
   | [`architecture/`](docs/images/architecture/) | 아키텍처 이미지 |
@@ -4638,6 +4670,7 @@ python main.py
   | [`logging_experimentmanager_system/`](docs/images/logging_experimentmanager_system/) | 로깅/실험 관리 시스템 이미지 |
   | [`run_img/`](docs/images/run_img/) | 실행 결과 이미지 |
   | [`slack/`](docs/images/slack/) | Slack 관련 이미지 |
+  </details>
 
 ---
 
